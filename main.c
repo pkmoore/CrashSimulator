@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
     pid_t child;
     int status;
     bool insyscall = false;
-    struct user_regs_struct regs;
     child = fork();
     if(child == 0) {
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);
