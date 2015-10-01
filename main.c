@@ -60,38 +60,46 @@ int main(int argc, char** argv) {
         }
         char* line = NULL;
         size_t line_length = 0;
+        long int extracted_return_value;
         while(true) {
             wait(&status);
             if(WIFEXITED(status)) {
                 break;
             }
             orig_eax = ptrace(PTRACE_PEEKUSER, child, 4*ORIG_EAX);
-            if(orig_eax == SYS_open) {
-                if(!insyscall) {
+            if(orig_eax == SYS_socketcall) {
+                if(insyscall == false) {
+                    printf("Entering: %ld\n", orig_eax);
                     if(getline(&line, &line_length, trace_file) <= 0) {
                         printf("Getline encountered an error or reached the end of the file");
                         exit(1);
                     }
-                    while(!is_open_syscall(line)) {
+                    while(!is_socket_syscall(line)) {
                         free(line);
                         line_length = 0;
                         if(getline(&line, &line_length, trace_file) <= 0) {
-                            printf("Getline encountered an error or reached the end of the file");
+                            printf("insideGetline encountered an error or reached the end of the file");
                             exit(1);
                         }
                     }
                     printf("Corresponding line: %s", line);
-                    printf("Entering: %ld\n", orig_eax);
-                    free(line);
                     line_length = 0;
                     insyscall = true;
                 }
                 else {
                     printf("Exiting: %ld\n", orig_eax);
-                    printf("Trying to return: EAX: %ld\n", ptrace(PTRACE_PEEKUSER, child, 4*EAX, NULL));
+                    printf("Trying to return: %ld\n", ptrace(PTRACE_PEEKUSER, child, 4 * EAX, NULL));
+                    printf("We will modify the system call based on this line: %s", line);
+                    extracted_return_value = extract_return_value(line);
+                    printf("We extracted the following return value: %ld\n", extracted_return_value);
+                    ptrace(PTRACE_POKEUSER, child, 4 * EAX, extracted_return_value);
+                    printf("Return value is now: %ld\n", ptrace(PTRACE_PEEKUSER, child, 4 * EAX, NULL));
+                    free(line);
+                    line_length = 0;
                     insyscall = false;
                 }
             }
+            orig_eax = 0;
             ptrace(PTRACE_SYSCALL, child, NULL, NULL);
         }
         return 0;
