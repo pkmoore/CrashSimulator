@@ -1,3 +1,4 @@
 resources/
 *.o
 cs
+python_modules/build/
