@@ -10,7 +10,7 @@ if __name__ == '__main__':
     pid = os.fork()
     if pid == 0:
         tracereplay.traceme()
-        os.execlp('ls', 'ls', '-al')
+        os.execlp(command, command, command)
     else:
         in_syscall = False
         while True:
