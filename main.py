@@ -19,8 +19,8 @@ if __name__ == '__main__':
                 break
             else:
                 orig_eax = tracereplay.get_EAX(pid)
-                # We don't want to count the execve because it throws our state off (it never exits)
-                if orig_eax == 11:
+                # We don't want to count the execve or exit because it throws our state off (it never exits)
+                if orig_eax == 11 or orig_eax == 252:
                     tracereplay.syscall(pid)
                     continue
                 if not in_syscall:
