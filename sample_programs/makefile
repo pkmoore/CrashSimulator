@@ -1,6 +1,6 @@
 
 opensocket: opensocket.c
-	gcc -ggdb-o opensocket -static opensocket.c
+	gcc -ggdb -o opensocket -static opensocket.c
 	strace -o opensocket.strace ./opensocket
 
 mtu_sender: mtu_sender.c
