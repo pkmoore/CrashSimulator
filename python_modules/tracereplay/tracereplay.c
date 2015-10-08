@@ -18,6 +18,34 @@ static PyObject* tracereplay_get_EAX(PyObject* self, PyObject* args) {
     return Py_BuildValue("i", extracted_eax);
 }
 
+static PyObject* tracereplay_set_EAX(PyObject* self, PyObject* args) {
+    pid_t child;
+    long int return_value;
+    PyArg_ParseTuple(args, "ii", &child, &return_value);
+    printf("Child: %d\n", child);
+    printf("Ret: %ld\n", return_value);
+    errno = 0;
+    ptrace(PTRACE_POKEUSER, child, 4 * EAX, return_value);
+    if(errno != 0) {
+        perror("Poke failed");
+        return NULL;
+    }
+    Py_RETURN_NONE;
+}
+
+static PyObject* tracereplay_get_EBX(PyObject* self, PyObject* args) {
+    pid_t child;
+    long int extracted_ebx;
+    PyArg_ParseTuple(args, "i", &child);
+    errno = 0;
+    extracted_ebx = ptrace(PTRACE_PEEKUSER, child, 4 * EBX, 0);
+    if(errno != 0) {
+        perror("Peek failed");
+        return NULL;
+    }
+    return Py_BuildValue("i", extracted_ebx);
+}
+
 static PyObject* tracereplay_cont(PyObject* self, PyObject* args) {
     pid_t child;
     PyArg_ParseTuple(args, "i", &child);
@@ -60,6 +88,8 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"wait", tracereplay_wait, METH_VARARGS, "wait on child process"},
     {"syscall", tracereplay_syscall, METH_VARARGS, "wait for syscall"},
     {"get_EAX", tracereplay_get_EAX, METH_VARARGS, "get EAX"},
+    {"set_EAX", tracereplay_set_EAX, METH_VARARGS, "set EAX"},
+    {"get_EBX", tracereplay_get_EBX, METH_VARARGS, "get EBX"},
     {NULL, NULL, 0, NULL}
 };
 
