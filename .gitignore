@@ -1,4 +1,4 @@
 resources/
 *.o
 cs
-python_modules/build/
+python_modules/tracereplay/build/
