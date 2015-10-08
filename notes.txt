@@ -1,7 +1,0 @@
-Do we want to mark the system calls we modified so we only manipulate their behavior
-    Mark modified system calls and dependent system calls
-
-Does strace truncate or modify the it prints as parameters?
-
-Do we only want to replay the system calls up to the point of the mutation?
-    It seems like if the rest of the system calls are good, it could mess things up
