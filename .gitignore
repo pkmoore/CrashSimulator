@@ -2,3 +2,4 @@ resources/
 *.o
 cs
 python_modules/tracereplay/build/
+python_modules/posix-omni-parser/
