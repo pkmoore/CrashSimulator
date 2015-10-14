@@ -15,6 +15,12 @@ SYS_socketcall = 102
 SYS_socketcall_socket = 1
 SYS_socketcall_bind = 2
 
+def next_syscall():
+    s = os.wait()
+    if os.WIFEXITED(s[1]):
+        return False
+    return True
+
 def is_socket_syscall(line):
     return re.search('socket\(', line) is not None or re.search('bind\(', line) is not None
 
@@ -33,27 +39,22 @@ if __name__ == '__main__':
             data = f.readlines()
         data = [x.rstrip('\n') for x in data]
         socket_calls = [x for x in reversed(data) if is_socket_syscall(x)]
-        print(socket_calls)
         in_syscall = False
         count = 0
-        while True:
-            s = os.wait()
-            if os.WIFEXITED(s[1]):
-                break
-            else:
-                orig_eax = tracereplay.get_EAX(pid)
-                # We don't want to count the execve or exit because it throws our state off (it never exits)
-                if orig_eax == SYS_execve or orig_eax == SYS_exit:
-                    tracereplay.syscall(pid)
-                    continue
-                if not in_syscall:
-                   in_syscall = True
-                else:
-                    if orig_eax == SYS_socketcall:
-                        print('SYS_socketcall exiting...')
-                        corresponding_line = socket_calls.pop()
-                        print('Corresponding line: ' + corresponding_line)
-                        ret = extract_return_value(corresponding_line)
-                        tracereplay.set_EAX(pid, int(ret))
-                    in_syscall = False
+        while next_syscall():
+            orig_eax = tracereplay.get_EAX(pid)
+            # We don't want to count the execve or exit because it throws our state off (it never exits)
+            if orig_eax == SYS_execve or orig_eax == SYS_exit:
                 tracereplay.syscall(pid)
+                continue
+            if not in_syscall:
+               in_syscall = True
+            else:
+                if orig_eax == SYS_socketcall:
+                    print('SYS_socketcall exiting...')
+                    corresponding_line = socket_calls.pop()
+                    print('Corresponding line: ' + corresponding_line)
+                    ret = extract_return_value(corresponding_line)
+                    tracereplay.set_EAX(pid, int(ret))
+                in_syscall = False
+            tracereplay.syscall(pid)
