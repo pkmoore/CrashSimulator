@@ -44,6 +44,7 @@ def get_trace_data(trace):
             data = f.readlines()
     data = [x.rstrip('\n') for x in data]
     socket_calls = [x for x in reversed(data) if is_socket_syscall(x)]
+    return socket_calls
 
 def is_socket_syscall(line):
     return re.search('socket\(', line) is not None or re.search('bind\(', line) is not None
@@ -59,8 +60,8 @@ if __name__ == '__main__':
         tracereplay.traceme()
         os.execlp(command, command, command)
     else:
+        socket_calls = get_trace_data(trace)
         in_syscall = False
-        count = 0
         while next_syscall():
             orig_eax = tracereplay.get_EAX(pid)
             # We don't want to count the execve or exit because it throws our state off (it never exits)
