@@ -39,6 +39,12 @@ def next_syscall():
         return False
     return True
 
+def get_trace_data(trace):
+    with open(trace, 'r') as f:
+            data = f.readlines()
+    data = [x.rstrip('\n') for x in data]
+    socket_calls = [x for x in reversed(data) if is_socket_syscall(x)]
+
 def is_socket_syscall(line):
     return re.search('socket\(', line) is not None or re.search('bind\(', line) is not None
 
@@ -53,10 +59,6 @@ if __name__ == '__main__':
         tracereplay.traceme()
         os.execlp(command, command, command)
     else:
-        with open(trace, 'r') as f:
-            data = f.readlines()
-        data = [x.rstrip('\n') for x in data]
-        socket_calls = [x for x in reversed(data) if is_socket_syscall(x)]
         in_syscall = False
         count = 0
         while next_syscall():
