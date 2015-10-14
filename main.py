@@ -17,21 +17,8 @@ SYS_socketcall_bind       = 2
 SYS_socketcall_connect    = 3
 SYS_socketcall_listen     = 4
 SYS_socketcall_accept     = 5
-SYS_socketcall_getsockname= 6
-SYS_socketcall_getpeername= 7
-SYS_socketcall_socketpair = 8
 SYS_socketcall_send       = 9
 SYS_socketcall_recv       = 1
-SYS_socketcall_sendto     = 1
-SYS_socketcall_recvfrom   = 1
-SYS_socketcall_shutdown   = 1
-SYS_socketcall_setsockopt = 1
-SYS_socketcall_getsockopt = 1
-SYS_socketcall_sendmsg    = 1
-SYS_socketcall_recvmsg    = 1
-SYS_socketcall_accept4    = 1
-SYS_socketcall_recvmmsg   = 1
-SYS_socketcall_sendmmsg   = 2
 
 def next_syscall():
     s = os.wait()
