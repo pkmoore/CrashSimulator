@@ -10,7 +10,7 @@ int main() {
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(6666);
-    inet_pton(AF_INET, "0.0.0.0", &addr.sin_addr);
+    inet_pton(AF_INET, "127.0.0.11", &addr.sin_addr);
     int retval = bind(s, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
     if(retval == 0) {
         printf("success\n");
