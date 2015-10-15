@@ -5,20 +5,21 @@ import re
 
 import tracereplay
 
-sys.path.append('./python_modules/posix-omni-parser/')
-import StraceParser
 
 #Constants
 SYS_execve = 11
 SYS_exit = 252
+SYS_close = 6
 SYS_socketcall = 102
+
+#Socketcall "subcalls"
 SYS_socketcall_socket     = 1
 SYS_socketcall_bind       = 2
 SYS_socketcall_connect    = 3
 SYS_socketcall_listen     = 4
 SYS_socketcall_accept     = 5
 SYS_socketcall_send       = 9
-SYS_socketcall_recv       = 1
+SYS_socketcall_recv       = 10
 
 def next_syscall():
     s = os.wait()
