@@ -1,4 +1,5 @@
 *.strace
 opensocket
 mtu_sender
-mtu_receiver
+mtu_receiver_good
+mtu_receiver_bad
