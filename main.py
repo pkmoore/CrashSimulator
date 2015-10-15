@@ -35,7 +35,30 @@ def get_trace_data(trace):
     return socket_calls
 
 def is_socket_syscall(line):
-    return re.search('socket\(', line) is not None or re.search('bind\(', line) is not None
+    return re.search('socket\(', line) is not None \
+           or re.search('bind\(', line) is not None \
+           or re.search('connect\(', line) is not None \
+           or re.search('listen\(', line) is not None \
+           or re.search('accept\(', line) is not None \
+           or re.search('send\(', line) is not None \
+           or re.search('recv\(', line) is not None \
+           or re.search('close\(', line) is not None \
+           or re.search('getsockname', line) is not None \
+           or re.search('getpeername', line) is not None \
+           or re.search('socketpair', line) is not None \
+           or re.search('sendto', line) is not None \
+           or re.search('recvfrom', line) is not None \
+           or re.search('shutdown', line) is not None \
+           or re.search('setsockopt', line) is not None \
+           or re.search('getsockopt', line) is not None \
+           or re.search('sendmsg', line) is not None \
+           or re.search('sendmmsg', line) is not None \
+           or re.search('recvmsg', line) is not None \
+           or re.search('recvmmsg', line) is not None \
+           or re.search('accept4', line) is not None
+
+def is_mutated_syscall(line):
+    return re.search('.*MUTMUT.*', line) is not None
 
 def extract_return_value(line):
     return re.search(' = -?[a-zA-Z0-9]* ?', line).group(0).translate(None, '= ')
