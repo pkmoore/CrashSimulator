@@ -1,0 +1,6 @@
+notate all socket calls that looks like it has a socket descriptor as the first argument
+
+Don't Forget:
+recvfrom
+sendto
+fcntl
