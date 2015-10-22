@@ -6,3 +6,4 @@ cs
 python_modules/tracereplay/build/
 python_modules/posix-omni-parser/
 python_modules/parse-syscall-definitions/
+*.pickle
