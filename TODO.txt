@@ -1,5 +1,8 @@
 notate all socket calls that looks like it has a socket descriptor as the first argument
 
+Better Command Line Argument Handling
+Added system call id to posix-omni-parser
+
 Don't Forget:
 recvfrom
 sendto
