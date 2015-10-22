@@ -181,23 +181,3 @@ SYSCALLS = {
 197:    'sys_fstat64',
 221:    'sys_fadvise64',
 243:    'sys_set_thread_area'}
-
-SOCKET_SUBCALLS = {
-0 :'socket',
-1 :'bind',
-2 :'connect',
-3 :'listen',
-4 :'accept',
-5 :'getsockname',
-6 :'getpeername',
-7 :'socketpair',
-8 :'send',
-9 :'recv',
-10:'sendto',
-11:'recvfrom',
-12:'shutdown',
-13:'setsockopt',
-14:'getsockopt',
-15:'sendmsg',
-16:'recvmsg',
-17:'accept4'}

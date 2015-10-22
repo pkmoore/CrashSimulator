@@ -5,7 +5,6 @@ import re
 import tracereplay
 import posix_helpers
 from system_call_dict import SYSCALLS
-from system_call_dict import SOCKET_SUBCALLS
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -34,25 +33,19 @@ if __name__ == '__main__':
         while next_syscall():
             orig_eax = tracereplay.get_EAX(pid)
             if SYSCALLS[orig_eax] == 'sys_execve' or orig_eax == SYS_exit:
+                print('======')
                 print('Got exec or exit: ' + system_calls.pop().name)
+                print('======')
                 tracereplay.syscall(pid)
                 continue
             if not in_syscall:
-                line = system_calls.pop().name
-                syscall_name = SYSCALLS[orig_eax]
-                identifier = posix_helpers.get_identifier(line)
-                print('EAX: ' + str(orig_eax) + ' Got syscall: ' + syscall_name)
-                print('Line in trace: ' + line)
-                if re.search(syscall_name[4:], line) is None:
-                    if identifier not in SOCKET_SUBCALLS.values():
-                        print('SYSTEM CALL MISMATCH: ' + identifier + ' : ' + syscall_name)
-                        sys.exit(1)
-                if SYSCALLS[orig_eax] == 'sys_socketcall':
-                    print('Entering SYS_socketcall')
-                    ebx = tracereplay.get_EBX(pid)
-                    print('Call: ' + str(orig_eax))
-                    print('Subcall: ' + str(ebx))
+                print('======')
+                syscall = system_calls.pop()
+                print('EAX: ' + str(orig_eax))
+                print('Looked Up Syscall Name: ' + SYSCALLS[orig_eax])
+                print('Syscall name from trace: ' + syscall.name)
                 in_syscall = True
+                print('======')
             else:
                 in_syscall = False
             tracereplay.syscall(pid)
