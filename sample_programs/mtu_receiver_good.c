@@ -44,7 +44,8 @@ int main() {
     }
     received = 0;
     while(received < 255) {
-        if((ret = recv(c, message + received, (sizeof(message) - 1 - received), 0)) == -1) {
+        ret = recv(c, message + received, (sizeof(message) - 1 - received), 0);
+        if(ret == -1) {
             perror("Error:");
             printf("Receive failed!\n");
             close(c);
@@ -53,6 +54,9 @@ int main() {
         }
         received += ret;
         printf("Received Total: %d\n", received);
+        if(ret == 0) {
+            break;
+        }
     }
     message[received] = '\0';
     close(c);
