@@ -22,8 +22,6 @@ static PyObject* tracereplay_set_EAX(PyObject* self, PyObject* args) {
     pid_t child;
     long int return_value;
     PyArg_ParseTuple(args, "ii", &child, &return_value);
-    printf("Child: %d\n", child);
-    printf("Ret: %ld\n", return_value);
     errno = 0;
     ptrace(PTRACE_POKEUSER, child, 4 * EAX, return_value);
     if(errno != 0) {
