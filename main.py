@@ -34,7 +34,7 @@ if __name__ == '__main__':
             orig_eax = tracereplay.get_EAX(pid)
             if SYSCALLS[orig_eax] == 'sys_execve' or orig_eax == SYS_exit:
                 print('======')
-                print('Got exec or exit: ' + system_calls.pop().name)
+                print(system_calls.pop())
                 print('======')
                 tracereplay.syscall(pid)
                 continue
@@ -43,7 +43,7 @@ if __name__ == '__main__':
                 syscall = system_calls.pop()
                 print('EAX: ' + str(orig_eax))
                 print('Looked Up Syscall Name: ' + SYSCALLS[orig_eax])
-                print('Syscall name from trace: ' + syscall.name)
+                print(syscall)
                 in_syscall = True
                 print('======')
             else:
