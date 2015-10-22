@@ -2,66 +2,22 @@ from __future__ import print_function
 import os
 import sys
 import re
-
 import tracereplay
+import posix_helpers
+from system_call_dict import SYSCALLS
+from system_call_dict import SOCKET_SUBCALLS
 
+sys.path.append('./python_modules/posix-omni-parser/')
+import Trace
 
 #Constants
-SYS_execve = 11
 SYS_exit = 252
-SYS_close = 6
-SYS_socketcall = 102
-
-#Socketcall "subcalls"
-SYS_socketcall_socket     = 1
-SYS_socketcall_bind       = 2
-SYS_socketcall_connect    = 3
-SYS_socketcall_listen     = 4
-SYS_socketcall_accept     = 5
-SYS_socketcall_send       = 9
-SYS_socketcall_recv       = 10
 
 def next_syscall():
     s = os.wait()
     if os.WIFEXITED(s[1]):
         return False
     return True
-
-def get_trace_data(trace):
-    with open(trace, 'r') as f:
-            data = f.readlines()
-    data = [x.rstrip('\n') for x in data]
-    socket_calls = [x for x in reversed(data) if is_socket_syscall(x)]
-    return socket_calls
-
-def is_socket_syscall(line):
-    return re.search('socket\(', line) is not None \
-           or re.search('bind\(', line) is not None \
-           or re.search('connect\(', line) is not None \
-           or re.search('listen\(', line) is not None \
-           or re.search('accept\(', line) is not None \
-           or re.search('send\(', line) is not None \
-           or re.search('recv\(', line) is not None \
-           or re.search('close\(', line) is not None \
-           or re.search('getsockname', line) is not None \
-           or re.search('getpeername', line) is not None \
-           or re.search('socketpair', line) is not None \
-           or re.search('sendto', line) is not None \
-           or re.search('recvfrom', line) is not None \
-           or re.search('shutdown', line) is not None \
-           or re.search('setsockopt', line) is not None \
-           or re.search('getsockopt', line) is not None \
-           or re.search('sendmsg', line) is not None \
-           or re.search('sendmmsg', line) is not None \
-           or re.search('recvmsg', line) is not None \
-           or re.search('recvmmsg', line) is not None \
-           or re.search('accept4', line) is not None
-
-def is_mutated_syscall(line):
-    return re.search('.*MUTMUT.*', line) is not None
-
-def extract_return_value(line):
-    return re.search(' = -?[a-zA-Z0-9]* ?', line).group(0).translate(None, '= ')
 
 if __name__ == '__main__':
     command = sys.argv[1]
@@ -71,22 +27,32 @@ if __name__ == '__main__':
         tracereplay.traceme()
         os.execlp(command, command, command)
     else:
-        socket_calls = get_trace_data(trace)
         in_syscall = False
+        replaying = True
+        t = Trace.Trace(trace)
+        system_calls = [x for x in reversed(t.syscalls)]
         while next_syscall():
             orig_eax = tracereplay.get_EAX(pid)
-            # We don't want to count the execve or exit because it throws our state off (it never exits)
-            if orig_eax == SYS_execve or orig_eax == SYS_exit:
+            if SYSCALLS[orig_eax] == 'sys_execve' or orig_eax == SYS_exit:
+                print('Got exec or exit: ' + system_calls.pop().name)
                 tracereplay.syscall(pid)
                 continue
             if not in_syscall:
-               in_syscall = True
+                line = system_calls.pop().name
+                syscall_name = SYSCALLS[orig_eax]
+                identifier = posix_helpers.get_identifier(line)
+                print('EAX: ' + str(orig_eax) + ' Got syscall: ' + syscall_name)
+                print('Line in trace: ' + line)
+                if re.search(syscall_name[4:], line) is None:
+                    if identifier not in SOCKET_SUBCALLS.values():
+                        print('SYSTEM CALL MISMATCH: ' + identifier + ' : ' + syscall_name)
+                        sys.exit(1)
+                if SYSCALLS[orig_eax] == 'sys_socketcall':
+                    print('Entering SYS_socketcall')
+                    ebx = tracereplay.get_EBX(pid)
+                    print('Call: ' + str(orig_eax))
+                    print('Subcall: ' + str(ebx))
+                in_syscall = True
             else:
-                if orig_eax == SYS_socketcall:
-                    print('SYS_socketcall exiting...')
-                    corresponding_line = socket_calls.pop()
-                    print('Corresponding line: ' + corresponding_line)
-                    ret = extract_return_value(corresponding_line)
-                    tracereplay.set_EAX(pid, int(ret))
                 in_syscall = False
             tracereplay.syscall(pid)
