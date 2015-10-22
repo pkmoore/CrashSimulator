@@ -1,5 +1,7 @@
 resources/
 *.o
+*.pyc
+.DS_Store
 cs
 python_modules/tracereplay/build/
 python_modules/posix-omni-parser/
