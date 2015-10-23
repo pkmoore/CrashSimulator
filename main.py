@@ -27,7 +27,6 @@ if __name__ == '__main__':
         os.execlp(command, command, command)
     else:
         in_syscall = False
-        replaying = True
         t = Trace.Trace(trace)
         system_calls = [x for x in reversed(t.syscalls)]
         while next_syscall():
