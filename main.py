@@ -3,7 +3,6 @@ import os
 import sys
 import re
 import tracereplay
-import posix_helpers
 from system_call_dict import SYSCALLS
 
 sys.path.append('./python_modules/posix-omni-parser/')
