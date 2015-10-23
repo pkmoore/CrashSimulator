@@ -7,3 +7,6 @@ Don't Forget:
 recvfrom
 sendto
 fcntl
+
+Ask about no-oping recv call
+What about mutated trace calls for writing more to a buffer than there is space for
