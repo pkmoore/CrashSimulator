@@ -180,4 +180,5 @@ SYSCALLS = {
 192:    'sys_mmap2',
 197:    'sys_fstat64',
 221:    'sys_fadvise64',
-243:    'sys_set_thread_area'}
+243:    'sys_set_thread_area',
+252:    'sys_exit_group'}
