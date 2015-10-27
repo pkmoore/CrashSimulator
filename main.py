@@ -54,7 +54,6 @@ if __name__ == '__main__':
             if orig_eax == SYS_exit_group or \
             SYSCALLS[orig_eax] == 'sys_execve' or \
             orig_eax == SYS_exit:
-                print('Ignoring entry/exit')
                 system_calls.next()
                 tracereplay.syscall(pid)
                 continue
