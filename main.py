@@ -35,14 +35,7 @@ def handle_syscall(syscall_id, syscall_object, entering):
 def validate_syscall(syscall_id, syscall_object):
     #The 102 bit is a hack to handle socket subcalls
     if syscall_object.name not in SYSCALLS[syscall_id][4:] and syscall_id != 102:
-            raise SyscallMismatchError(str(syscall_id) + " is not " + syscall_object.name)
-
-class SyscallMismatchError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return repr(self.value)
-
+            raise Exception(str(syscall_id) + " is not " + syscall_object.name)
 
 if __name__ == '__main__':
     command = sys.argv[1]
