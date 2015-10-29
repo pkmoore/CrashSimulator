@@ -12,8 +12,12 @@ mtu_receiver_bad: mtu_receiver_bad.c
 mtu_receiver_good: mtu_receiver_good.c
 	gcc -ggdb -o mtu_receiver_good mtu_receiver_good.c
 
+callread: callread.c
+	gcc -ggdb -o callread -static callread.c
+
 clean:
 	- rm mtu_sender
 	- rm mtu_receiver_bad
 	- rm opensocket
 	- rm *.strace
+	- rm callread
