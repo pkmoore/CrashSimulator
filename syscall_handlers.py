@@ -60,8 +60,8 @@ buffer_size = 0
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
-    buffer_address = tracereplay.get_ECX(pid)
-    buffer_size = tracereplay.get_EDX(pid)
+    buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
+    buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
     pass
 
 def read_exit_handler(syscall_id, syscall_object, entering, pid):

@@ -5,17 +5,36 @@
 #include <sys/syscall.h>
 #include <sys/reg.h>
 
-static PyObject* tracereplay_get_EAX(PyObject* self, PyObject* args) {
+void init_constants(PyObject* m) {
+    if(PyModule_AddIntConstant(m, "ORIG_EAX", ORIG_EAX) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "EAX", EAX) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "EBX", EBX) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "ECX", ECX) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "EDX", EDX) == -1) {
+        return;
+    }
+}
+
+static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
     pid_t child;
-    long int extracted_eax;
-    PyArg_ParseTuple(args, "i", &child);
+    int reg;
+    long int extracted_register;
+    PyArg_ParseTuple(args, "ii", &child, &reg);
     errno = 0;
-    extracted_eax = ptrace(PTRACE_PEEKUSER, child, 4 * ORIG_EAX, 0);
+    extracted_register = ptrace(PTRACE_PEEKUSER, child, sizeof(long int) * reg, NULL);
     if(errno != 0) {
-        perror("Peek failed");
+        perror("Register Peek Failed");
         return NULL;
     }
-    return Py_BuildValue("i", extracted_eax);
+    return Py_BuildValue("i", extracted_register);
 }
 
 static PyObject* tracereplay_set_EAX(PyObject* self, PyObject* args) {
@@ -29,45 +48,6 @@ static PyObject* tracereplay_set_EAX(PyObject* self, PyObject* args) {
         return NULL;
     }
     Py_RETURN_NONE;
-}
-
-static PyObject* tracereplay_get_EBX(PyObject* self, PyObject* args) {
-    pid_t child;
-    long int extracted_ebx;
-    PyArg_ParseTuple(args, "i", &child);
-    errno = 0;
-    extracted_ebx = ptrace(PTRACE_PEEKUSER, child, 4 * EBX, 0);
-    if(errno != 0) {
-        perror("Peek failed");
-        return NULL;
-    }
-    return Py_BuildValue("i", extracted_ebx);
-}
-
-static PyObject* tracereplay_get_ECX(PyObject* self, PyObject* args) {
-    pid_t child;
-    long int extracted_ecx;
-    PyArg_ParseTuple(args, "i", &child);
-    errno = 0;
-    extracted_ecx = ptrace(PTRACE_PEEKUSER, child, 4 * ECX, 0);
-    if(errno != 0) {
-        perror("Peek failed");
-        return NULL;
-    }
-    return Py_BuildValue("i", extracted_ecx);
-}
-
-static PyObject* tracereplay_get_EDX(PyObject* self, PyObject* args) {
-    pid_t child;
-    long int extracted_edx;
-    PyArg_ParseTuple(args, "i", &child);
-    errno = 0;
-    extracted_edx = ptrace(PTRACE_PEEKUSER, child, 4 * EDX, 0);
-    if(errno != 0) {
-        perror("Peek failed");
-        return NULL;
-    }
-    return Py_BuildValue("i", extracted_edx);
 }
 
 static PyObject* tracereplay_cont(PyObject* self, PyObject* args) {
@@ -123,15 +103,16 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
     {"wait", tracereplay_wait, METH_VARARGS, "wait on child process"},
     {"syscall", tracereplay_syscall, METH_VARARGS, "wait for syscall"},
-    {"get_EAX", tracereplay_get_EAX, METH_VARARGS, "get EAX"},
     {"set_EAX", tracereplay_set_EAX, METH_VARARGS, "set EAX"},
-    {"get_EBX", tracereplay_get_EBX, METH_VARARGS, "get EBX"},
-    {"get_ECX", tracereplay_get_ECX, METH_VARARGS, "get ECX"},
-    {"get_EDX", tracereplay_get_EDX, METH_VARARGS, "get EDX"},
     {"poke_address", tracereplay_poke_address, METH_VARARGS, "poke address"},
+    {"peek_register", tracereplay_peek_register, METH_VARARGS, "peek register value"},
     {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC inittracereplay(void) {
-    Py_InitModule("tracereplay", TraceReplayMethods);
+    PyObject* m;
+    if((m = Py_InitModule("tracereplay", TraceReplayMethods)) == NULL) {
+        return;
+    }
+    init_constants(m);
 }

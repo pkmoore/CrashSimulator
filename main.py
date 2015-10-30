@@ -21,7 +21,6 @@ def next_syscall():
         return False
     return True
 
-
 def validate_syscall(syscall_id, syscall_object):
     #The 102 bit is a hack to handle socket subcalls
     if syscall_object.name not in SYSCALLS[syscall_id][4:] and syscall_id != 102:
@@ -39,7 +38,7 @@ if __name__ == '__main__':
         t = Trace.Trace(trace)
         system_calls = iter(t.syscalls)
         while next_syscall():
-            orig_eax = tracereplay.get_EAX(pid)
+            orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
             #This if statement is an ugly hack
             if orig_eax == SYS_exit_group or \
             SYSCALLS[orig_eax] == 'sys_execve' or \
