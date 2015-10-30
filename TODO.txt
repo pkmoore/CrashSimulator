@@ -1,12 +1,17 @@
+Use file-descriptor-using system calls to get data to associate with file descriptors
+
 notate all socket calls that looks like it has a socket descriptor as the first argument
 
 Better Command Line Argument Handling
 Added system call id to posix-omni-parser
 
 Don't Forget:
+read
+write
+send
+recv
 recvfrom
 sendto
 fcntl
 
-Ask about no-oping recv call
-What about mutated trace calls for writing more to a buffer than there is space for
+no-op out the system call by making it GETPID
