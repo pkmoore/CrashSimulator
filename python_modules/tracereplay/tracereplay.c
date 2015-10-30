@@ -44,6 +44,32 @@ static PyObject* tracereplay_get_EBX(PyObject* self, PyObject* args) {
     return Py_BuildValue("i", extracted_ebx);
 }
 
+static PyObject* tracereplay_get_ECX(PyObject* self, PyObject* args) {
+    pid_t child;
+    long int extracted_ecx;
+    PyArg_ParseTuple(args, "i", &child);
+    errno = 0;
+    extracted_ecx = ptrace(PTRACE_PEEKUSER, child, 4 * ECX, 0);
+    if(errno != 0) {
+        perror("Peek failed");
+        return NULL;
+    }
+    return Py_BuildValue("i", extracted_ecx);
+}
+
+static PyObject* tracereplay_get_EDX(PyObject* self, PyObject* args) {
+    pid_t child;
+    long int extracted_edx;
+    PyArg_ParseTuple(args, "i", &child);
+    errno = 0;
+    extracted_edx = ptrace(PTRACE_PEEKUSER, child, 4 * EDX, 0);
+    if(errno != 0) {
+        perror("Peek failed");
+        return NULL;
+    }
+    return Py_BuildValue("i", extracted_edx);
+}
+
 static PyObject* tracereplay_cont(PyObject* self, PyObject* args) {
     pid_t child;
     PyArg_ParseTuple(args, "i", &child);
@@ -80,6 +106,18 @@ static PyObject* tracereplay_syscall(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_poke_address(PyObject* self, PyObject* args) {
+    pid_t child;
+    int address;
+    int data;
+    PyArg_ParseTuple(args, "iii", &child, &address, &data);
+    errno = 0;
+    if(ptrace(PTRACE_POKEDATA, child, address, data) == -1) {
+        perror("Poke into userspace failed");
+    }
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef TraceReplayMethods[]  = {
     {"cont", tracereplay_cont, METH_VARARGS, "continue process under trace"},
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
@@ -88,6 +126,9 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"get_EAX", tracereplay_get_EAX, METH_VARARGS, "get EAX"},
     {"set_EAX", tracereplay_set_EAX, METH_VARARGS, "set EAX"},
     {"get_EBX", tracereplay_get_EBX, METH_VARARGS, "get EBX"},
+    {"get_ECX", tracereplay_get_ECX, METH_VARARGS, "get ECX"},
+    {"get_EDX", tracereplay_get_EDX, METH_VARARGS, "get EDX"},
+    {"poke_address", tracereplay_poke_address, METH_VARARGS, "poke address"},
     {NULL, NULL, 0, NULL}
 };
 
