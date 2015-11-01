@@ -37,14 +37,14 @@ static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
     return Py_BuildValue("i", extracted_register);
 }
 
-static PyObject* tracereplay_set_EAX(PyObject* self, PyObject* args) {
+static PyObject* tracereplay_poke_register(PyObject* self, PyObject* args) {
     pid_t child;
-    long int return_value;
-    PyArg_ParseTuple(args, "ii", &child, &return_value);
+    int reg;
+    long int value;
+    PyArg_ParseTuple(args, "iii", &child, &reg, &value);
     errno = 0;
-    ptrace(PTRACE_POKEUSER, child, 4 * EAX, return_value);
-    if(errno != 0) {
-        perror("Poke failed");
+    if(ptrace(PTRACE_POKEUSER, child, sizeof(long int) * reg, value) == -1){
+        perror("Register Poke Failed");
         return NULL;
     }
     Py_RETURN_NONE;
@@ -103,9 +103,9 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
     {"wait", tracereplay_wait, METH_VARARGS, "wait on child process"},
     {"syscall", tracereplay_syscall, METH_VARARGS, "wait for syscall"},
-    {"set_EAX", tracereplay_set_EAX, METH_VARARGS, "set EAX"},
     {"poke_address", tracereplay_poke_address, METH_VARARGS, "poke address"},
     {"peek_register", tracereplay_peek_register, METH_VARARGS, "peek register value"},
+    {"poke_register", tracereplay_poke_register, METH_VARARGS, "poke register value"},
     {NULL, NULL, 0, NULL}
 };
 
