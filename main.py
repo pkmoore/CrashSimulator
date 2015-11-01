@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 continue
             if entering_syscall:
                 syscall_object = system_calls.next()
-            validate_syscall(orig_eax, syscall_object)
+            #validate_syscall(orig_eax, syscall_object)
             syscall_handlers.handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
             tracereplay.syscall(pid)

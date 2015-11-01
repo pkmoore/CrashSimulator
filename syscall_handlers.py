@@ -1,5 +1,17 @@
 import tracereplay
+import binascii
 
+from syscall_dict import SYSCALLS
+
+def noop_current_syscall(pid):
+    tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
+
+def write_buffer(pid, address, value, buffer_length):
+    writes = [value[i:i+4] for i in range(0, len(value), 4)]
+    for i in writes:
+        data = int(binascii.hexlify(i), 16)
+        tracereplay.poke_address(pid, address, data)
+        address = address + 4
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
@@ -62,19 +74,20 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_size
     buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
     buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
-    pass
+    noop_current_syscall(pid)
+    #horrible hack to deal with the fact that nooping results in the exit handler not being called
+    read_exit_handler(syscall_id, syscall_object, entering, pid)
 
 def read_exit_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
-    tracereplay.poke_address(pid, buffer_address, 0x41414141)
-    pass
+    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
 
 def default_syscall_handler(syscall_id, syscall_object, entering, pid):
     pass
     #print('======')
     #print('Syscall_ID: ' + str(syscall_id))
-    #print('Looked Up Syscall Name: ' + SYSCALLS[orig_eax])
+    #print('Looked Up Syscall Name: ' + SYSCALLS[syscall_id])
     #print(syscall_object)
     #print('======')
 
