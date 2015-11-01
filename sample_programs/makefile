@@ -1,4 +1,4 @@
-all: opensocket mtu_sender mtu_receiver_bad mtu_receiver_good
+all: opensocket mtu_sender mtu_receiver_bad mtu_receiver_good callread
 
 opensocket: opensocket.c
 	gcc -ggdb -o opensocket -static opensocket.c
