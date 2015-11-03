@@ -1,5 +1,4 @@
 import tracereplay
-import binascii
 
 from syscall_dict import SYSCALLS
 
@@ -18,6 +17,7 @@ def write_buffer(pid, address, value, buffer_length):
         data = int(binascii.hexlify(i), 16)
         tracereplay.poke_address(pid, address, data)
         address = address + 4
+
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
@@ -71,31 +71,12 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     else:
         raise Exception('Tried to store the same file descriptor twice')
 
-# Horrible hack
-buffer_address = 0
-buffer_size = 0
-
-def read_entry_handler(syscall_id, syscall_object, entering, pid):
-    global buffer_address
-    global buffer_size
-    buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-    buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
-    noop_current_syscall(pid)
-    #horrible hack to deal with the fact that nooping results in the exit handler not being called
-    read_exit_handler(syscall_id, syscall_object, entering, pid)
-
-def read_exit_handler(syscall_id, syscall_object, entering, pid):
-    global buffer_address
-    global buffer_size
-    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
-
 def default_syscall_handler(syscall_id, syscall_object, entering, pid):
-    pass
-    #print('======')
-    #print('Syscall_ID: ' + str(syscall_id))
-    #print('Looked Up Syscall Name: ' + SYSCALLS[syscall_id])
-    #print(syscall_object)
-    #print('======')
+    print('======')
+    print('Syscall_ID: ' + str(syscall_id))
+    print('Looked Up Syscall Name: ' + SYSCALLS[syscall_id])
+    print(syscall_object)
+    print('======')
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     handlers = {
@@ -104,9 +85,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
                 (5, True): open_entry_handler,
-                (5, False): open_exit_handler,
-                (3, True): read_entry_handler,
-                (3, False): read_exit_handler
+                (5, False): open_exit_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
