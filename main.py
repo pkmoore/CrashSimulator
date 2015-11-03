@@ -3,9 +3,9 @@ import os
 import sys
 import re
 import argparse
+import importlib
 
 import tracereplay
-import syscall_handlers
 from syscall_dict import SYSCALLS
 
 sys.path.append('./python_modules/posix-omni-parser/')
@@ -14,8 +14,6 @@ import Trace
 #Constants
 SYS_exit = 252
 SYS_exit_group = 231
-
-FILE_DESCRIPTORS = []
 
 def next_syscall():
     s = os.wait()
@@ -38,6 +36,10 @@ if __name__ == '__main__':
                         '--trace',
                         help='The system call trace to be replayed during the specified command',
                         required=True)
+    parser.add_argument('-d',
+                        '--handlers',
+                        help='Python module containing a handle_syscall method. Don\'t include .py',
+                        required=True)
     args = vars(parser.parse_args())
     command = args['command']
     trace = args['trace']
@@ -49,6 +51,7 @@ if __name__ == '__main__':
         entering_syscall = True
         t = Trace.Trace(trace)
         system_calls = iter(t.syscalls)
+        handler = importlib.import_module(args['handlers'])
         while next_syscall():
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
             #This if statement is an ugly hack
@@ -61,6 +64,6 @@ if __name__ == '__main__':
             if entering_syscall:
                 syscall_object = system_calls.next()
             #validate_syscall(orig_eax, syscall_object)
-            syscall_handlers.handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
+            handler.handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
             tracereplay.syscall(pid)

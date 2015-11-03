@@ -3,6 +3,12 @@ import binascii
 
 from syscall_dict import SYSCALLS
 
+FILE_DESCRIPTORS = []
+
+# Horrible hack
+buffer_address = 0
+buffer_size = 0
+
 def noop_current_syscall(pid):
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
 
