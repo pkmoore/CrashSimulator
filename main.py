@@ -2,6 +2,8 @@ from __future__ import print_function
 import os
 import sys
 import re
+import argparse
+
 import tracereplay
 import syscall_handlers
 from syscall_dict import SYSCALLS
@@ -27,8 +29,18 @@ def validate_syscall(syscall_id, syscall_object):
             raise Exception(str(syscall_id) + " is not " + syscall_object.name)
 
 if __name__ == '__main__':
-    command = sys.argv[1]
-    trace = sys.argv[2]
+    parser = argparse.ArgumentParser(description='SYSCALLS!')
+    parser.add_argument('-c',
+                        '--command',
+                        help='The command to be executed',
+                        required=True)
+    parser.add_argument('-t',
+                        '--trace',
+                        help='The system call trace to be replayed during the specified command',
+                        required=True)
+    args = vars(parser.parse_args())
+    command = args['command']
+    trace = args['trace']
     pid = os.fork()
     if pid == 0:
         tracereplay.traceme()
