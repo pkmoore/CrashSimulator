@@ -23,9 +23,14 @@ def next_syscall():
     return True
 
 def validate_syscall(syscall_id, syscall_object):
-    #The 102 bit is a hack to handle socket subcalls
-    if syscall_object.name not in SYSCALLS[syscall_id][4:] and syscall_id != 102:
-            raise Exception(str(syscall_id) + " is not " + syscall_object.name)
+    if syscall_object.name != SYSCALLS[syscall_id][4:]:
+        raise Exception('Syscall validation failed: {0} is not {1}'.format(syscall_id, syscall_object.name))
+
+def validate_subcall(subcall_id, syscall_object):
+    print('Subcall: {0} Syscall Name: {1}'.format(subcall_id, syscall_object.name))
+    print(syscall_object.original_line)
+    if syscall_object.name != SOCKET_SUBCALLS[subcall_id][4:]:
+        raise Exception('Subcall validation failed: {0} is not {1}'.format(subcall_id, syscall_object.name))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SYSCALLS!')
