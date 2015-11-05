@@ -67,9 +67,12 @@ if __name__ == '__main__':
                 system_calls.next()
                 tracereplay.syscall(pid)
                 continue
+            elif orig_eax == 20:
+                system_calls.next()
+                tracereplay.syscall(pid)
+                continue
             if entering_syscall:
                 syscall_object = system_calls.next()
-            #validate_syscall(orig_eax, syscall_object)
             handler.handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
             tracereplay.syscall(pid)
