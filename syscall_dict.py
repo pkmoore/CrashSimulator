@@ -182,3 +182,26 @@ SYSCALLS = {
 221:    'sys_fadvise64',
 243:    'sys_set_thread_area',
 252:    'sys_exit_group'}
+
+SOCKET_SUBCALLS = {
+1:    'sys_socket',
+2:    'sys_bind',
+3:    'sys_connect',
+4:    'sys_listen',
+5:    'sys_accept',
+6:    'sys_getsockname',
+7:    'sys_getpeername',
+8:    'sys_socketpair',
+9:    'sys_send',
+10:    'sys_recv',
+11:    'sys_sendto',
+12:    'sys_recvfrom',
+13:    'sys_shutdown',
+14:    'sys_setsockopt',
+15:    'sys_getsockopt',
+16:    'sys_sendmsg',
+17:    'sys_recvmsg',
+18:    'sys_accept4',
+19:    'sys_recvmmsg',
+20:    'sys_sendmmsg'
+}

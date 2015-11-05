@@ -7,6 +7,7 @@ import importlib
 
 import tracereplay
 from syscall_dict import SYSCALLS
+from syscall_dict import SOCKET_SUBCALLS
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
