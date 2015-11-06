@@ -130,13 +130,13 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
 
 def validate_syscall(syscall_id, syscall_object):
-    if syscall_object.name != SYSCALLS[syscall_id][4:]:
+    if syscall_object.name not in SYSCALLS[syscall_id][4:]:
         raise Exception('Syscall validation failed: {0} is not {1}'.format(syscall_id, syscall_object.name))
 
 def validate_subcall(subcall_id, syscall_object):
     print('Subcall: {0} Syscall Name: {1}'.format(subcall_id, syscall_object.name))
     print(syscall_object.original_line)
-    if syscall_object.name != SOCKET_SUBCALLS[subcall_id][4:]:
+    if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
         raise Exception('Subcall validation failed: {0} is not {1}'.format(subcall_id, syscall_object.name))
 
 if __name__ == '__main__':
