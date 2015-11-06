@@ -27,9 +27,20 @@ FILE_DESCRIPTORS = []
 # Horrible hack
 buffer_address = 0
 buffer_size = 0
+system_calls = None
+entering_syscall = True
 
 def noop_current_syscall(pid):
+    print('nooping')
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
+    tracereplay.syscall(pid)
+    next_syscall()
+    skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
+    print(skipping)
+    if skipping != 20:
+        raise Exception('Nooping did not result in getpid exit')
+    global entering_syscall
+    entering_syscall = False
 
 def write_buffer(pid, address, value, buffer_length):
     writes = [value[i:i+4] for i in range(0, len(value), 4)]
@@ -157,7 +168,6 @@ if __name__ == '__main__':
         tracereplay.traceme()
         os.execlp(command, command, command)
     else:
-        entering_syscall = True
         t = Trace.Trace(trace)
         system_calls = iter(t.syscalls)
         while next_syscall():
@@ -169,12 +179,10 @@ if __name__ == '__main__':
                 system_calls.next()
                 tracereplay.syscall(pid)
                 continue
-            elif orig_eax == 20:
-                system_calls.next()
-                tracereplay.syscall(pid)
-                continue
             if entering_syscall:
                 syscall_object = system_calls.next()
+            if orig_eax != 102:
+                validate_syscall(orig_eax, syscall_object)
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
             tracereplay.syscall(pid)
