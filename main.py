@@ -93,9 +93,10 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
 
 def default_syscall_handler(syscall_id, syscall_object, entering, pid):
     print('======')
-    print('Syscall_ID: ' + str(syscall_id))
-    print('Looked Up Syscall Name: ' + SYSCALLS[syscall_id])
+    print('Syscall_ID: {}'.format(syscall_id))
+    print('Looked Up Syscall Name: {}'.format(SYSCALLS[syscall_id]))
     print(syscall_object)
+    print('Entering: {}'.format(entering))
     print('======')
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
