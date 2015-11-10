@@ -4,6 +4,7 @@ import sys
 import re
 import argparse
 import binascii
+from struct import pack, unpack
 
 import tracereplay
 from syscall_dict import SYSCALLS
@@ -31,24 +32,32 @@ system_calls = None
 entering_syscall = True
 
 def noop_current_syscall(pid):
-    print('nooping')
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
     tracereplay.syscall(pid)
     next_syscall()
     skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
-    print(skipping)
     if skipping != 20:
         raise Exception('Nooping did not result in getpid exit')
     global entering_syscall
     entering_syscall = False
 
+# Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
     writes = [value[i:i+4] for i in range(0, len(value), 4)]
+    trailing = len(value) % 4
+    if trailing != 0:
+        left = writes.pop()
     for i in writes:
         i = i[::-1]
         data = int(binascii.hexlify(i), 16)
         tracereplay.poke_address(pid, address, data)
         address = address + 4
+    if trailing != 0:
+        address = address
+        data = tracereplay.peek_address(pid, address)
+        d = pack('i', data)
+        d = left + d[len(left):]
+        tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {

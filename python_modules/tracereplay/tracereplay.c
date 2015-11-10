@@ -98,11 +98,25 @@ static PyObject* tracereplay_poke_address(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
+    pid_t child;
+    int address;
+    long int value;
+    PyArg_ParseTuple(args, "ii", &child, &address);
+    errno = 0;
+    if((value = ptrace(PTRACE_PEEKDATA, child, address, NULL)) == -1) {
+        perror("Peek into userspace failed");
+        return NULL;
+    }
+    return Py_BuildValue("i", value);
+}
+
 static PyMethodDef TraceReplayMethods[]  = {
     {"cont", tracereplay_cont, METH_VARARGS, "continue process under trace"},
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
     {"wait", tracereplay_wait, METH_VARARGS, "wait on child process"},
     {"syscall", tracereplay_syscall, METH_VARARGS, "wait for syscall"},
+    {"peek_address", tracereplay_peek_address, METH_VARARGS, "peek address"},
     {"poke_address", tracereplay_poke_address, METH_VARARGS, "poke address"},
     {"peek_register", tracereplay_peek_register, METH_VARARGS, "peek register value"},
     {"poke_register", tracereplay_poke_register, METH_VARARGS, "poke register value"},
