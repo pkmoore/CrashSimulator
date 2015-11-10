@@ -45,6 +45,7 @@ def noop_current_syscall(pid):
 def write_buffer(pid, address, value, buffer_length):
     writes = [value[i:i+4] for i in range(0, len(value), 4)]
     for i in writes:
+        i = i[::-1]
         data = int(binascii.hexlify(i), 16)
         tracereplay.poke_address(pid, address, data)
         address = address + 4
