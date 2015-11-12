@@ -170,8 +170,10 @@ def extract_socketcall_parameters(pid, address, num):
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
+    global return_value
     buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
     buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
+    return_value = syscall_object.ret[0]
     noop_current_syscall(pid)
     #horrible hack to deal with the fact that nooping results in the exit handler not being called
     read_exit_handler(syscall_id, syscall_object, entering, pid)
@@ -179,7 +181,9 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
 def read_exit_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
+    global return_value
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
+    tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
 def validate_syscall(syscall_id, syscall_object):
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
