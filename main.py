@@ -28,6 +28,7 @@ FILE_DESCRIPTORS = []
 # Horrible hack
 buffer_address = 0
 buffer_size = 0
+return_value = 0
 system_calls = None
 entering_syscall = True
 
@@ -60,11 +61,13 @@ def write_buffer(pid, address, value, buffer_length):
         tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
+    print(syscall_object.name)
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
                         ('socket', False): socket_subcall_exit_handler,
                         ('accept', True): accept_subcall_entry_handler,
-                        ('accept', False): accept_subcall_exit_handler
+                        ('accept', False): accept_subcall_exit_handler,
+                        ('recv', True): recv_subcall_entry_handler
                        }
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
@@ -135,6 +138,34 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         default_syscall_handler(syscall_id, syscall_object, entering, pid)
+
+def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    global buffer_address
+    global buffer_size
+    global return_value
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 4)
+    noop_current_syscall(pid)
+    buffer_address = params[1]
+    buffer_size = params[2]
+    return_value = syscall_object.ret[0]
+    recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+
+def recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
+    global buffer_address
+    global buffer_size
+    global return_value
+    print('Exitng recv: {} {} {}'.format(buffer_address, buffer_size,
+        return_value))
+    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
+    tracereplay.poke_register(pid, tracereplay.EAX, return_value)
+
+def extract_socketcall_parameters(pid, address, num):
+    params = []
+    for i in range(num):
+        params += [tracereplay.peek_address(pid, address)]
+        address = address + 4
+    return params
 
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
