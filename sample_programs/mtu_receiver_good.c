@@ -10,23 +10,16 @@
 #include <errno.h>
 int main() {
     int s, c;
-    struct addrinfo* info;
-    struct addrinfo hints;
+    struct sockaddr_in addr;
     ssize_t received;
     ssize_t ret;
     char message[256];
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-    if(getaddrinfo(NULL, "6666", NULL, &info) != 0) {
-        perror("Error:");
-        printf("Failed to get addrinfo\n");
-        exit(1);
-    }
-    s = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-    if(bind(s, info->ai_addr, info->ai_addrlen) == -1) {
+    s = socket(AF_INET, SOCK_STREAM, 0);
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(6666);
+    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+    if(bind(s, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         perror("Error:");
         printf("Bind failed!\n");
         exit(1);
@@ -36,7 +29,6 @@ int main() {
         printf("Listen failed!\n");
         exit(1);
     }
-    freeaddrinfo(info);
     if((c = accept(s, NULL, NULL)) == -1) {
         perror("Error:");
         printf("Accept failed!\n");
