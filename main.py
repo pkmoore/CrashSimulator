@@ -38,7 +38,7 @@ def noop_current_syscall(pid):
     next_syscall()
     skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
     if skipping != 20:
-        raise Exception('Nooping did not result in getpid exit')
+        raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
     global entering_syscall
     entering_syscall = False
 
@@ -186,8 +186,6 @@ def validate_syscall(syscall_id, syscall_object):
         raise Exception('Syscall validation failed: {0} is not {1}'.format(syscall_id, syscall_object.name))
 
 def validate_subcall(subcall_id, syscall_object):
-    print('Subcall: {0} Syscall Name: {1}'.format(subcall_id, syscall_object.name))
-    print(syscall_object.original_line)
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
         raise Exception('Subcall validation failed: {0} is not {1}'.format(subcall_id, syscall_object.name))
 
