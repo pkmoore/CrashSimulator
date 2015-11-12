@@ -29,7 +29,8 @@ static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
     long int extracted_register;
     PyArg_ParseTuple(args, "ii", &child, &reg);
     errno = 0;
-    extracted_register = ptrace(PTRACE_PEEKUSER, child, sizeof(long int) * reg, NULL);
+    extracted_register = ptrace(PTRACE_PEEKUSER, child,
+                                sizeof(long int) * reg, NULL);
     if(errno != 0) {
         perror("Register Peek Failed");
         return NULL;
@@ -118,8 +119,10 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"syscall", tracereplay_syscall, METH_VARARGS, "wait for syscall"},
     {"peek_address", tracereplay_peek_address, METH_VARARGS, "peek address"},
     {"poke_address", tracereplay_poke_address, METH_VARARGS, "poke address"},
-    {"peek_register", tracereplay_peek_register, METH_VARARGS, "peek register value"},
-    {"poke_register", tracereplay_poke_register, METH_VARARGS, "poke register value"},
+    {"peek_register", tracereplay_peek_register,
+      METH_VARARGS, "peek register value"},
+    {"poke_register", tracereplay_poke_register,
+      METH_VARARGS, "poke register value"},
     {NULL, NULL, 0, NULL}
 };
 
