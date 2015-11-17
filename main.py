@@ -71,7 +71,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
-        default_syscall_handler(syscall_id, syscall_object, entering, pid)
+        raise NotImplementedError('No handler for socket subcall {}'
+                                  .format(syscall_object.name))
 
 def close_entry_handler(syscall_id, syscall_object, entering, pid):
     pass
@@ -142,7 +143,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
-        default_syscall_handler(syscall_id, syscall_object, entering, pid)
+        raise NotImplementedError('No handler for syscall {}'
+                                   .format(syscall_object.name))
 
 def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
