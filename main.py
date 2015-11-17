@@ -61,7 +61,6 @@ def write_buffer(pid, address, value, buffer_length):
         tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
-    print(syscall_object.name)
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
                         ('socket', False): socket_subcall_exit_handler,
