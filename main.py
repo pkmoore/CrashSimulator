@@ -131,7 +131,13 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (5, True): open_entry_handler,
                 (5, False): open_exit_handler,
                 (3, True): read_entry_handler,
-                (3, False): read_exit_handler
+                (3, False): read_exit_handler,
+                (59, True): uname_entry_handler,
+                (59, False): uname_exit_handler,
+                (109, True): uname_entry_handler,
+                (109, False): uname_exit_handler,
+                (122, True): uname_entry_handler,
+                (122, False): uname_exit_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
@@ -183,6 +189,12 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
     global return_value
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
+
+def uname_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def uname_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
 
 def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' not in syscall_object.name:
