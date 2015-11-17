@@ -115,30 +115,72 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     else:
         raise Exception('Tried to store the same file descriptor twice')
 
-def default_syscall_handler(syscall_id, syscall_object, entering, pid):
-    print('======')
-    print('Syscall_ID: {}'.format(syscall_id))
-    print('Looked Up Syscall Name: {}'.format(SYSCALLS[syscall_id]))
-    print(syscall_object)
-    print('Entering: {}'.format(entering))
-    print('======')
+def set_thread_area_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def set_thread_area_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def readlink_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def readlink_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def access_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def access_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def fstat64_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def mmap2_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def mmap2_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def write_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def write_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     handlers = {
                 (102, True): socketcall_handler,
                 (102, False): socketcall_handler,
+                (4, True): write_entry_handler,
+                (4, False): write_exit_handler,
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
                 (5, True): open_entry_handler,
                 (5, False): open_exit_handler,
                 (3, True): read_entry_handler,
                 (3, False): read_exit_handler,
+                (33, True): access_entry_handler,
+                (33, False): access_exit_handler,
+                (45, True): brk_entry_handler,
+                (45, False): brk_exit_handler,
                 (59, True): uname_entry_handler,
                 (59, False): uname_exit_handler,
+                (85, True): readlink_entry_handler,
+                (85, False): readlink_exit_handler,
                 (109, True): uname_entry_handler,
                 (109, False): uname_exit_handler,
                 (122, True): uname_entry_handler,
-                (122, False): uname_exit_handler
+                (122, False): uname_exit_handler,
+                (192, True): mmap2_entry_handler,
+                (192, False): mmap2_exit_handler,
+                (197, True): fstat64_entry_handler,
+                (197, False): fstat64_exit_handler,
+                (243, True): set_thread_area_entry_handler,
+                (243, False): set_thread_area_exit_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
@@ -196,6 +238,12 @@ def uname_entry_handler(syscall_id, syscall_object, entering, pid):
     pass
 
 def uname_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def brk_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def brk_exit_handler(syscall_id, syscall_object, entering, pid):
     pass
 
 def validate_syscall(syscall_id, syscall_object):
