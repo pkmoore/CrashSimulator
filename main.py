@@ -63,9 +63,9 @@ def write_buffer(pid, address, value, buffer_length):
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
-                        ('socket', False): socket_subcall_exit_handler,
                         ('accept', True): accept_subcall_entry_handler,
-                        ('accept', False): accept_subcall_exit_handler,
+                        ('bind', True): bind_subcall_entry_handler,
+                        ('listen', True): listen_subcall_entry_handler,
                         ('recv', True): recv_subcall_entry_handler
                        }
     try:
@@ -73,6 +73,20 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     except KeyError:
         raise NotImplementedError('No handler for socket subcall {}'
                                   .format(syscall_object.name))
+
+def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    noop_current_syscall(pid)
+    listen_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+
+def listen_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+
+def bind_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    noop_current_syscall(pid)
+    bind_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+
+def bind_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def close_entry_handler(syscall_id, syscall_object, entering, pid):
     pass
@@ -85,7 +99,8 @@ def close_exit_handler(syscall_id, syscall_object, entering, pid):
         pass
 
 def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
+    noop_current_syscall(pid)
+    socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
 
 def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     if syscall_object.args[0] ==  '[\'PF_INET\']':
@@ -94,6 +109,7 @@ def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
             FILE_DESCRIPTORS.append(fd[0])
         else:
             raise Exception('Tried to store the same file descriptor twice')
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def open_entry_handler(syscall_id, syscall_object, entering, pid):
     pass
@@ -106,7 +122,8 @@ def open_exit_handler(syscall_id, syscall_object, entering, pid):
         raise Exception('Tried to store the same file descriptor twice')
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
+    noop_current_syscall(pid)
+    accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
 
 def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     fd = syscall_object.ret
@@ -114,6 +131,7 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
         FILE_DESCRIPTORS.append(fd[0])
     else:
         raise Exception('Tried to store the same file descriptor twice')
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def set_thread_area_entry_handler(syscall_id, syscall_object, entering, pid):
     pass
@@ -204,8 +222,6 @@ def recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
     global return_value
-    print('Exitng recv: {} {} {}'.format(buffer_address, buffer_size,
-        return_value))
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
