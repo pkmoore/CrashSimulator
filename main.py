@@ -284,11 +284,12 @@ if __name__ == '__main__':
                         required=True)
     args = vars(parser.parse_args())
     command = args['command']
+    command = command.split(' ')
     trace = args['trace']
     pid = os.fork()
     if pid == 0:
         tracereplay.traceme()
-        os.execlp(command, command, command)
+        os.execvp(command[0], command)
     else:
         t = Trace.Trace(trace)
         system_calls = iter(t.syscalls)
