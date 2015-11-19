@@ -1,0 +1,69 @@
+30169 execve("/bin/nc", ["nc", "-l", "6666"], [/* 25 vars */]) = 0
+30169 brk(0)                            = 0x9a86000
+30169 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+30169 mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb76dd000
+30169 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+30169 open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+30169 fstat64(3, {st_mode=S_IFREG|0644, st_size=80674, ...}) = 0
+30169 mmap2(NULL, 80674, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb76c9000
+30169 close(3)                          = 0
+30169 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+30169 open("/lib/i386-linux-gnu/libbsd.so.0", O_RDONLY|O_CLOEXEC) = 3
+30169 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\360 \0\0004\0\0\0\354\362\0\0\0\0\0\0004\0 \0\7\0(\0\33\0\32\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0p\343\0\0p\343\0\0\5\0\0\0\0\20\0\0\1\0\0\0\324\356\0\0\324\376\0\0\324\376\0\0\354\2\0\0\320\20\0\0\6\0\0\0\0\20\0\0\2\0\0\0\340\356\0\0\340\376\0\0\340\376\0\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345td8\272\0\0008\272\0\0008\272\0\0T\3\0\0T\3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\324\356\0\0\324\376\0\0\324\376\0\0,\1\0\0,\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0T\201\301\242Q\4\343\262|p\251\316Nv\351q\231&\326\305C\0\0\0V\0\0\0\20\0\0\0\t\0\0\0\2!\20B+\360*\6\21_@\300\221\210 \261\210\4\0\2000\0\v\f5B\310\r\374\207\210\2\0\0\0\0h\201CD\311\v\304;\24\325H\220\4\260\245\1F(`\0\222\244\7\0\200\t\t\10V\0\0\0X\0\0\0]\0\0\0\0\0\0\0^\0\0\0a\0\0\0b\0\0\0\0\0\0\0d\0\0\0f\0\0\0g\0\0\0h\0\0\0\0\0\0\0k\0\0\0l\0\0\0n\0\0\0\0\0\0\0p\0\0\0q\0\0\0s\0\0\0t\0\0\0\0\0\0\0u\0\0\0v\0\0\0\0\0\0\0x\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0z\0\0\0", 512) = 512
+30169 fstat64(3, {st_mode=S_IFREG|0644, st_size=63268, ...}) = 0
+30169 mmap2(NULL, 69540, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb76b8000
+30169 mmap2(0xb76c7000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xe000) = 0xb76c7000
+30169 close(3)                          = 0
+30169 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+30169 open("/lib/i386-linux-gnu/libresolv.so.2", O_RDONLY|O_CLOEXEC) = 3
+30169 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\260&\0\0004\0\0\0\250R\1\0\0\0\0\0004\0 \0\7\0(\0\36\0\35\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\3347\1\0\3347\1\0\5\0\0\0\0\20\0\0\1\0\0\0\3009\1\0\300I\1\0\300I\1\0\300\27\0\0\10?\0\0\6\0\0\0\0\20\0\0\2\0\0\0\324>\1\0\324N\1\0\324N\1\0\10\1\0\0\10\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0P\345tdp\0\1\0p\0\1\0p\0\1\0\314\3\0\0\314\3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\3009\1\0\300I\1\0\300I\1\0@\26\0\0@\26\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0>\244'.\262\212\371\227\20\273\360*8\363\344\325m\\q\234\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\321\0\0\0?\0\0\0 \0\0\0\n\0\0\0@\0\300\20\20\0\20\0\0\0 \26\1w\244\230\202\204\20\0\2\203\1\20 \2\34\200!\220X\7\200@\0\0\20\0\0 \200\10\0\24D\20\0\2\2\20\2\20\20\30H\0 \304\340@`\0\0021\4B\34\200>\30@4\200\0\30\221\21\1\10\f\200\0\0\4\300\t\0\0D\10\0\0\4\0\20\201\20\0\0@\220\334\32\n\20\20\30\20\201\23A\30\344\f6\4\0\200\0\20\1\1$\4\0\241\21\v?\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 512) = 512
+30169 fstat64(3, {st_mode=S_IFREG|0644, st_size=87896, ...}) = 0
+30169 mmap2(NULL, 100552, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb769f000
+30169 mmap2(0xb76b3000, 12288, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x13000) = 0xb76b3000
+30169 mmap2(0xb76b6000, 6344, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb76b6000
+30169 close(3)                          = 0
+30169 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+30169 open("/lib/i386-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+30169 read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220\210\1\0004\0\0\0\300\211\33\0\0\0\0\0004\0 \0\n\0(\0E\0D\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0@\1\0\0@\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\245\241\26\0\245\241\26\0\245\241\26\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\2303\33\0\2303\33\0\5\0\0\0\0\20\0\0\1\0\0\0\\?\33\0\\O\33\0\\O\33\0\2700\0\0\200_\0\0\6\0\0\0\0\20\0\0\2\0\0\0\244]\33\0\244m\33\0\244m\33\0\360\0\0\0\360\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0t\1\0\0t\1\0\0t\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\\?\33\0\\O\33\0\\O\33\0\10\0\0\0L\0\0\0\4\0\0\0\4\0\0\0P\345td\270\241\26\0\270\241\26\0\270\241\26\0\244`\0\0\244`\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\\?\33\0\\O\33\0\\O\33\0\244 \0\0\244 \0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0%\335B\217\264\303P\301m\376\342\4\221\361\240d\204\242\277\243\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\363\3\0\0\n\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0268\0&\204\200\216\4\10B$", 512) = 512
+30169 fstat64(3, {st_mode=S_IFREG|0755, st_size=1807496, ...}) = 0
+30169 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb769e000
+30169 mmap2(NULL, 1814236, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb74e3000
+30169 mmap2(0xb7697000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b3000) = 0xb7697000
+30169 mmap2(0xb769c000, 7900, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb769c000
+30169 close(3)                          = 0
+30169 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb74e2000
+30169 set_thread_area({entry_number:-1 -> 6, base_addr:0xb74e2700, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+30169 mprotect(0xb7697000, 12288, PROT_READ) = 0
+30169 mprotect(0xb76b3000, 8192, PROT_READ) = 0
+30169 mprotect(0xb76c7000, 4096, PROT_READ) = 0
+30169 mprotect(0x804e000, 4096, PROT_READ) = 0
+30169 mprotect(0xb7704000, 4096, PROT_READ) = 0
+30169 munmap(0xb76c9000, 80674)         = 0
+30169 brk(0)                            = 0x9a86000
+30169 brk(0x9aa7000)                    = 0x9aa7000
+30169 socket(PF_INET, SOCK_STREAM, IPPROTO_TCP) = 3
+30169 setsockopt(3, SOL_SOCKET, SO_REUSEADDR, [1], 4) = 0
+30169 bind(3, {sa_family=AF_INET, sin_port=htons(6666), sin_addr=inet_addr("0.0.0.0")}, 16) = 0
+30169 listen(3, 1)                      = 0
+30169 accept(3, 0xbfeed25c, [128])      = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+30169 --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+30169 accept(3, 0xbfeed25c, [128])      = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+30169 --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+30169 accept(3, 0xbfeed25c, [128])      = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+30169 --- SIGWINCH {si_signo=SIGWINCH, si_code=SI_KERNEL} ---
+30169 accept(3, {sa_family=AF_INET, sin_port=htons(44689), sin_addr=inet_addr("127.0.0.1")}, [16]) = 4
+30169 close(3)                          = 0
+30169 poll([{fd=4, events=POLLIN}, {fd=0, events=POLLIN}], 2, -1) = 1 ([{fd=0, revents=POLLIN}])
+30169 read(0, "\n", 2048)               = 1
+30169 write(4, "\n", 1)                 = 1
+30169 poll([{fd=4, events=POLLIN}, {fd=0, events=POLLIN}], 2, -1) = 1 ([{fd=4, revents=POLLIN}])
+30169 read(4, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n", 2048) = 101
+30169 write(1, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n", 101) = 101
+30169 poll([{fd=4, events=POLLIN}, {fd=0, events=POLLIN}], 2, -1) = 1 ([{fd=4, revents=POLLIN}])
+30169 read(4, "", 2048)                 = 0
+30169 shutdown(4, SHUT_RD)              = 0
+30169 close(4)                          = 0
+30169 close(3)                          = -1 EBADF (Bad file descriptor)
+30169 close(3)                          = -1 EBADF (Bad file descriptor)
+30169 exit_group(0)                     = ?
+30169 +++ exited with 0 +++
