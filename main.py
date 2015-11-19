@@ -23,7 +23,7 @@ def next_syscall():
         return False
     return True
 
-FILE_DESCRIPTORS = [tracereplay.STDIN, tracereplay.STDOUT, tracereplay.STDERR]
+FILE_DESCRIPTORS = [tracereplay.STDIN]
 
 # Horrible hack
 buffer_address = 0
