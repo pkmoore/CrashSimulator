@@ -21,6 +21,18 @@ void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "EDX", EDX) == -1) {
         return;
     }
+
+    if(PyModule_AddIntConstant(m, "STDIN", STDIN_FILENO) == -1) {
+        return;
+    }
+
+    if(PyModule_AddIntConstant(m, "STDOUT", STDOUT_FILENO) == -1) {
+        return;
+    }
+
+    if(PyModule_AddIntConstant(m, "STDERR", STDERR_FILENO) == -1) {
+        return;
+    }
 }
 
 static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
