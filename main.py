@@ -23,7 +23,7 @@ def next_syscall():
         return False
     return True
 
-FILE_DESCRIPTORS = []
+FILE_DESCRIPTORS = [tracereplay.STDIN, tracereplay.STDOUT, tracereplay.STDERR]
 
 # Horrible hack
 buffer_address = 0
@@ -213,6 +213,8 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
     noop_current_syscall(pid)
+    if params[0] not in FILE_DESCRIPTORS:
+        raise Exception('Tried to recv from non-existant file descriptor')
     buffer_address = params[1]
     buffer_size = params[2]
     return_value = syscall_object.ret[0]
@@ -236,6 +238,9 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
     global return_value
+    file_descriptor = tracereplay.peek_register(pid, tracereplay.EBX)
+    if file_descriptor not in FILE_DESCRIPTORS:
+        raise Exception('Tried to read from non-existant file descriptor')
     buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
     buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
     return_value = syscall_object.ret[0]
