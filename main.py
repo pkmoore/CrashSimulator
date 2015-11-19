@@ -66,13 +66,21 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('accept', True): accept_subcall_entry_handler,
                         ('bind', True): bind_subcall_entry_handler,
                         ('listen', True): listen_subcall_entry_handler,
-                        ('recv', True): recv_subcall_entry_handler
+                        ('recv', True): recv_subcall_entry_handler,
+                        ('setsockopt', True): setsockopt_subcall_entry_handler,
+                        ('setsockopt', False): setsockopt_subcall_exit_handler,
                        }
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         raise NotImplementedError('No handler for socket subcall {}'
                                   .format(syscall_object.name))
+
+def setsockopt_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def setsockopt_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
 
 def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
@@ -189,10 +197,14 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (59, False): uname_exit_handler,
                 (85, True): readlink_entry_handler,
                 (85, False): readlink_exit_handler,
+                (91, True): munmap_entry_handler,
+                (91, False): munmap_exit_handler,
                 (109, True): uname_entry_handler,
                 (109, False): uname_exit_handler,
                 (122, True): uname_entry_handler,
                 (122, False): uname_exit_handler,
+                (125, True): mprotect_entry_handler,
+                (125, False): mprotect_exit_handler,
                 (192, True): mmap2_entry_handler,
                 (192, False): mmap2_exit_handler,
                 (197, True): fstat64_entry_handler,
@@ -205,6 +217,18 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     except KeyError:
         raise NotImplementedError('No handler for syscall {}'
                                    .format(syscall_object.name))
+
+def munmap_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def munmap_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def mprotect_entry_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
+def mprotect_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
 
 def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
