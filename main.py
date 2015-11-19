@@ -14,10 +14,6 @@ from syscall_dict import SOCKET_SUBCALLS
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
 
-#Constants
-SYS_exit = 252
-SYS_exit_group = 231
-
 def next_syscall():
     s = os.wait()
     if os.WIFEXITED(s[1]):
@@ -216,10 +212,10 @@ if __name__ == '__main__':
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
             logging.debug('Extracted {} from ORIG_EAX'.format(orig_eax))
             #This if statement is an ugly hack
-            if orig_eax == SYS_exit_group or \
-            SYSCALLS[orig_eax] == 'sys_execve' or \
-            orig_eax == SYS_exit:
-                logging.debug('Ignoring syscall because it is a flavor of exit')
+            if SYSCALLS[orig_eax] == 'sys_exit_group' or \
+               SYSCALLS[orig_eax] == 'sys_execve' or \
+               SYSCALLS[orig_eax] == 'sys_exit':
+                logging.debug('Ignoring syscall')
                 system_calls.next()
                 tracereplay.syscall(pid)
                 continue
