@@ -185,15 +185,15 @@ if __name__ == '__main__':
                         '--loglevel',
                         help='Log Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
     args = vars(parser.parse_args())
-
-    if args['loglevel']:
-        numeric_level = getattr(logging, args['loglevel'].upper(), None)
+    command = args['command'].split(' ')
+    trace = args['trace']
+    loglevel = args['loglevel']
+    if loglevel:
+        numeric_level = getattr(logging, loglevel.upper(), None)
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: {}'.format(loglevel))
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
-    command = args['command'].split(' ')
-    trace = args['trace']
     logging.debug('About to spawn child process')
     pid = os.fork()
     if pid == 0:
