@@ -32,34 +32,6 @@ return_value = 0
 system_calls = None
 entering_syscall = True
 
-def noop_current_syscall(pid):
-    tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
-    tracereplay.syscall(pid)
-    next_syscall()
-    skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
-    if skipping != 20:
-        raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
-    global entering_syscall
-    entering_syscall = False
-
-# Just for the record, this function is a monstrosity.
-def write_buffer(pid, address, value, buffer_length):
-    writes = [value[i:i+4] for i in range(0, len(value), 4)]
-    trailing = len(value) % 4
-    if trailing != 0:
-        left = writes.pop()
-    for i in writes:
-        i = i[::-1]
-        data = int(binascii.hexlify(i), 16)
-        tracereplay.poke_address(pid, address, data)
-        address = address + 4
-    if trailing != 0:
-        address = address
-        data = tracereplay.peek_address(pid, address)
-        d = pack('i', data)
-        d = left + d[len(left):]
-        tracereplay.poke_address(pid, address, unpack('i', d)[0])
-
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
@@ -67,20 +39,12 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('bind', True): bind_subcall_entry_handler,
                         ('listen', True): listen_subcall_entry_handler,
                         ('recv', True): recv_subcall_entry_handler,
-                        ('setsockopt', True): setsockopt_subcall_entry_handler,
-                        ('setsockopt', False): setsockopt_subcall_exit_handler,
                        }
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         raise NotImplementedError('No handler for socket subcall {}'
                                   .format(syscall_object.name))
-
-def setsockopt_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def setsockopt_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
 
 def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
@@ -119,16 +83,6 @@ def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
             raise Exception('Tried to store the same file descriptor twice')
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
-def open_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def open_exit_handler(syscall_id, syscall_object, entering, pid):
-    fd = syscall_object.ret
-    if fd not in FILE_DESCRIPTORS:
-        FILE_DESCRIPTORS.append(fd[0])
-    else:
-        raise Exception('Tried to store the same file descriptor twice')
-
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
     accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
@@ -140,95 +94,6 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     else:
         raise Exception('Tried to store the same file descriptor twice')
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
-
-def set_thread_area_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def set_thread_area_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def readlink_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def readlink_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def access_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def access_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def fstat64_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def mmap2_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def mmap2_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def write_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def write_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def handle_syscall(syscall_id, syscall_object, entering, pid):
-    handlers = {
-                (102, True): socketcall_handler,
-                (102, False): socketcall_handler,
-                (4, True): write_entry_handler,
-                (4, False): write_exit_handler,
-                (6, True): close_entry_handler,
-                (6, False): close_exit_handler,
-                (5, True): open_entry_handler,
-                (5, False): open_exit_handler,
-                (3, True): read_entry_handler,
-                (3, False): read_exit_handler,
-                (33, True): access_entry_handler,
-                (33, False): access_exit_handler,
-                (45, True): brk_entry_handler,
-                (45, False): brk_exit_handler,
-                (59, True): uname_entry_handler,
-                (59, False): uname_exit_handler,
-                (85, True): readlink_entry_handler,
-                (85, False): readlink_exit_handler,
-                (91, True): munmap_entry_handler,
-                (91, False): munmap_exit_handler,
-                (109, True): uname_entry_handler,
-                (109, False): uname_exit_handler,
-                (122, True): uname_entry_handler,
-                (122, False): uname_exit_handler,
-                (125, True): mprotect_entry_handler,
-                (125, False): mprotect_exit_handler,
-                (192, True): mmap2_entry_handler,
-                (192, False): mmap2_exit_handler,
-                (197, True): fstat64_entry_handler,
-                (197, False): fstat64_exit_handler,
-                (243, True): set_thread_area_entry_handler,
-                (243, False): set_thread_area_exit_handler
-               }
-    try:
-        handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
-    except KeyError:
-        raise NotImplementedError('No handler for syscall {}'
-                                   .format(syscall_object.name))
-
-def munmap_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def munmap_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def mprotect_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def mprotect_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
 
 def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
@@ -251,45 +116,52 @@ def recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
+def handle_syscall(syscall_id, syscall_object, entering, pid):
+    handlers = {
+                (102, True): socketcall_handler,
+                (102, False): socketcall_handler,
+                (6, True): close_entry_handler,
+                (6, False): close_exit_handler,
+               }
+    try:
+        handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
+    except KeyError:
+        pass
+
+def noop_current_syscall(pid):
+    tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
+    tracereplay.syscall(pid)
+    next_syscall()
+    skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
+    if skipping != 20:
+        raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
+    global entering_syscall
+    entering_syscall = False
+
+# Just for the record, this function is a monstrosity.
+def write_buffer(pid, address, value, buffer_length):
+    writes = [value[i:i+4] for i in range(0, len(value), 4)]
+    trailing = len(value) % 4
+    if trailing != 0:
+        left = writes.pop()
+    for i in writes:
+        i = i[::-1]
+        data = int(binascii.hexlify(i), 16)
+        tracereplay.poke_address(pid, address, data)
+        address = address + 4
+    if trailing != 0:
+        address = address
+        data = tracereplay.peek_address(pid, address)
+        d = pack('i', data)
+        d = left + d[len(left):]
+        tracereplay.poke_address(pid, address, unpack('i', d)[0])
+
 def extract_socketcall_parameters(pid, address, num):
     params = []
     for i in range(num):
         params += [tracereplay.peek_address(pid, address)]
         address = address + 4
     return params
-
-def read_entry_handler(syscall_id, syscall_object, entering, pid):
-    global buffer_address
-    global buffer_size
-    global return_value
-    file_descriptor = tracereplay.peek_register(pid, tracereplay.EBX)
-    if file_descriptor not in FILE_DESCRIPTORS:
-        raise Exception('Tried to read from non-existant file descriptor')
-    buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-    buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
-    return_value = syscall_object.ret[0]
-    noop_current_syscall(pid)
-    #horrible hack to deal with the fact that nooping results in the exit handler not being called
-    read_exit_handler(syscall_id, syscall_object, entering, pid)
-
-def read_exit_handler(syscall_id, syscall_object, entering, pid):
-    global buffer_address
-    global buffer_size
-    global return_value
-    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
-    tracereplay.poke_register(pid, tracereplay.EAX, return_value)
-
-def uname_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def uname_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def brk_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
-
-def brk_exit_handler(syscall_id, syscall_object, entering, pid):
-    pass
 
 def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' not in syscall_object.name:
