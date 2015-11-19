@@ -4,6 +4,7 @@ import sys
 import re
 import argparse
 import binascii
+import logging
 from struct import pack, unpack
 
 import tracereplay
@@ -183,7 +184,17 @@ if __name__ == '__main__':
                         '--trace',
                         help='The system call trace to be replayed during the specified command',
                         required=True)
+    parser.add_argument('-l',
+                        '--loglevel',
+                        help='Log Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
     args = vars(parser.parse_args())
+
+    if args['loglevel']:
+        numeric_level = getattr(logging, args['loglevel'].upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: {}'.format(loglevel))
+        logging.basicConfig(stream=sys.stderr, level=numeric_level)
+        logging.info('logging engaged')
     command = args['command']
     command = command.split(' ')
     trace = args['trace']
