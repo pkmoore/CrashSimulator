@@ -195,8 +195,7 @@ if __name__ == '__main__':
             raise ValueError('Invalid log level: {}'.format(loglevel))
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('logging engaged')
-    command = args['command']
-    command = command.split(' ')
+    command = args['command'].split(' ')
     trace = args['trace']
     pid = os.fork()
     if pid == 0:
