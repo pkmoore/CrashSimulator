@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <sys/syscall.h>
 #include <sys/reg.h>
+#include <sys/socket.h>
 
 void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "ORIG_EAX", ORIG_EAX) == -1) {
@@ -31,6 +32,10 @@ void init_constants(PyObject* m) {
     }
 
     if(PyModule_AddIntConstant(m, "STDERR", STDERR_FILENO) == -1) {
+        return;
+    }
+
+    if(PyModule_AddIntConstant(m, "PF_INET", PF_INET) == -1) {
         return;
     }
 }
