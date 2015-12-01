@@ -68,16 +68,36 @@ def close_exit_handler(syscall_id, syscall_object, entering, pid):
         pass
 
 def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
-    noop_current_syscall(pid)
-    socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+    #Before we proceed we need to make sure this is socket call we care about.
+    #In order to do this we must that the executing call has the correct first
+    #parameter (PF_INET) and that the corresponding line in the trace has the
+    #same
+    logging.debug('Entering socket subcall entry handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('Extracting parameters from address: {}'.format(ecx))
+    params = extract_socketcall_parameters(pid, ecx, 3)
+    execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
+    trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
+    logging.debug('Execution is PF_INET: {}'.format(execution_is_PF_INET))
+    logging.debug('Trace is PF_INET: {}'.format(trace_is_PF_INET))
+    if execution_is_PF_INET != trace_is_PF_INET:
+        raise Exception('Encountered socket subcall with mismatch between \
+                             execution and trace protocol family')
+    if trace_is_PF_INET or execution_is_PF_INET:
+        noop_current_syscall(pid)
+        socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+    else:
+        logging.info('Ignoring non-PF_INET call to socket')
 
 def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
-    if syscall_object.args[0] ==  '[\'PF_INET\']':
-        fd = syscall_object.ret
-        if fd not in FILE_DESCRIPTORS:
-            FILE_DESCRIPTORS.append(fd[0])
-        else:
-            raise Exception('Tried to store the same file descriptor twice')
+    logging.debug('Entering socket subcall exit handler')
+    fd = syscall_object.ret
+    logging.debug('File Descriptor from trace: {}'.format(fd))
+    if fd not in FILE_DESCRIPTORS:
+        FILE_DESCRIPTORS.append(fd[0])
+    else:
+        raise Exception('File descriptor from trace is already tracked')
+    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
