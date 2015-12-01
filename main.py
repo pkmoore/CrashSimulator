@@ -117,6 +117,13 @@ def setsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
                          descriptor from trace')
     if fd not in FILE_DESCRIPTORS:
         raise Exception('Called setsockopt on untracked file descriptor')
+    noop_current_syscall(pid)
+    setsockopt_exit_handler(syscall_id, syscall_object, entering, pid)
+
+def setsockopt_exit_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering setsockopt exit handler')
+    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
