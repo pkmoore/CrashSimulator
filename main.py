@@ -76,7 +76,20 @@ def bind_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def close_entry_handler(syscall_id, syscall_object, entering, pid):
-    pass
+    logging.debug('Entering close entry handler')
+    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution differs from file \
+                         descriptor from trace')
+    if fd in FILE_DESCRIPTORS:
+        logging.debug('Got tracked file descriptor')
+        noop_current_syscall(pid)
+        close_exit_handler(syscall_id, syscall_object, entering, pid)
+    else:
+        logging.debug('Ignoring close of non-socket file descriptor')
 
 def close_exit_handler(syscall_id, syscall_object, entering, pid):
     fd = syscall_object.args[0].value
@@ -84,6 +97,8 @@ def close_exit_handler(syscall_id, syscall_object, entering, pid):
         FILE_DESCRIPTORS.remove(fd)
     except ValueError:
         pass
+    logging.debug('Injecting return value: %s', syscall_object.ret[0])
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     #Before we proceed we need to make sure this is socket call we care about.
