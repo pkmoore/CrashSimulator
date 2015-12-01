@@ -41,10 +41,9 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
-        logging.warn('No handler for socket subcall {} {}'
-                     .format(syscall_object.name,
-                             'entry' if entering else 'exit')
-                    )
+        logging.warn('No handler for socket subcall %s %s',
+                     syscall_object.name,
+                     'entry' if entering else 'exit')
 
 def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
@@ -94,12 +93,12 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     #same
     logging.debug('Entering socket subcall entry handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address: {}'.format(ecx))
+    logging.debug('Extracting parameters from address: %s', ecx)
     params = extract_socketcall_parameters(pid, ecx, 3)
     execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
     trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
-    logging.debug('Execution is PF_INET: {}'.format(execution_is_PF_INET))
-    logging.debug('Trace is PF_INET: {}'.format(trace_is_PF_INET))
+    logging.debug('Execution is PF_INET: %s', execution_is_PF_INET)
+    logging.debug('Trace is PF_INET: %s', trace_is_PF_INET)
     if execution_is_PF_INET != trace_is_PF_INET:
         raise Exception('Encountered socket subcall with mismatch between \
                              execution and trace protocol family')
@@ -112,23 +111,23 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
 def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering socket subcall exit handler')
     fd = syscall_object.ret
-    logging.debug('File Descriptor from trace: {}'.format(fd))
+    logging.debug('File Descriptor from trace: %s', fd)
     if fd not in FILE_DESCRIPTORS:
         FILE_DESCRIPTORS.append(fd[0])
     else:
         raise Exception('File descriptor from trace is already tracked')
-    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
+    logging.debug('Injecting return value: %s', syscall_object.ret[0])
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def setsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering setsockopt subcall handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address {}'.format(ecx))
+    logging.debug('Extracting parameters from address %s', ecx)
     params = extract_socketcall_parameters(pid, ecx, 5)
     fd = params[0]
     fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: {}'.format(fd))
-    logging.debug('File descriptor from trace: {}'.format(fd_from_trace))
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
         raise Exception('File descriptor from execution differs from file \
                          descriptor from trace')
@@ -139,7 +138,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
 
 def setsockopt_exit_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering setsockopt exit handler')
-    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
+    logging.debug('Injecting return value: %s', syscall_object.ret[0])
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
@@ -220,7 +219,7 @@ def extract_socketcall_parameters(pid, address, num):
     for i in range(num):
         params += [tracereplay.peek_address(pid, address)]
         address = address + 4
-    logging.debug('Extracted socketcall parameters: {}'.format(params))
+    logging.debug('Extracted socketcall parameters: %s', params)
     return params
 
 def validate_syscall(syscall_id, syscall_object):
@@ -267,12 +266,12 @@ if __name__ == '__main__':
     else:
         t = Trace.Trace(trace)
         system_calls = iter(t.syscalls)
-        logging.info('Parsed trace with {} syscalls'.format(len(t.syscalls)))
+        logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
             logging.debug('New system call')
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
-            logging.debug('Extracted {} from ORIG_EAX'.format(orig_eax))
+            logging.debug('Extracted %s from ORIG_EAX', orig_eax)
             #This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
@@ -283,8 +282,8 @@ if __name__ == '__main__':
                 continue
             if entering_syscall:
                 syscall_object = system_calls.next()
-                logging.debug('Selecting next syscall from trace\n{}'
-                              .format(syscall_object))
+                logging.debug('Selecting next syscall from trace\n%s',
+                              syscall_object)
             if orig_eax != 102:
                 logging.debug('Validating non-socketcall syscall')
                 validate_syscall(orig_eax, syscall_object)
