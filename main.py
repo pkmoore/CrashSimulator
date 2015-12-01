@@ -41,8 +41,10 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
-        raise NotImplementedError('No handler for socket subcall {}'
-                                  .format(syscall_object.name))
+        logging.warn('No handler for socket subcall {} {}'
+                     .format(syscall_object.name,
+                             'entry' if entering else 'exit')
+                    )
 
 def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
