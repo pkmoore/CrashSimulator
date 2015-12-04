@@ -5,6 +5,7 @@
 #include <sys/syscall.h>
 #include <sys/reg.h>
 #include <sys/socket.h>
+#include <poll.h>
 
 void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "ORIG_EAX", ORIG_EAX) == -1) {
@@ -36,6 +37,10 @@ void init_constants(PyObject* m) {
     }
 
     if(PyModule_AddIntConstant(m, "PF_INET", PF_INET) == -1) {
+        return;
+    }
+
+    if(PyModule_AddIntConstant(m, "POLLIN", POLLIN) == -1) {
         return;
     }
 }
@@ -129,6 +134,10 @@ static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
     return Py_BuildValue("i", value);
 }
 
+static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef TraceReplayMethods[]  = {
     {"cont", tracereplay_cont, METH_VARARGS, "continue process under trace"},
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
@@ -140,6 +149,8 @@ static PyMethodDef TraceReplayMethods[]  = {
       METH_VARARGS, "peek register value"},
     {"poke_register", tracereplay_poke_register,
       METH_VARARGS, "poke register value"},
+    {"write_poll_result", tracereplay_write_poll_result,
+      METH_VARARGS, "write poll result"},
     {NULL, NULL, 0, NULL}
 };
 
