@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <poll.h>
 
+static PyObject* TraceReplayError;
+
 void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "ORIG_EAX", ORIG_EAX) == -1) {
         return;
@@ -154,7 +156,6 @@ static PyMethodDef TraceReplayMethods[]  = {
     {NULL, NULL, 0, NULL}
 };
 
-static PyObject* TraceReplayError;
 
 PyMODINIT_FUNC inittracereplay(void) {
     PyObject* m;
