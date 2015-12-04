@@ -143,10 +143,18 @@ static PyMethodDef TraceReplayMethods[]  = {
     {NULL, NULL, 0, NULL}
 };
 
+static PyObject* TraceReplayError;
+
 PyMODINIT_FUNC inittracereplay(void) {
     PyObject* m;
     if((m = Py_InitModule("tracereplay", TraceReplayMethods)) == NULL) {
         return;
     }
+    TraceReplayError = PyErr_NewException("tracereplay.TraceReplayError",
+                                          NULL,
+                                          NULL
+                                         );
+    Py_INCREF(TraceReplayError);
+    PyModule_AddObject(m, "error", TraceReplayError);
     init_constants(m);
 }
