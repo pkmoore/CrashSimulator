@@ -28,6 +28,7 @@ buffer_size = 0
 return_value = 0
 system_calls = None
 entering_syscall = True
+pollfd_array_address = 0
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
@@ -194,11 +195,45 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (102, False): socketcall_handler,
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
+                (168, True): poll_entry_handler,
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         pass
+
+def poll_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering poll entry handler')
+    noop_current_syscall(pid)
+    global pollfd_array_address
+    pollfd_array_address = tracereplay.peek_register(pid, tracereplay.EBX)
+    poll_exit_handler(syscall_id, syscall_object, entering, pid)
+
+def poll_exit_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering poll exit handler')
+    ol = syscall_object.original_line
+    ret_struct = ol[ol.rfind('('):]
+    logging.debug('Poll return structure: %s', ret_struct)
+    fd = int(ret_struct[ret_struct.find('=') + 1:ret_struct.find(',')])
+    logging.debug('Returned file descriptor: %s', fd)
+    ret_struct = ret_struct[ret_struct.find(' '):]
+    revent = ret_struct[ret_struct.find('=') + 1 : ret_struct.find('}')]
+    if revent != 'POLLIN':
+        raise NotImplementedError('Encountered unimplemented revent in poll')
+    logging.debug('Returned event: %s', revent)
+    logging.debug('Writing poll results structure')
+    global pollfd_array_address
+    logging.debug('Address: %s', pollfd_array_address)
+    logging.debug('File Descriptor: %s', fd)
+    logging.debug('Event: %s', tracereplay.POLLIN)
+    logging.debug('Child PID: %s', pid)
+    tracereplay.write_poll_result(pid,
+                                  pollfd_array_address,
+                                  fd,
+                                  tracereplay.POLLIN
+                                 )
+    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def noop_current_syscall(pid):
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)

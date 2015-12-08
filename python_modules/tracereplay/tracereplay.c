@@ -137,6 +137,67 @@ static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
+    pid_t child;
+    int address;
+    short fd;
+    short re;
+    char buffer[sizeof(struct pollfd)];
+    struct pollfd* s = (struct pollfd*)buffer;
+    size_t writes = sizeof(struct pollfd) / sizeof(void*);
+    if(!PyArg_ParseTuple(args, "iihh", &child, &address, &fd, &re)) {
+        PyErr_SetString(TraceReplayError, "write_poll_result arg parse failed");
+    }
+    s->fd = fd;
+    printf("FD Size: %d\n", sizeof(s->fd));
+    s->events = 0;
+    printf("E Size: %d\n", sizeof(s->events));
+    s->revents = re;
+    printf("RE Size: %d\n", sizeof(s->revents));
+    printf("C: Buffer:\n");
+    int i = 0;
+    for(i = 0; i < sizeof(buffer); i++) {
+        printf("%02X ", buffer[i]);
+    }
+    printf("\n");
+    printf("C: sizeof(struct pollfd) = %d\n", sizeof(struct pollfd));
+    printf("C: FD %d\n", s->fd);
+    printf("C: E %d\n", s->events);
+    printf("C: RE %d\n", s->revents);
+    printf("C: Writes %d\n", writes);
+    int* writeptr;
+    writeptr = (int*)buffer;
+    printf("Writing: %d\n", *writeptr);
+    if(ptrace(PTRACE_POKEDATA,
+              child,
+              address,
+              *writeptr
+              ) == -1) {
+        PyErr_SetString(TraceReplayError,
+                        "Failed to poke when writing pollfd struct");
+    }
+    writeptr = (int*)(&buffer[4]);
+    printf("Writing: %d\n", *writeptr);
+    if(ptrace(PTRACE_POKEDATA,
+              child,
+              address+4,
+              *writeptr
+              ) == -1) {
+        PyErr_SetString(TraceReplayError,
+                        "Failed to poke when writing pollfd struct");
+    }
+    char tmp_buf[4];
+    int* tmp = (int*)tmp_buf;
+    printf("Values read back from child process:\n");
+    *tmp = ptrace(PTRACE_PEEKDATA, child, address, NULL);
+    for(i = 0; i < sizeof(tmp_buf); i++) {
+        printf("%02X ", tmp_buf[i]);
+    }
+    printf("\n");
+    *tmp = ptrace(PTRACE_PEEKDATA, child, address+4, NULL);
+    for(i = 0; i < sizeof(tmp_buf); i++) {
+        printf("%02X ", tmp_buf[i]);
+    }
+    printf("\n");
     Py_RETURN_NONE;
 }
 
