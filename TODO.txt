@@ -1,17 +1,10 @@
-Use file-descriptor-using system calls to get data to associate with file descriptors
-
-notate all socket calls that looks like it has a socket descriptor as the first argument
-
-Better Command Line Argument Handling
 Added system call id to posix-omni-parser
+    Patch to add the stuff with accept that isn't supported
 
 Don't Forget:
-read
-write
-send
-recv
 recvfrom
 sendto
 fcntl
 
-no-op out the system call by making it GETPID
+look at setsockopt and getsockopt
+getsockopt -> notify when this is called, error out
