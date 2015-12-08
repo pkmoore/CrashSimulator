@@ -189,8 +189,36 @@ def recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
+def read_entry_handler(syscall_id, syscall_object, entering, pid):
+    global buffer_address
+    global buffer_size
+    global return_value
+    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution differs from file \
+                         descriptor from trace')
+    if fd in FILE_DESCRIPTORS:
+        buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
+        buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
+        noop_current_syscall(pid)
+        return_value = syscall_object.ret[0]
+        read_exit_handler(syscall_id, syscall_object, entering, pid)
+    else:
+        logging.debug("Ignoring read call to untracked file descriptor")
+
+def read_exit_handler(syscall_id, syscall_object, entering, pid):
+    global buffer_address
+    global buffer_size
+    global return_value
+    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
+    tracereplay.poke_register(pid, tracereplay.EAX, return_value)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     handlers = {
+                (3, True):read_entry_handler,
                 (102, True): socketcall_handler,
                 (102, False): socketcall_handler,
                 (6, True): close_entry_handler,
