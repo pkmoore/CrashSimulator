@@ -8,3 +8,46 @@ fcntl
 
 look at setsockopt and getsockopt
 getsockopt -> notify when this is called, error out
+
+TODO for next week:
+Verify return values for all system calls
+Get accept working without having to modify traces
+Implement select
+Expand poll to support more than one data structure
+Other system calls for curl, wget
+Run things from the netcheck traces -> look at big traces
+    We want to support all of the calls that netcheck and checkapi support
+Submit patch to posix-omni-parser for picking up poll and select stuff
+***Report when the number of reported bytes returned differs from the length of
+the string.
+    This will be a good unit test
+
+Select vs. Poll
+Select used a bitmask rather than an array of structures to track file
+descriptors. Select is more commonly implemented but the nature of a bitmask
+means that there are a limited number of file descriptors that can be tracked.
+It has one advantage over poll: Early versions of poll didn't allow you to set a
+structure's file descriptor to -1 to have it ignored meaning that if you no
+longer care about a file descriptor you would have to rebuild the array.
+Presumably it will be easier to un-track a file descriptor with select.
+
+
+Use netcat send mode for next test
+
+Send-like calls -> always assume they succeeded and return the expected number
+of bytes from the trace.
+
+
+Write-like system calls:
+write
+sendmsg
+sendmmsg
+sendto
+send
+
+Read-like system calls:
+read
+recvmsg
+recvmmsg
+receivefrom
+recv
