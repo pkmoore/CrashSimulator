@@ -13,7 +13,7 @@ int main() {
     struct sockaddr_in addr;
     ssize_t received;
     ssize_t ret;
-    char message[256];
+    char message[16];
 
     s = socket(AF_INET, SOCK_STREAM, 0);
     addr.sin_family = AF_INET;
@@ -35,7 +35,7 @@ int main() {
         exit(1);
     }
     received = 0;
-    while(received < 255) {
+    while(received < 16) {
         ret = recv(c, message + received, (sizeof(message) - 1 - received), 0);
         if(ret == -1) {
             perror("Error:");
