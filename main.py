@@ -63,8 +63,8 @@ def bind_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file\
-                         descriptor from trace')
+        raise Exception('File descriptor from execution differs from file '
+                        'descriptor from trace')
     if fd not in FILE_DESCRIPTORS:
         raise Exception('Execution attempted to bind untracked file descriptor \
                          {}'.format(fd))
@@ -83,8 +83,8 @@ def close_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file \
-                         descriptor from trace')
+        raise Exception('File descriptor from execution differs from file '
+                        'descriptor from trace')
     if fd in FILE_DESCRIPTORS:
         logging.debug('Got tracked file descriptor')
         noop_current_syscall(pid)
@@ -144,8 +144,8 @@ def setsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file \
-                         descriptor from trace')
+        raise Exception('File descriptor from execution differs from file '
+                        'descriptor from trace')
     if fd not in FILE_DESCRIPTORS:
         raise Exception('Called setsockopt on untracked file descriptor')
     noop_current_syscall(pid)
@@ -198,8 +198,8 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file \
-                         descriptor from trace')
+        raise Exception('File descriptor from execution differs from file '
+                        'descriptor from trace')
     if fd in FILE_DESCRIPTORS:
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
         buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
