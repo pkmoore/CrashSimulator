@@ -217,6 +217,9 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
+    logging.debug('Handling system call')
+    logging.debug('Sycall id: %s', syscall_id)
+    logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
                 (3, True):read_entry_handler,
                 (102, True): socketcall_handler,
