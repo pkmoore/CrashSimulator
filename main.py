@@ -339,6 +339,7 @@ if __name__ == '__main__':
             raise ValueError('Invalid log level: {}'.format(loglevel))
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
+        tracereplay.enable_debug_output()
     logging.debug('About to spawn child process')
     pid = os.fork()
     if pid == 0:
