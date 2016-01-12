@@ -6,8 +6,21 @@
 #include <sys/reg.h>
 #include <sys/socket.h>
 #include <poll.h>
+#include <stdbool.h>
 
 static PyObject* TraceReplayError;
+
+bool DEBUG = false;
+
+static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args) {
+    DEBUG = true;
+    Py_RETURN_NONE;
+}
+
+static PyObject* tracereplay_disable_debug_output(PyObject* self, PyObject* args) {
+    DEBUG = false;
+    Py_RETURN_NONE;
+}
 
 void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "ORIG_EAX", ORIG_EAX) == -1) {
@@ -148,25 +161,29 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
         PyErr_SetString(TraceReplayError, "write_poll_result arg parse failed");
     }
     s->fd = fd;
-    printf("FD Size: %d\n", sizeof(s->fd));
     s->events = 0;
-    printf("E Size: %d\n", sizeof(s->events));
     s->revents = re;
-    printf("RE Size: %d\n", sizeof(s->revents));
-    printf("C: Buffer:\n");
     int i = 0;
-    for(i = 0; i < sizeof(buffer); i++) {
-        printf("%02X ", buffer[i]);
+    if(DEBUG) {
+        printf("E Size: %d\n", sizeof(s->events));
+        printf("FD Size: %d\n", sizeof(s->fd));
+        printf("RE Size: %d\n", sizeof(s->revents));
+        printf("C: Buffer:\n");
+        for(i = 0; i < sizeof(buffer); i++) {
+            printf("%02X ", buffer[i]);
+        }
+        printf("\n");
+        printf("C: sizeof(struct pollfd) = %d\n", sizeof(struct pollfd));
+        printf("C: FD %d\n", s->fd);
+        printf("C: E %d\n", s->events);
+        printf("C: RE %d\n", s->revents);
+        printf("C: Writes %d\n", writes);
     }
-    printf("\n");
-    printf("C: sizeof(struct pollfd) = %d\n", sizeof(struct pollfd));
-    printf("C: FD %d\n", s->fd);
-    printf("C: E %d\n", s->events);
-    printf("C: RE %d\n", s->revents);
-    printf("C: Writes %d\n", writes);
     int* writeptr;
     writeptr = (int*)buffer;
-    printf("Writing: %d\n", *writeptr);
+    if(DEBUG) {
+        printf("Writing: %d\n", *writeptr);
+    }
     if(ptrace(PTRACE_POKEDATA,
               child,
               address,
@@ -176,7 +193,9 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
                         "Failed to poke when writing pollfd struct");
     }
     writeptr = (int*)(&buffer[4]);
-    printf("Writing: %d\n", *writeptr);
+    if(DEBUG) {
+        printf("Writing: %d\n", *writeptr);
+    }
     if(ptrace(PTRACE_POKEDATA,
               child,
               address+4,
@@ -187,21 +206,27 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     }
     char tmp_buf[4];
     int* tmp = (int*)tmp_buf;
-    printf("Values read back from child process:\n");
-    *tmp = ptrace(PTRACE_PEEKDATA, child, address, NULL);
-    for(i = 0; i < sizeof(tmp_buf); i++) {
-        printf("%02X ", tmp_buf[i]);
+    if(DEBUG) {
+        printf("Values read back from child process:\n");
+        *tmp = ptrace(PTRACE_PEEKDATA, child, address, NULL);
+        for(i = 0; i < sizeof(tmp_buf); i++) {
+            printf("%02X ", tmp_buf[i]);
+        }
+        printf("\n");
+        *tmp = ptrace(PTRACE_PEEKDATA, child, address+4, NULL);
+        for(i = 0; i < sizeof(tmp_buf); i++) {
+            printf("%02X ", tmp_buf[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
-    *tmp = ptrace(PTRACE_PEEKDATA, child, address+4, NULL);
-    for(i = 0; i < sizeof(tmp_buf); i++) {
-        printf("%02X ", tmp_buf[i]);
-    }
-    printf("\n");
     Py_RETURN_NONE;
 }
 
 static PyMethodDef TraceReplayMethods[]  = {
+    {"enable_debug_output", tracereplay_enable_debug_output,
+     METH_VARARGS, "enable debug messages"},
+    {"disable_debug_output", tracereplay_disable_debug_output,
+     METH_VARARGS, "disable debug messages"},
     {"cont", tracereplay_cont, METH_VARARGS, "continue process under trace"},
     {"traceme", tracereplay_traceme, METH_VARARGS, "request tracing"},
     {"wait", tracereplay_wait, METH_VARARGS, "wait on child process"},
