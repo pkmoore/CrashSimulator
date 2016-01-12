@@ -82,10 +82,10 @@ def close_entry_handler(syscall_id, syscall_object, entering, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file '
-                        'descriptor from trace')
     if fd in FILE_DESCRIPTORS:
+        if fd != int(fd_from_trace):
+            raise Exception('File descriptor from execution differs from file '
+                            'descriptor from trace')
         logging.debug('Got tracked file descriptor')
         noop_current_syscall(pid)
         close_exit_handler(syscall_id, syscall_object, entering, pid)
@@ -197,10 +197,10 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file '
-                        'descriptor from trace')
     if fd in FILE_DESCRIPTORS:
+        if fd != int(fd_from_trace):
+            raise Exception('File descriptor from execution differs from file '
+                            'descriptor from trace')
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
         buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
         noop_current_syscall(pid)
