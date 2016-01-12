@@ -217,7 +217,6 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
-    logging.debug('Handling system call')
     logging.debug('Sycall id: %s', syscall_id)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
@@ -375,5 +374,5 @@ if __name__ == '__main__':
             logging.debug('Handling syscall')
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
-            logging.debug('requesting next syscall')
+            logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
