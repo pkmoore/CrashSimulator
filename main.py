@@ -157,6 +157,14 @@ def setsockopt_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Checking if line from trace is interrupted accept')
+    while syscall_object.ret[0] == '?':
+        logging.debug('Got interrupted accept. Will advance past')
+        syscall_object = system_calls.next()
+        logging.debug('Got new line %s', syscall_object.original_line)
+        if syscall_object.name != 'accept':
+            raise Exception('Attempt to advance past interrupted accept line '
+                            'failed. Next system call was not accept!')
     noop_current_syscall(pid)
     accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
 
