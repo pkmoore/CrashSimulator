@@ -11,9 +11,6 @@ fcntl
 look at setsockopt and getsockopt
 getsockopt -> notify when this is called, error out
 
-Get accept working without having to modify traces
-    **This is done but it looks like the implementation broke something
-
 Implement select
 Expand poll to support more than one data structure
 Other system calls for curl, wget
