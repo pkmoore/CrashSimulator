@@ -1,3 +1,5 @@
+BUG: If there are multi-character literals in strings presented by strace then
+write buffer will probably not copy what you want (i.e. '\n' etc.)
 Added system call id to posix-omni-parser
     Patch to add the stuff with accept that isn't supported
 
@@ -9,9 +11,9 @@ fcntl
 look at setsockopt and getsockopt
 getsockopt -> notify when this is called, error out
 
-TODO for next week:
-Verify return values for all system calls
 Get accept working without having to modify traces
+    **This is done but it looks like the implementation broke something
+
 Implement select
 Expand poll to support more than one data structure
 Other system calls for curl, wget
