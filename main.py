@@ -274,6 +274,7 @@ def poll_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def noop_current_syscall(pid):
+    logging.debug('Nooping the current system call in pid: %s', pid)
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
     tracereplay.syscall(pid)
     next_syscall()
