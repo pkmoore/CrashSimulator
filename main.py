@@ -39,6 +39,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('recv', True): recv_subcall_entry_handler,
                         ('setsockopt', True): setsockopt_entry_handler,
                        }
+    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
+    validate_subcall(subcall_id, syscall_object)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
@@ -318,7 +320,10 @@ def validate_syscall(syscall_id, syscall_object):
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
-        raise Exception('Subcall validation failed: {0} is not {1}'.format(subcall_id, syscall_object.name))
+        raise Exception('Subcall validation failed: {0}({1}) is not {2}' \
+                        .format(SOCKET_SUBCALLS[subcall_id][4:], \
+                                subcall_id, \
+                                syscall_object.name))\
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SYSCALLS!')
