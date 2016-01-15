@@ -304,6 +304,18 @@ def write_buffer(pid, address, value, buffer_length):
         d = left + d[len(left):]
         tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
+def print_buffer(pid, address, num_bytes):
+    reads = num_bytes // 4
+    remainder = num_bytes % 4
+    data = ''
+    for i in range(reads):
+        data =  data + pack('<I', tracereplay.peek_address(pid, address))
+        address = address + 4
+    if remainder != 0:
+        last_chunk = pack('<I', tracereplay.peek_address(pid, address))
+        data = data + last_chunk[:remainder]
+    print(data)
+
 def extract_socketcall_parameters(pid, address, num):
     params = []
     for i in range(num):
