@@ -35,9 +35,10 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('socket', True): socket_subcall_entry_handler,
                         ('accept', True): accept_subcall_entry_handler,
                         ('bind', True): bind_subcall_entry_handler,
-                        ('listen', True): listen_subcall_entry_handler,
+                        ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
                         ('setsockopt', True): setsockopt_entry_handler,
+                        ('send', True): subcall_return_success_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     validate_subcall(subcall_id, syscall_object)
@@ -48,11 +49,11 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                      syscall_object.name,
                      'entry' if entering else 'exit')
 
-def listen_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+# Generic handler for all calls that just need to return what they returned in
+# the trace.
+# Currently used by send, listen
+def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
-    listen_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
-
-def listen_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def bind_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
