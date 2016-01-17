@@ -34,7 +34,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
                         ('accept', True): accept_subcall_entry_handler,
-                        ('bind', True): bind_subcall_entry_handler,
+                        ('bind', True): subcall_return_success_handler,
                         ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
                         ('setsockopt', True): subcall_return_success_handler,
@@ -68,29 +68,6 @@ def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
         raise Exception('Called {} on untracked file descriptor' \
                         .format(syscall_object.name))
     noop_current_syscall(pid)
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
-
-def bind_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering bind subcall entry handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address: %s', ecx)
-    params = extract_socketcall_parameters(pid, ecx, 3)
-    fd = params[0]
-    fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file '
-                        'descriptor from trace')
-    if fd not in FILE_DESCRIPTORS:
-        raise Exception('Execution attempted to bind untracked file descriptor \
-                         {}'.format(fd))
-    noop_current_syscall(pid)
-    bind_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
-
-def bind_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering bind subcall exit handler')
     logging.debug('Injecting return value: %s', syscall_object.ret[0])
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
