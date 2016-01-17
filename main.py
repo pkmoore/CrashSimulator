@@ -37,7 +37,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('bind', True): bind_subcall_entry_handler,
                         ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
-                        ('setsockopt', True): setsockopt_entry_handler,
+                        ('setsockopt', True): subcall_return_success_handler,
                         ('send', True): subcall_return_success_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
@@ -53,7 +53,22 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 # the trace.
 # Currently used by send, listen
 def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering setsockopt subcall handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('Extracting parameters from address %s', ecx)
+    params = extract_socketcall_parameters(pid, ecx, 1)
+    fd = params[0]
+    fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution differs from file '
+                        'descriptor from trace')
+    if fd not in FILE_DESCRIPTORS:
+        raise Exception('Called {} on untracked file descriptor' \
+                        .format(syscall_object.name))
     noop_current_syscall(pid)
+    logging.debug('Injecting return value: %s', syscall_object.ret[0])
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def bind_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
@@ -134,28 +149,6 @@ def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
         FILE_DESCRIPTORS.append(fd[0])
     else:
         raise Exception('File descriptor from trace is already tracked')
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
-
-def setsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering setsockopt subcall handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address %s', ecx)
-    params = extract_socketcall_parameters(pid, ecx, 5)
-    fd = params[0]
-    fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution differs from file '
-                        'descriptor from trace')
-    if fd not in FILE_DESCRIPTORS:
-        raise Exception('Called setsockopt on untracked file descriptor')
-    noop_current_syscall(pid)
-    setsockopt_exit_handler(syscall_id, syscall_object, entering, pid)
-
-def setsockopt_exit_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering setsockopt exit handler')
     logging.debug('Injecting return value: %s', syscall_object.ret[0])
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
