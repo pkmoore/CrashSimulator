@@ -326,9 +326,14 @@ def extract_socketcall_parameters(pid, address, num):
 
 def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' not in syscall_object.name:
-        raise Exception('Syscall validation failed: {0} is not {1}'.format(syscall_id, syscall_object.name))
-    if syscall_object.name not in SYSCALLS[syscall_id][4:]:
-        raise Exception('Syscall validation failed: {0} is not {1}'.format(syscall_id, syscall_object.name))
+        raise Exception('Syscall validation failed: {0} is not {1}' \
+                        .format(syscall_id, syscall_object.name))
+    elif syscall_id == 140 and 'llseek' not in syscall_object.name:
+        raise Exception('Syscall validation failed: {0} is not {1}' \
+                        .format(syscall_id, syscall_object.name))
+    elif syscall_object.name not in SYSCALLS[syscall_id][4:]:
+        raise Exception('Syscall validation failed: {0} is not {1}' \
+                        .format(syscall_id, syscall_object.name))
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
