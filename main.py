@@ -374,7 +374,7 @@ if __name__ == '__main__':
     logging.debug('About to spawn child process')
     pid = os.fork()
     if pid == 0:
-        f = open(child_output if child_output else 'child_output.log', 'w')
+        f = open(child_output if child_output else 'child_output.log', 'w', 0)
         os.dup2(f.fileno(), 1)
         os.dup2(f.fileno(), 2)
         tracereplay.traceme()
