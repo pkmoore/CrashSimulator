@@ -206,11 +206,20 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
                 (168, True): poll_entry_handler,
+                (54, True): syscall_return_success_handler,
+                (195, True): syscall_return_success_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         pass
+
+# Like the subcall return success handler, this handler just no-ops out a call
+# and returns whatever it returned from the trace. Used by ioctl and stat64
+def syscall_return_success_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Using default "return success" handler')
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
 
 def poll_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering poll entry handler')
