@@ -1,6 +1,12 @@
+TODO: make stat64 and statfs64 work
+
 TODO: netcat send mode test
 
 TODO: implement select
+
+TODO: make it so instead of returning -1, no-op'd system calls correctly set
+errno. This is done by returning -ERROR at system call exit. Glibc will handle
+everything else appropriately from this point.
 
 EASY: Change the write_buffer function to use the strategy I used in the print
 buffer function
