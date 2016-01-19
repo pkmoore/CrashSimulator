@@ -254,6 +254,8 @@ def poll_exit_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
+# This function leaves the child process in a state of waiting at the point just
+# before execution returns to user code.
 def noop_current_syscall(pid):
     logging.debug('Nooping the current system call in pid: %s', pid)
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
