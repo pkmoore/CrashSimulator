@@ -68,8 +68,7 @@ def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
         raise Exception('Called {} on untracked file descriptor' \
                         .format(syscall_object.name))
     noop_current_syscall(pid)
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+    apply_return_conditions(pid, syscall_object)
 
 def close_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering close entry handler')
@@ -256,6 +255,15 @@ def noop_current_syscall(pid):
         raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
     global entering_syscall
     entering_syscall = False
+
+# Applies the return conditions from the specified syscall object to the syscall
+# currently being executed by the process identified by PID. Return conditions
+# at this point are: setting the return value appropriately. Setting the value
+# of errno by suppling -ERROR in the eax register. This function should only be
+# called in exit handlers.
+def apply_return_conditions(pid, syscall_object):
+    logging.debug('Injecting return value: %s', syscall_object.ret[0])
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 # Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
