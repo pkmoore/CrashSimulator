@@ -92,8 +92,7 @@ def close_exit_handler(syscall_id, syscall_object, entering, pid):
         FILE_DESCRIPTORS.remove(fd)
     except ValueError:
         pass
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+    apply_return_conditions(pid, syscall_object)
 
 def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     #Before we proceed we need to make sure this is socket call we care about.
