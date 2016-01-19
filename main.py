@@ -166,7 +166,10 @@ def recv_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
     global buffer_address
     global buffer_size
     global return_value
-    write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
+    write_buffer(pid,
+                 buffer_address,
+                 syscall_object.args[1].value.lstrip('"').rstrip('"'),
+                 buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
