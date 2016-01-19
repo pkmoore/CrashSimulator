@@ -10,6 +10,7 @@ from struct import pack, unpack
 import tracereplay
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
+from errno_dict import ERRNO_CODES
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -275,8 +276,17 @@ def noop_current_syscall(pid):
 # of errno by suppling -ERROR in the eax register. This function should only be
 # called in exit handlers.
 def apply_return_conditions(pid, syscall_object):
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+    ret_val = syscall_object.ret[0]
+    if syscall_object.ret[1] is not None:
+        logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
+        error_code = ERRNO_CODES[syscall_object.ret[1]];
+        logging.debug('Looked up error number: %s', error_code)
+        ret_val = -error_code
+        logging.debug('Will return: %s instead of %s',
+                      ret_val,
+                      syscall_object.ret[0])
+    logging.debug('Injecting return value %s', ret_val)
+    tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
 
 # Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
