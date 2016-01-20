@@ -201,6 +201,10 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
+    if syscall_id == 102:
+        logging.debug('This is a socket subcall')
+        ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+        logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
                 (3, True):read_entry_handler,
