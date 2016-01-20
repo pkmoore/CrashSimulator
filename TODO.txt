@@ -1,3 +1,5 @@
+TODO: Clean up the duplicate code around validating file descriptors
+
 TODO: make stat64 and statfs64 work
 
 TODO: netcat send mode test
