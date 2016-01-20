@@ -7,10 +7,17 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <sys/select.h>
 
 static PyObject* TraceReplayError;
 
 bool DEBUG = false;
+
+static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
+                                                     PyObject* args) {
+    printf("WOULD HAVE DONE SOMETHING WITH SELECT!");
+    Py_RETURN_NONE;
+}
 
 static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args) {
     DEBUG = true;
@@ -236,9 +243,11 @@ static PyMethodDef TraceReplayMethods[]  = {
     {"peek_register", tracereplay_peek_register,
       METH_VARARGS, "peek register value"},
     {"poke_register", tracereplay_poke_register,
-      METH_VARARGS, "poke register value"},
+     METH_VARARGS, "poke register value"},
     {"write_poll_result", tracereplay_write_poll_result,
-      METH_VARARGS, "write poll result"},
+     METH_VARARGS, "write poll result"},
+    {"populate_select_bitmaps", tracereplay_populate_select_bitmaps,
+     METH_VARARGS, "populate select bitmaps"},
     {NULL, NULL, 0, NULL}
 };
 

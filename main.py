@@ -54,7 +54,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 # the trace.
 # Currently used by send, listen
 def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering setsockopt subcall handler')
+    logging.debug('Entering subcall return success handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('Extracting parameters from address %s', ecx)
     params = extract_socketcall_parameters(pid, ecx, 1)
@@ -214,12 +214,19 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (6, False): close_exit_handler,
                 (168, True): poll_entry_handler,
                 (54, True): syscall_return_success_handler,
-                (195, True): syscall_return_success_handler
+                (195, True): syscall_return_success_handler,
+                (142, True): select_entry_handler,
+                (82, True): select_entry_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         pass
+
+def select_entry_handler(syscall_id, syscall_object, entering, pid):
+    print("This is the select system call handler")
+    tracereplay.populate_select_bitmaps()
+    sys.exit(0)
 
 # Like the subcall return success handler, this handler just no-ops out a call
 # and returns whatever it returned from the trace. Used by ioctl and stat64
