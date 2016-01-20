@@ -1,3 +1,5 @@
+EASY: Make it so failed validation kills the child process
+
 TODO: Clean up the duplicate code around validating file descriptors
 
 TODO: make stat64 and statfs64 work
