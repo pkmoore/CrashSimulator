@@ -9,3 +9,4 @@ python_modules/parse-syscall-definitions/
 *.pickle
 *.swo
 *.swp
+*.log
