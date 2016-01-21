@@ -12,6 +12,7 @@ import tracereplay
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
+from os_dict import OS_CONST
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -333,17 +334,28 @@ def apply_return_conditions(pid, syscall_object):
         logging.debug('Will return: %s instead of %s',
                       ret_val,
                       syscall_object.ret[0])
+    else:
+        ret_val = cleanup_return_value(ret_val)
+    logging.debug('Injecting return value %s', ret_val)
+    tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
+
+def cleanup_return_value(val):
     try:
-        ret_val = int(ret_val)
+        ret_val = int(val)
     except ValueError:
         logging.debug('Couldn\'t parse ret_val as base 10 integer')
         try:
-            ret_val = int(ret_val, base=16)
+            ret_val = int(val, base=16)
         except ValueError:
             logging.debug('Couldn\'t parse ret_val as base 16 either')
-            raise Exception('Couldn\'t get integer form of return value!')
-    logging.debug('Injecting return value %s', ret_val)
-    tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
+            try:
+                logging.debug('Trying to look up ret_val')
+                ret_val = OS_CONST[val]
+            except KeyError:
+                logging.debug('Couldn\'t look up value from OS_CONST dict')
+                raise Exception('Couldn\'t get integer form of return value!')
+    logging.debug('Cleaned up value %s', ret_val)
+    return ret_val
 
 # Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
