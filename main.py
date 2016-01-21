@@ -223,10 +223,46 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     except KeyError:
         pass
 
+# A lot of the parsing in this function needs to be moved into the
+# posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
+# DESCRIPTORS" parsing class.
 def select_entry_handler(syscall_id, syscall_object, entering, pid):
-    print("This is the select system call handler")
-    tracereplay.populate_select_bitmaps()
-    sys.exit(0)
+    logging.debug('Entering select entry handler')
+    readfds = syscall_object.args[1].value.strip('[]').split(' ')
+    readfds = [None if x == 'NULL' else int(x) for x in readfds]
+    logging.debug('readfds: %s', readfds)
+    writefds = syscall_object.args[2].value.strip('[]').split(' ')
+    writefds = [None if x == 'NULL' else int(x) for x in writefds]
+    logging.debug('writefds: %s', writefds)
+    exceptfds = syscall_object.args[3].value.strip('[]').split(' ')
+    exceptfds = [None if x == 'NULL' else int(x) for x in exceptfds]
+    logging.debug('exceptfds: %s', exceptfds)
+    fd = int(syscall_object.original_line[syscall_object.original_line \
+                                                     .rfind('['):] \
+                                                     .strip('[]) '))
+    logging.debug('Got active file descriptor: %s', fd)
+    readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('readfds addr: %s', readfds_addr)
+    writefds_addr = tracereplay.peek_register(pid, tracereplay.EDX)
+    logging.debug('writefds addr: %s', writefds_addr)
+    exceptfds_addr = tracereplay.peek_register(pid, tracereplay.ESI)
+    logging.debug('exceptfds addr: %s', exceptfds_addr)
+
+    if fd in readfds:
+        logging.debug('using readfds_addr')
+        addr = readfds_addr
+    elif fd in writefds:
+        logging.debug('using writefds_addr')
+        addr = writefds_addr
+    else:
+        logging.debug('using exceptfds_addr')
+        addr = exceptfds_addr
+    logging.debug('Using Address: %s', addr)
+    noop_current_syscall(pid)
+    logging.debug('Populating bitmaps')
+    tracereplay.populate_select_bitmaps(pid, fd, addr)
+    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
+    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 # Like the subcall return success handler, this handler just no-ops out a call
 # and returns whatever it returned from the trace. Used by ioctl and stat64

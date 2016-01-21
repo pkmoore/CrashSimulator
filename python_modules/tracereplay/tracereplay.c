@@ -15,7 +15,28 @@ bool DEBUG = false;
 
 static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
                                                      PyObject* args) {
-    printf("WOULD HAVE DONE SOMETHING WITH SELECT!");
+    pid_t child;
+    int fd;
+    fd_set* addr;
+    PyArg_ParseTuple(args, "iii", &child, &fd, &addr);
+    if(DEBUG) {
+        printf("C: Select: PID: %d\n", child);
+        printf("C: Select: FD: %d\n", fd);
+        printf("C: Select: addr: %d\n", (int)addr);
+    }
+    fd_set tmp;
+    FD_ZERO(&tmp);
+    FD_SET(fd, &tmp);
+    if(DEBUG) {
+        printf("C: Select: Is fd %d set?: %s\n",
+               fd,
+               FD_ISSET(fd, &tmp) ? "true" : "false");
+        printf("C: Select: poking data\n");
+    }
+    errno = 0;
+    if((ptrace(PTRACE_POKEDATA, child, addr, tmp) == -1)) {
+        PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+    }
     Py_RETURN_NONE;
 }
 
@@ -43,6 +64,12 @@ void init_constants(PyObject* m) {
         return;
     }
     if(PyModule_AddIntConstant(m, "EDX", EDX) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "ESI", ESI) == -1) {
+        return;
+    }
+    if(PyModule_AddIntConstant(m, "EDI", EDI) == -1) {
         return;
     }
 
