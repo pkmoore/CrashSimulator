@@ -325,7 +325,7 @@ def noop_current_syscall(pid):
 # called in exit handlers.
 def apply_return_conditions(pid, syscall_object):
     ret_val = syscall_object.ret[0]
-    if syscall_object.ret[1] is not None:
+    if  syscall_object.ret[0] == -1  and syscall_object.ret[1] is not None:
         logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
         error_code = ERRNO_CODES[syscall_object.ret[1]];
         logging.debug('Looked up error number: %s', error_code)
@@ -333,6 +333,15 @@ def apply_return_conditions(pid, syscall_object):
         logging.debug('Will return: %s instead of %s',
                       ret_val,
                       syscall_object.ret[0])
+    try:
+        ret_val = int(ret_val)
+    except ValueError:
+        logging.debug('Couldn\'t parse ret_val as base 10 integer')
+        try:
+            ret_val = int(ret_val, base=16)
+        except ValueError:
+            logging.debug('Couldn\'t parse ret_val as base 16 either')
+            raise Exception('Couldn\'t get integer form of return value!')
     logging.debug('Injecting return value %s', ret_val)
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
 
