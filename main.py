@@ -458,9 +458,11 @@ if __name__ == '__main__':
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
+            logging.debug('===')
             logging.debug('New system call')
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
             logging.debug('Extracted %s from ORIG_EAX', orig_eax)
+            logging.debug('%s', entering_syscall)
             #This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
