@@ -41,7 +41,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
                         ('setsockopt', True): subcall_return_success_handler,
-                        ('send', True): subcall_return_success_handler
+                        ('send', True): subcall_return_success_handler,
+                        ('connect', True): subcall_return_success_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     validate_subcall(subcall_id, syscall_object)
@@ -108,27 +109,32 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     params = extract_socketcall_parameters(pid, ecx, 3)
     execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
     trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
+    execution_is_PF_LOCAL = (params[0] == 1) #define PF_LOCAL 1
+    trace_is_PF_LOCAL = (str(syscall_object.args[0]) == '[\'PF_LOCAL\']')
     logging.debug('Execution is PF_INET: %s', execution_is_PF_INET)
     logging.debug('Trace is PF_INET: %s', trace_is_PF_INET)
+    logging.debug('Exeuction is PF_LOCAL: %s', execution_is_PF_LOCAL)
+    logging.debug('Trace is PF_LOCAL: %s', trace_is_PF_LOCAL)
     if execution_is_PF_INET != trace_is_PF_INET:
         raise Exception('Encountered socket subcall with mismatch between \
                              execution and trace protocol family')
-    if trace_is_PF_INET or execution_is_PF_INET:
+    if execution_is_PF_LOCAL != trace_is_PF_LOCAL:
+        raise Exception('Encountered socket subcall with mismatch between \
+                             execution and trace protocol family')
+    if trace_is_PF_INET or \
+       execution_is_PF_INET or \
+       trace_is_PF_LOCAL or \
+       execution_is_PF_LOCAL:
         noop_current_syscall(pid)
-        socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+        fd = syscall_object.ret
+        logging.debug('File Descriptor from trace: %s', fd)
+        if fd not in FILE_DESCRIPTORS:
+            FILE_DESCRIPTORS.append(fd[0])
+        else:
+            raise Exception('File descriptor from trace is already tracked')
+        apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Ignoring non-PF_INET call to socket')
-
-def socket_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
-    logging.debug('Entering socket subcall exit handler')
-    fd = syscall_object.ret
-    logging.debug('File Descriptor from trace: %s', fd)
-    if fd not in FILE_DESCRIPTORS:
-        FILE_DESCRIPTORS.append(fd[0])
-    else:
-        raise Exception('File descriptor from trace is already tracked')
-    logging.debug('Injecting return value: %s', syscall_object.ret[0])
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking if line from trace is interrupted accept')
