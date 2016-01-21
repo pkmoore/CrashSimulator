@@ -218,12 +218,23 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (54, True): syscall_return_success_handler,
                 (195, True): syscall_return_success_handler,
                 (142, True): select_entry_handler,
-                (82, True): select_entry_handler
+                (82, True): select_entry_handler,
+                (221, True): fcntl64_entry_handler
                }
     try:
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         pass
+
+def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering fcntl64 entry handler')
+    operation = syscall_object.args[1].value[0].strip('[]\'')
+    noop_current_syscall(pid)
+    if operation == 'F_GETFL' or operation == 'F_SETFL':
+        apply_return_conditions(pid, syscall_object)
+    else:
+        raise NotImplementedError('Unimplemented fcntl64 operation {}'
+                                  .format(operation))
 
 # A lot of the parsing in this function needs to be moved into the
 # posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
