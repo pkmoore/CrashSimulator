@@ -42,7 +42,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('recv', True): recv_subcall_entry_handler,
                         ('setsockopt', True): subcall_return_success_handler,
                         ('send', True): subcall_return_success_handler,
-                        ('connect', True): subcall_return_success_handler
+                        ('connect', True): subcall_return_success_handler,
+                        ('getsockopt', True): getsockopt_entry_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     validate_subcall(subcall_id, syscall_object)
@@ -52,6 +53,37 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         logging.warn('No handler for socket subcall %s %s',
                      syscall_object.name,
                      'entry' if entering else 'exit')
+
+def _exit(pid):
+    os.kill(pid, signal.SIGKILL)
+    sys.exit(1)
+
+def getsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering getsockopt handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('Extracting parameters from address %s', ecx)
+    params = extract_socketcall_parameters(pid, ecx, 5)
+    if params[1] != 1 or params[2] != 4:
+        raise Exception('Unimplemented getsockopt level or optname')
+    optval_addr = params[3]
+    optval_len_addr = params[4]
+    logging.debug('Optval addr: %s', optval_addr)
+    logging.debug('Optval len addr: %s', optval_len_addr)
+    optval = syscall_object.args[3].value.strip('[]')
+    optval_len = syscall_object.args[4].value.strip('[]')
+    logging.debug('Optval: %s', optval)
+    logging.debug('Optval Length: %s', optval_len)
+    noop_current_syscall(pid)
+    logging.debug('Writing values')
+    write_buffer(pid,
+                 optval_addr,
+                 optval,
+                 optval_len)
+    write_buffer(pid,
+                 optval_len_addr,
+                 optval_len,
+                 4)
+    apply_return_conditions(pid, syscall_object)
 
 # Generic handler for all calls that just need to return what they returned in
 # the trace.
