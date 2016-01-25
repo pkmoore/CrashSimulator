@@ -265,7 +265,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
                 (4, True): write_entry_handler,
-                (3, True):read_entry_handler,
+                (3, True): read_entry_handler,
                 (102, True): socketcall_handler,
                 (102, False): socketcall_handler,
                 (6, True): close_entry_handler,
