@@ -477,15 +477,10 @@ if __name__ == '__main__':
     parser.add_argument('-l',
                         '--loglevel',
                         help='Log Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
-    parser.add_argument('-o',
-                        '--child-output',
-                        help='File in which to write child process\' output. \
-                        Default is "child_output.log"')
     args = vars(parser.parse_args())
     command = args['command'].split(' ')
     trace = args['trace']
     loglevel = args['loglevel']
-    child_output = args['child_output']
     if loglevel:
         numeric_level = getattr(logging, loglevel.upper(), None)
         if not isinstance(numeric_level, int):
@@ -496,9 +491,6 @@ if __name__ == '__main__':
     logging.debug('About to spawn child process')
     pid = os.fork()
     if pid == 0:
-        f = open(child_output if child_output else 'child_output.log', 'w', 0)
-        os.dup2(f.fileno(), 1)
-        os.dup2(f.fileno(), 2)
         tracereplay.traceme()
         os.execvp(command[0], command)
     else:
