@@ -288,9 +288,11 @@ def select_entry_handler(syscall_id, syscall_object, entering, pid):
     exceptfds = syscall_object.args[3].value.strip('[]').split(' ')
     exceptfds = [None if x == 'NULL' else int(x) for x in exceptfds]
     logging.debug('exceptfds: %s', exceptfds)
-    fd = int(syscall_object.original_line[syscall_object.original_line \
-                                                     .rfind('['):] \
-                                                     .strip('[]) '))
+    fd = int(syscall_object.original_line[
+                                         syscall_object.original_line.rfind('[')
+                                         :
+                                         syscall_object.original_line.rfind(']')
+                                         ].strip('[]) '))
     logging.debug('Got active file descriptor: %s', fd)
     readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('readfds addr: %s', readfds_addr)
