@@ -239,6 +239,23 @@ def read_exit_handler(syscall_id, syscall_object, entering, pid):
     write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
     tracereplay.poke_register(pid, tracereplay.EAX, return_value)
 
+#Note: This handler only takes action on syscalls made to file descriptors we
+#are tracking. Otherwise it simply does any required debug-printing and lets it
+#execute
+def write_entry_handler(syscall_id, syscall_object, entering, pid):
+    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    msg_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    msg_len = tracereplay.peek_register(pid, tracereplay.EDX)
+    logging.debug('Child attempted to write to FD: %s', fd)
+    logging.debug('Child\'s message stored at: %s', msg_addr)
+    logging.debug('Child\'s message length: %s', msg_len)
+    #print_buffer(pid, msg_addr, msg_len)
+    if fd in FILE_DESCRIPTORS:
+        logging.debug('We care about this file descriptor. No-oping...')
+        noop_current_syscall(pid)
+        logging.debug('Applying return conditions')
+        apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:
@@ -247,6 +264,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (4, True): write_entry_handler,
                 (3, True):read_entry_handler,
                 (102, True): socketcall_handler,
                 (102, False): socketcall_handler,
@@ -431,10 +449,10 @@ def print_buffer(pid, address, num_bytes):
     remainder = num_bytes % 4
     data = ''
     for i in range(reads):
-        data =  data + pack('<I', tracereplay.peek_address(pid, address))
+        data =  data + pack('<i', tracereplay.peek_address(pid, address))
         address = address + 4
     if remainder != 0:
-        last_chunk = pack('<I', tracereplay.peek_address(pid, address))
+        last_chunk = pack('<i', tracereplay.peek_address(pid, address))
         data = data + last_chunk[:remainder]
     print(data)
 
