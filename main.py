@@ -46,7 +46,12 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('getsockopt', True): getsockopt_entry_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
-    validate_subcall(subcall_id, syscall_object)
+    try:
+        validate_subcall(subcall_id, syscall_object)
+    except Exception as e:
+        print(e)
+        os.kill(pid, signal.SIGKILL)
+        sys.exit(1)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
@@ -518,7 +523,12 @@ if __name__ == '__main__':
                               syscall_object)
             if orig_eax != 102:
                 logging.debug('Validating non-socketcall syscall')
-                validate_syscall(orig_eax, syscall_object)
+                try:
+                    validate_syscall(orig_eax, syscall_object)
+                except Exception as e:
+                    print(e)
+                    os.kill(pid, signal.SIGKILL)
+                    sys.exit(1)
             logging.debug('Handling syscall')
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
