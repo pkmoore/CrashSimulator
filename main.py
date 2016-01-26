@@ -201,10 +201,9 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
         raise Exception('Tried to recv from non-existant file descriptor')
     buffer_address = params[1]
     buffer_size = params[2]
-    write_buffer(pid,
-                 buffer_address,
-                 syscall_object.args[1].value.lstrip('"').rstrip('"'),
-                 buffer_size)
+    data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+    data = fix_character_literals(data)
+    write_buffer(pid, buffer_address, data, buffer_size)
     apply_return_conditions(pid, syscall_object)
 
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
@@ -219,7 +218,9 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
         buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
         noop_current_syscall(pid)
-        write_buffer(pid, buffer_address, syscall_object.args[1].value.lstrip('"').rstrip('"'), buffer_size)
+        data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+        data = fix_character_literals(data)
+        write_buffer(pid, buffer_address, data, buffer_size)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
@@ -457,6 +458,14 @@ def extract_socketcall_parameters(pid, address, num):
         address = address + 4
     logging.debug('Extracted socketcall parameters: %s', params)
     return params
+
+def fix_character_literals(string):
+    logging.debug('Cleaning up string')
+    string = string.replace('\\n', '\n')
+    string = string.replace('\\r', '\r')
+    logging.debug('Cleaned up string:')
+    logging.debug(string)
+    return string
 
 def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' in syscall_object.name:
