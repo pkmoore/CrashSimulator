@@ -257,7 +257,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (6, False): close_exit_handler,
                 (168, True): poll_entry_handler,
                 (54, True): syscall_return_success_handler,
-                (195, True): syscall_return_success_handler,
+                (195, True): stat64_entry_handler,
                 (142, True): select_entry_handler,
                 (82, True): select_entry_handler,
                 (221, True): fcntl64_entry_handler
@@ -266,6 +266,15 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
         pass
+
+def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
+    if syscall_object.ret[0] == -1:
+        logging.debug('Got unsuccessful stat64 call')
+        logging.debug('Applying return conditions from trace')
+        apply_return_conditions(pid, syscall_object)
+    else:
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('Unimplemented successful stat64 call')
 
 def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering fcntl64 entry handler')
