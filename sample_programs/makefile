@@ -1,4 +1,4 @@
-all: opensocket mtu_receiver_good callread
+all: opensocket mtu_receiver_good callread callselect callstat64
 
 opensocket: opensocket.c
 	gcc -ggdb -o opensocket -static opensocket.c
@@ -12,9 +12,13 @@ callread: callread.c
 callselect: callselect.c
 	gcc -ggdb -o callselect -static callselect.c
 
+callstat64: callstat64.c
+	gcc -ggdb -o callstat64 -static callstat64.c
+
 clean:
 	- rm mtu_receiver_good
 	- rm opensocket
 	- rm *.strace
 	- rm callread
 	- rm callselect
+	- rm callstat64

@@ -1,3 +1,7 @@
+#define __USE_LARGEFILE64
+#define _LARGEFILE_SOURCE
+#define _LARGEFILE64_SOURCE
+
 #include <Python.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
@@ -8,10 +12,79 @@
 #include <poll.h>
 #include <stdbool.h>
 #include <sys/select.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 
 static PyObject* TraceReplayError;
 
 bool DEBUG = false;
+
+static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
+                                                    PyObject* args) {
+    struct stat64 s;
+    pid_t child;
+    void* addr;
+    int st_dev1;
+    int st_dev2;
+    dev_t     st_dev;     /* ID of device containing file */
+    ino_t     st_ino;     /* inode number */
+    mode_t    st_mode;    /* protection */
+    nlink_t   st_nlink;   /* number of hard links */
+    uid_t     st_uid;     /* user ID of owner */
+    gid_t     st_gid;     /* group ID of owner */
+    dev_t     st_rdev = 0;    /* device ID (if special file) */
+    off_t     st_size;    /* total size, in bytes */
+    blksize_t st_blksize; /* blocksize for file system I/O */
+    blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
+    time_t st__ctime;
+    time_t st__mtime;
+    time_t st__atime;
+    PyArg_ParseTuple(args, "iiiiiiiiiiiiiii", &child, &addr, &st_dev1, &st_dev2,
+                    (int*)&st_blocks,    (int*)&st_nlink,  (int*)&st_gid,
+                    (int*)&st_blksize,   (int*)&st_size,   (int*)&st_mode,
+                    (int*)&st_uid,       (int*)&st_ino,    (int*)&st__ctime,
+                    (int*)&st__mtime,    (int*)&st__atime);
+    st_dev = makedev(st_dev1, st_dev2);
+    s.st_dev = st_dev;
+    s.st_ino = st_ino;
+    s.st_mode = st_mode;
+    s.st_nlink = st_nlink;
+    s.st_uid = st_uid;
+    s.st_gid = st_gid;
+    s.st_rdev = st_rdev;
+    s.st_size = st_size;
+    s.st_blksize = st_blksize;
+    s.st_blocks = st_blocks;
+    s.st_ctime = st__ctime;
+    s.st_mtime = st__mtime;
+    s.st_atime = st__atime;
+    size_t writes = sizeof(s) - sizeof(int);
+    size_t write_overlap = sizeof(s) % sizeof(int);
+    char buffer[sizeof(s)];
+    memcpy(&buffer, (char*)&s, sizeof(s));
+    if(DEBUG) {
+        printf("C: stat64: sizeof stat64: %d\n", sizeof(struct stat64));
+        printf("C: stat64: sizeof int: %d\n", sizeof(int));
+        printf("C: stat64: sizeof long: %d\n", sizeof(long));
+        printf("C: stat64: number of writes: %d\n", writes);
+        printf("C: stat64: byte overlap: %d\n", write_overlap);
+    }
+    if(write_overlap != 0) {
+        PyErr_SetString(TraceReplayError, "Stat64 structure size unhandled");
+    }
+    int i;
+    for(i = 0; i < writes; i++) {
+        if(DEBUG) {
+            printf("C: stat64: poking (%p)%d into %p\n", &buffer[i], (int)buffer[i], addr);
+        }
+        if((ptrace(PTRACE_POKEDATA, child, addr, buffer[i])) == -1) {
+            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+        }
+        addr++;
+    }
+    Py_RETURN_NONE;
+}
 
 static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
                                                      PyObject* args) {
@@ -275,6 +348,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "write poll result"},
     {"populate_select_bitmaps", tracereplay_populate_select_bitmaps,
      METH_VARARGS, "populate select bitmaps"},
+    {"populate_stat64_struct", tracereplay_populate_stat64_struct,
+     METH_VARARGS, "populate stat64 struct"},
     {NULL, NULL, 0, NULL}
 };
 

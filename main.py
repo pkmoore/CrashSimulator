@@ -1,4 +1,6 @@
 from __future__ import print_function
+from time import strptime, mktime
+import datetime
 import os
 import signal
 import sys
@@ -12,7 +14,7 @@ import tracereplay
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
-from os_dict import OS_CONST
+from os_dict import OS_CONST, STAT_CONST
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -269,13 +271,69 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         pass
 
 def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
+    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    edx = tracereplay.peek_register(pid, tracereplay.EDX)
+    esi = tracereplay.peek_register(pid, tracereplay.ESI)
+    edi = tracereplay.peek_register(pid, tracereplay.EDI)
+    logging.debug('EBX: %x', ebx)
+    logging.debug('ECX: %x', (buf_addr & 0xffffffff))
+    logging.debug('EDX: %x', edx)
+    logging.debug('ESI: %x', esi)
+    logging.debug('EDI: %x', edi)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful stat64 call')
         logging.debug('Applying return conditions from trace')
         apply_return_conditions(pid, syscall_object)
     else:
-        os.kill(pid, signal.SIGKILL)
-        raise NotImplementedError('Unimplemented successful stat64 call')
+        logging.debug('Got successful stat64 call')
+        st_dev1 = syscall_object.args[1].value
+        st_dev1 = st_dev1[st_dev1.rfind('(')+1:]
+        st_dev2 = syscall_object.args[2].value
+        st_dev2 = st_dev2.strip(')')
+        logging.debug('st_dev1: %s', st_dev1)
+        logging.debug('st_dev2: %s', st_dev2)
+        mid_args = list(syscall_object.args[3:11])
+        mid_args = [x.value for x in mid_args]
+        time_args = list(syscall_object.args[11:])
+        time_args = [x.value for x in time_args]
+        mid_args_dict = {x.split('=')[0]: x.split('=')[1] for x in mid_args}
+        mid_args_dict['st_mode'] = cleanup_st_mode(mid_args_dict['st_mode'])
+        mid_args_dict = {x: int(y) for x, y in mid_args_dict.iteritems()}
+        time_args_dict = {x.split('=')[0]: x.split('=')[1] for x in time_args}
+        time_args_dict = {x: int(mktime(strptime(y.strip('}'),
+                                                 '%Y/%m/%d-%H:%M:%S'))) \
+                         for x, y in time_args_dict.iteritems()}
+        logging.debug('Middle Args: %s', mid_args_dict)
+        logging.debug('Time Args: %s', time_args_dict)
+        noop_current_syscall(pid)
+        logging.debug('Injecting values into structure')
+        tracereplay.populate_stat64_struct(pid,
+                                           buf_addr,
+                                           int(st_dev1),
+                                           int(st_dev2),
+                                           mid_args_dict['st_blocks'],
+                                           mid_args_dict['st_nlink'],
+                                           mid_args_dict['st_gid'],
+                                           mid_args_dict['st_blksize'],
+                                           mid_args_dict['st_size'],
+                                           mid_args_dict['st_mode'],
+                                           mid_args_dict['st_uid'],
+                                           mid_args_dict['st_ino'],
+                                           time_args_dict['st_ctime'],
+                                           time_args_dict['st_mtime'],
+                                           time_args_dict['st_atime'])
+        apply_return_conditions(pid, syscall_object)
+
+def cleanup_st_mode(m):
+    m = m.split('|')
+    tmp = 0
+    for i in m:
+        if i[0] == '0':
+            tmp = tmp | int(i, 8)
+        else:
+            tmp = tmp | STAT_CONST[i]
+    return tmp
 
 def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering fcntl64 entry handler')
