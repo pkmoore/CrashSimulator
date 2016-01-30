@@ -20,6 +20,34 @@ static PyObject* TraceReplayError;
 
 bool DEBUG = false;
 
+int copy_buffer_into_child_process_memory(pid_t child,
+                                          void* addr,
+                                          const char* const buffer,
+                                          size_t buf_length){
+    size_t writes = buf_length - sizeof(int);
+    size_t write_overlap = buf_length % sizeof(int);
+    if(write_overlap != 0) {
+        PyErr_SetString(TraceReplayError,
+                        "buffer size % sizeof(int) must be 0");
+    }
+    if(DEBUG) {
+        printf("C: copy_buffer: number of writes: %d\n", writes);
+        printf("C: copy_buffer: byte overlap: %d\n", write_overlap);
+    }
+    int i;
+    for(i = 0; i < writes; i++) {
+        if(DEBUG) {
+            printf("C: copy_buffer: poking (%p)%d into %p\n", &buffer[i],
+                   (int)buffer[i], addr);
+        }
+        if((ptrace(PTRACE_POKEDATA, child, addr, buffer[i])) == -1) {
+            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+        }
+        addr++;
+    }
+    return 0;
+}
+
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
     printf("sizeof long long: %d\n", sizeof(long long));
@@ -32,27 +60,10 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
         printf("C: llseek: addr: %d\n", (int)addr);
         printf("C: llseek: result: %lld\n", (long long)result);
     }
-    size_t writes = sizeof(result) - sizeof(int);
-    size_t write_overlap = sizeof(result) % sizeof(int);
-    char buffer[sizeof(result)];
-    memcpy(&buffer, (char*)&result, sizeof(result));
-    if(DEBUG) {
-        printf("C: stat64: number of writes: %d\n", writes);
-        printf("C: stat64: byte overlap: %d\n", write_overlap);
-    }
-    if(write_overlap != 0) {
-        PyErr_SetString(TraceReplayError, "long long size unhandled");
-    }
-    int i;
-    for(i = 0; i < writes; i++) {
-        if(DEBUG) {
-            printf("C: llseek: poking (%p)%d into %p\n", &buffer[i], (int)buffer[i], addr);
-        }
-        if((ptrace(PTRACE_POKEDATA, child, addr, buffer[i])) == -1) {
-            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
-        }
-        addr++;
-    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&result,
+                                          sizeof(long long));
     Py_RETURN_NONE;
 }
 
@@ -95,30 +106,10 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     s.st_ctime = st__ctime;
     s.st_mtime = st__mtime;
     s.st_atime = st__atime;
-    size_t writes = sizeof(s) - sizeof(int);
-    size_t write_overlap = sizeof(s) % sizeof(int);
-    char buffer[sizeof(s)];
-    memcpy(&buffer, (char*)&s, sizeof(s));
-    if(DEBUG) {
-        printf("C: stat64: sizeof stat64: %d\n", sizeof(struct stat64));
-        printf("C: stat64: sizeof int: %d\n", sizeof(int));
-        printf("C: stat64: sizeof long: %d\n", sizeof(long));
-        printf("C: stat64: number of writes: %d\n", writes);
-        printf("C: stat64: byte overlap: %d\n", write_overlap);
-    }
-    if(write_overlap != 0) {
-        PyErr_SetString(TraceReplayError, "Stat64 structure size unhandled");
-    }
-    int i;
-    for(i = 0; i < writes; i++) {
-        if(DEBUG) {
-            printf("C: stat64: poking (%p)%d into %p\n", &buffer[i], (int)buffer[i], addr);
-        }
-        if((ptrace(PTRACE_POKEDATA, child, addr, buffer[i])) == -1) {
-            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
-        }
-        addr++;
-    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&s,
+                                          sizeof(s));
     Py_RETURN_NONE;
 }
 
