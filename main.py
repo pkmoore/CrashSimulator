@@ -45,7 +45,9 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('setsockopt', True): subcall_return_success_handler,
                         ('send', True): subcall_return_success_handler,
                         ('connect', True): subcall_return_success_handler,
-                        ('getsockopt', True): getsockopt_entry_handler
+                        ('getsockopt', True): getsockopt_entry_handler,
+                        ('sendmmsg', True): subcall_return_success_handler,
+                        ('sendto', True): subcall_return_success_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
@@ -252,6 +254,10 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (199, True): syscall_return_success_handler,
+                (200, True): syscall_return_success_handler,
+                (201, True): syscall_return_success_handler,
+                (202, True): syscall_return_success_handler,
                 (4, True): write_entry_handler,
                 (3, True): read_entry_handler,
                 (102, True): socketcall_handler,
