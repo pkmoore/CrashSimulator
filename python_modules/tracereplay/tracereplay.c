@@ -20,6 +20,42 @@ static PyObject* TraceReplayError;
 
 bool DEBUG = false;
 
+static PyObject* tracereplay_populate_llseek_result(PyObject* self,
+                                                    PyObject* args) {
+    printf("sizeof long long: %d\n", sizeof(long long));
+    pid_t child;
+    void* addr;
+    loff_t result;
+    PyArg_ParseTuple(args, "iiL", (int*)&child, (int*)&addr, (int*)&result);
+    if(DEBUG) {
+        printf("C: llseek: child: %d\n", (int)child);
+        printf("C: llseek: addr: %d\n", (int)addr);
+        printf("C: llseek: result: %lld\n", (long long)result);
+    }
+    size_t writes = sizeof(result) - sizeof(int);
+    size_t write_overlap = sizeof(result) % sizeof(int);
+    char buffer[sizeof(result)];
+    memcpy(&buffer, (char*)&result, sizeof(result));
+    if(DEBUG) {
+        printf("C: stat64: number of writes: %d\n", writes);
+        printf("C: stat64: byte overlap: %d\n", write_overlap);
+    }
+    if(write_overlap != 0) {
+        PyErr_SetString(TraceReplayError, "long long size unhandled");
+    }
+    int i;
+    for(i = 0; i < writes; i++) {
+        if(DEBUG) {
+            printf("C: llseek: poking (%p)%d into %p\n", &buffer[i], (int)buffer[i], addr);
+        }
+        if((ptrace(PTRACE_POKEDATA, child, addr, buffer[i])) == -1) {
+            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+        }
+        addr++;
+    }
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
                                                     PyObject* args) {
     struct stat64 s;
@@ -350,6 +386,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate select bitmaps"},
     {"populate_stat64_struct", tracereplay_populate_stat64_struct,
      METH_VARARGS, "populate stat64 struct"},
+    {"populate_llseek_result", tracereplay_populate_llseek_result,
+     METH_VARARGS, "populate llseek result"},
     {NULL, NULL, 0, NULL}
 };
 
