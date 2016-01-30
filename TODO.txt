@@ -1,27 +1,13 @@
-TODO: Implement fcntl64
-EASY: Make it so failed validation kills the child process
+EASY: Try to clean up the business with the "entering" parameter
+
+TODO: Maintain list of ignored system calls
 
 TODO: Clean up the duplicate code around validating file descriptors
 
-TODO: make stat64 and statfs64 work
-
-TODO: netcat send mode test
-
-TODO: implement select
-
-TODO: make it so instead of returning -1, no-op'd system calls correctly set
-errno. This is done by returning -ERROR at system call exit. Glibc will handle
-everything else appropriately from this point.
+TODO: statfs64 work
 
 EASY: Change the write_buffer function to use the strategy I used in the print
 buffer function
-
-BUG: If there are multi-character literals in strings presented by strace then
-write buffer will probably not copy what you want (i.e. '\n' etc.)
-Added system call id to posix-omni-parser
-    Patch to add the stuff with accept that isn't supported
-
-BUG: If we redirect output it causes writes to become mis-ordered
 
 BUG: Poll implementation only works with one data structure.
 
@@ -29,14 +15,6 @@ BUG: Poll parsing fails for some calls to poll due to posix-omni-parser
 
 BUG: Posix omni parser doesn't return stuff in comments at end of line (poll,
 select)
-
-Don't Forget:
-recvfrom
-sendto
-fcntl
-
-look at setsockopt and getsockopt
-getsockopt -> notify when this is called, error out
 
 Select vs. Poll
 Select used a bitmask rather than an array of structures to track file
