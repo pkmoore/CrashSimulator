@@ -289,8 +289,6 @@ def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('EDI: %x', edi)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful stat64 call')
-        logging.debug('Applying return conditions from trace')
-        apply_return_conditions(pid, syscall_object)
     else:
         logging.debug('Got successful stat64 call')
         st_dev1 = syscall_object.args[1].value
@@ -329,7 +327,7 @@ def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
                                            time_args_dict['st_ctime'],
                                            time_args_dict['st_mtime'],
                                            time_args_dict['st_atime'])
-        apply_return_conditions(pid, syscall_object)
+    apply_return_conditions(pid, syscall_object)
 
 def cleanup_st_mode(m):
     m = m.split('|')
