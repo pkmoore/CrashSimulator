@@ -1,3 +1,5 @@
+EASY: Tests for callstat64 and call llseek
+
 EASY: Try to clean up the business with the "entering" parameter
 
 TODO: Maintain list of ignored system calls
