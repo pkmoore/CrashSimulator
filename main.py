@@ -246,6 +246,21 @@ def write_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Applying return conditions')
         apply_return_conditions(pid, syscall_object)
 
+def llseek_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering llseek entry handler')
+    result = int(syscall_object.args[2].value.strip('[]'))
+    result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
+    logging.debug('result: %s', result)
+    logging.debug('result_addr: %s', result_addr)
+    noop_current_syscall(pid)
+    if syscall_object.ret[0] != -1:
+        logging.debug('Got successful llseek call')
+        logging.debug('Populating result')
+        tracereplay.populate_llseek_result(pid, result_addr, result)
+    else:
+        logging.debug('Got unsucceesful llseek call')
+    apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:
@@ -254,6 +269,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (140, True): llseek_entry_handler,
                 (10, True): syscall_return_success_handler,
                 (33, True): syscall_return_success_handler,
                 (199, True): syscall_return_success_handler,
