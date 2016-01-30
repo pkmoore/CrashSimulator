@@ -254,6 +254,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (10, True): syscall_return_success_handler,
+                (33, True): syscall_return_success_handler,
                 (199, True): syscall_return_success_handler,
                 (200, True): syscall_return_success_handler,
                 (201, True): syscall_return_success_handler,
