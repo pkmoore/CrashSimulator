@@ -453,6 +453,7 @@ def noop_current_syscall(pid):
 # of errno by suppling -ERROR in the eax register. This function should only be
 # called in exit handlers.
 def apply_return_conditions(pid, syscall_object):
+    logging.debug('Applying return conditions')
     ret_val = syscall_object.ret[0]
     if  syscall_object.ret[0] == -1  and syscall_object.ret[1] is not None:
         logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
