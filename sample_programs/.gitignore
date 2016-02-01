@@ -5,3 +5,4 @@ callread
 callselect
 callstat64
 callllseek
+callgetcwd

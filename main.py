@@ -261,6 +261,25 @@ def llseek_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Got unsucceesful llseek call')
     apply_return_conditions(pid, syscall_object)
 
+def getcwd_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering getcwd entry handler')
+    array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    data = str(syscall_object.args[0].value.strip('"'))
+    data_length = int(syscall_object.ret[0])
+    noop_current_syscall(pid)
+    if data_length != 0:
+        logging.debug('Got successful getcwd call')
+        logging.debug('Data: %s', data)
+        logging.debug('Data length: %s', data_length)
+        logging.debug('Populating character array')
+        tracereplay.populate_char_buffer(pid,
+                                         array_addr,
+                                         data,
+                                         data_length)
+    else:
+        logging.debug('Got unsuccessful getcwd call')
+    apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:
@@ -269,6 +288,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (183, True): getcwd_entry_handler,
                 (140, True): llseek_entry_handler,
                 (10, True): syscall_return_success_handler,
                 (33, True): syscall_return_success_handler,

@@ -47,6 +47,27 @@ int copy_buffer_into_child_process_memory(pid_t child,
     return 0;
 }
 
+static PyObject* tracereplay_populate_char_buffer(PyObject* self,
+                                                  PyObject* args) {
+    pid_t child;
+    void* addr;
+    char* data;
+    long int data_length;
+    PyArg_ParseTuple(args, "iisl", (int*)&child, (int*)&addr, 
+                     &data, &data_length);
+    if(DEBUG) {
+        printf("C: pop_char_buf: child: %d\n", child);
+        printf("C: pop_char_buf: addr: %d\n", (int)addr);
+        printf("C: pop_char_buf: data: %s\n", data);
+        printf("C: pop_char_buf: data_length %ld\n", data_length);
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          data,
+                                          data_length);
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
     printf("sizeof long long: %d\n", sizeof(long long));
@@ -333,6 +354,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate stat64 struct"},
     {"populate_llseek_result", tracereplay_populate_llseek_result,
      METH_VARARGS, "populate llseek result"},
+    {"populate_char_buffer", tracereplay_populate_char_buffer,
+     METH_VARARGS, "populate char buffer"},
     {NULL, NULL, 0, NULL}
 };
 
