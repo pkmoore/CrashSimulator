@@ -24,7 +24,7 @@ int copy_buffer_into_child_process_memory(pid_t child,
                                           void* addr,
                                           const char* const buffer,
                                           size_t buf_length){
-    size_t writes = buf_length - sizeof(int);
+    size_t writes = buf_length - (sizeof(int) - 1 );
     int i;
     if(DEBUG) {
         printf("C: copy_buffer: number of writes: %d\n", writes);
