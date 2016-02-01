@@ -25,15 +25,9 @@ int copy_buffer_into_child_process_memory(pid_t child,
                                           const char* const buffer,
                                           size_t buf_length){
     size_t writes = buf_length - sizeof(int);
-    size_t write_overlap = buf_length % sizeof(int);
     int i;
-    if(write_overlap != 0) {
-        PyErr_SetString(TraceReplayError,
-                        "buffer size % sizeof(int) must be 0");
-    }
     if(DEBUG) {
         printf("C: copy_buffer: number of writes: %d\n", writes);
-        printf("C: copy_buffer: byte overlap: %d\n", write_overlap);
         printf("C: copy_buffer: buffer data: \n");
         for(i = 0; i < buf_length; i++) {
             printf("%02X ", buffer[i]);
