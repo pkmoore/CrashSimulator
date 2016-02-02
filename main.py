@@ -280,6 +280,27 @@ def getcwd_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
 
+# This handler assumes that uname cannot fail. The only documented way it can
+# fail is if the buffer it is handed is somehow invalid. This code assumes that
+# well written programs don't do this.
+def uname_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering uname handler')
+    args = {x.value.split('=')[0]: x.value.split('=')[1]
+            for x in syscall_object.args}
+    args = {x.strip('{}'): y.strip('"{}') for x, y in args.iteritems()}
+    logging.debug(args)
+    address = tracereplay.peek_register(pid, tracereplay.EBX)
+    noop_current_syscall(pid)
+    tracereplay.populate_uname_structure(pid,
+                                         address,
+                                         args['sysname'],
+                                         args['nodename'],
+                                         args['release'],
+                                         args['version'],
+                                         args['machine'],
+                                         args['domainname'])
+    apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:
@@ -288,6 +309,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     handlers = {
+                (122, True): uname_entry_handler,
                 (183, True): getcwd_entry_handler,
                 (140, True): llseek_entry_handler,
                 (10, True): syscall_return_success_handler,

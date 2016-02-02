@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <sys/utsname.h>
 
 static PyObject* TraceReplayError;
 
@@ -45,6 +46,42 @@ int copy_buffer_into_child_process_memory(pid_t child,
         addr++;
     }
     return 0;
+}
+
+static PyObject* tracereplay_populate_uname_structure(PyObject* self,
+                                                     PyObject* args) {
+    pid_t child;
+    void* addr;
+    char* sysname;
+    char* nodename;
+    char* release;
+    char* version;
+    char* machine;
+    char* domainname;
+    PyArg_ParseTuple(args, "iissssss", (int*)&child, (int*)&addr, &sysname,
+                     &nodename, &release, &version, &machine, &domainname);
+    if(DEBUG) {
+        printf("C: uname: child %d\n", (int)child);
+        printf("C: uname: addr %d\n", (int)addr);
+        printf("C: uname: sysname %s\n", sysname);
+        printf("C: uname: nodename %s\n", nodename);
+        printf("C: uname: release %s\n", release);
+        printf("C: uname: version %s\n", version);
+        printf("C: uname: machine %s\n", machine);
+        printf("C: uname: domainname %s\n", domainname);
+    }
+    struct utsname s;
+    strncpy(s.sysname, sysname, 64);
+    strncpy(s.nodename, nodename, 64);
+    strncpy(s.release, release, 64);
+    strncpy(s.version, version, 64);
+    strncpy(s.machine, machine, 64);
+    strncpy(s.domainname, domainname, 64);
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&s,
+                                          sizeof(s));
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_populate_char_buffer(PyObject* self,
@@ -356,6 +393,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate llseek result"},
     {"populate_char_buffer", tracereplay_populate_char_buffer,
      METH_VARARGS, "populate char buffer"},
+    {"populate_uname_structure", tracereplay_populate_uname_structure,
+     METH_VARARGS, "populate uname structure"},
     {NULL, NULL, 0, NULL}
 };
 
