@@ -798,6 +798,7 @@ def fix_character_literals(string):
     logging.debug('Cleaning up string')
     string = string.replace('\\n', '\n')
     string = string.replace('\\r', '\r')
+    string = string.replace('\"', '"')
     logging.debug('Cleaned up string:')
     logging.debug(string)
     return string
