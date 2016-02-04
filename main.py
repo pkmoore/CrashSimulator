@@ -328,6 +328,25 @@ def getcwd_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
 
+def readlink_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering readlink entry handler')
+    array_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    data = str(syscall_object.args[0].value.strip('"'))
+    data_length = int(syscall_object.ret[0])
+    noop_current_syscall(pid)
+    if data_length != -1:
+        logging.debug('Got successful readlink call')
+        logging.debug('Data: %s', data)
+        logging.debug('Data length: %s', data_length)
+        logging.debug('Populating character array')
+        tracereplay.populate_char_buffer(pid,
+                                         array_addr,
+                                         data,
+                                         data_length)
+    else:
+        logging.debug('Got unsuccessful readlink call')
+    apply_return_conditions(pid, syscall_object)
+
 # This handler assumes that uname cannot fail. The only documented way it can
 # fail is if the buffer it is handed is somehow invalid. This code assumes that
 # well written programs don't do this.
@@ -398,6 +417,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    5 #!!!!!!!! open
                   ]
     handlers = {
+                (85, True): readlink_entry_handler,
                 (197, True): fstat64_entry_handler,
                 (122, True): uname_entry_handler,
                 (183, True): getcwd_entry_handler,
@@ -430,6 +450,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
             logging.error('Encountered un-ignored syscall with no handler: %s(%s)',
                           syscall_id,
                           syscall_object.name)
+            os.kill(pid, signal.SIGKILL)
             raise e
 def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -513,6 +534,8 @@ def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
     apply_return_conditions(pid, syscall_object)
 
 def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
+    if 'st_rdev' in syscall_object.original_line:
+        raise Exception('stat64 handler can\'t deal with st_rdevs!!')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
