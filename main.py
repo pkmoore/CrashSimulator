@@ -267,6 +267,12 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
 
+# This thing must be here to handle exits for read calls that we let pass. This
+# will go away once the new "open" machinery is in place and we intercept all
+# calls to read.
+def read_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
 #Note: This handler only takes action on syscalls made to file descriptors we
 #are tracking. Otherwise it simply does any required debug-printing and lets it
 #execute
@@ -371,6 +377,14 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
+    ignore_list = [
+                   91, #sys_munprotect
+                   125, #sys_mprotect
+                   243, #sys_set_thread_area
+                   45,  #sys_brk
+                   192, #sys_mmap_pgoff/mmap
+                   5 #!!!!!!!! open
+                  ]
     handlers = {
                 (122, True): uname_entry_handler,
                 (183, True): getcwd_entry_handler,
@@ -383,6 +397,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (202, True): syscall_return_success_handler,
                 (4, True): write_entry_handler,
                 (3, True): read_entry_handler,
+                (3, False): read_exit_handler,
                 (102, True): socketcall_handler,
                 (102, False): socketcall_handler,
                 (6, True): close_entry_handler,
