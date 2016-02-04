@@ -1,3 +1,5 @@
+HACK: Clean up the mess around rdev
+
 EASY: Tests for callstat64 and call llseek
 
 EASY: Try to clean up the business with the "entering" parameter
@@ -17,29 +19,3 @@ BUG: Poll parsing fails for some calls to poll due to posix-omni-parser
 
 BUG: Posix omni parser doesn't return stuff in comments at end of line (poll,
 select)
-
-Select vs. Poll
-Select used a bitmask rather than an array of structures to track file
-descriptors. Select is more commonly implemented but the nature of a bitmask
-means that there are a limited number of file descriptors that can be tracked.
-It has one advantage over poll: Early versions of poll didn't allow you to set a
-structure's file descriptor to -1 to have it ignored meaning that if you no
-longer care about a file descriptor you would have to rebuild the array.
-Presumably it will be easier to un-track a file descriptor with select.
-
-Send-like calls -> always assume they succeeded and return the expected number
-of bytes from the trace.
-
-Write-like system calls:
-write
-sendmsg
-sendmmsg
-sendto
-send
-
-Read-like system calls:
-read
-recvmsg
-recvmmsg
-receivefrom
-recv
