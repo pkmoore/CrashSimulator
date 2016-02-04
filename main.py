@@ -48,7 +48,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('connect', True): subcall_return_success_handler,
                         ('getsockopt', True): getsockopt_entry_handler,
                         ('sendmmsg', True): subcall_return_success_handler,
-                        ('sendto', True): subcall_return_success_handler
+                        ('sendto', True): subcall_return_success_handler,
+                        ('shutdown', True): shutdown_subcall_entry_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
@@ -67,6 +68,28 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def _exit(pid):
     os.kill(pid, signal.SIGKILL)
     sys.exit(1)
+
+def shutdown_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering shutdown entry handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 1)
+    fd = params[0]
+    fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    if fd in FILE_DESCRIPTORS:
+        if fd != int(fd_from_trace):
+            raise Exception('File descriptor from execution differs from file '
+                            'descriptor from trace')
+        logging.debug('Got tracked file descriptor')
+        noop_current_syscall(pid)
+        try:
+            FILE_DESCRIPTORS.remove(fd)
+        except ValueError:
+            pass
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Ignoring shutdown of untracked file descriptor')
 
 def getsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering getsockopt handler')
