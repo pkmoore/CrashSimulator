@@ -613,6 +613,13 @@ def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
 # DESCRIPTORS" parsing class.
 def select_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering select entry handler')
+    while syscall_object.ret[0] == '?':
+        logging.debug('Got interrupted select. Will advance past')
+        syscall_object = system_calls.next()
+        logging.debug('Got new line %s', syscall_object.original_line)
+        if syscall_object.name != 'select':
+            raise Exception('Attempt to advance past interrupted accept line '
+                            'failed. Next system call was not accept!')
     readfds = syscall_object.args[1].value.strip('[]').split(' ')
     readfds = [None if x == 'NULL' else int(x) for x in readfds]
     logging.debug('readfds: %s', readfds)
