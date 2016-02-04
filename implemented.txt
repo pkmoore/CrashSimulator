@@ -1,0 +1,55 @@
+    109 munmap
+    250 mmap2
+     29 brk
+     53 mprotect
+     82 rt_sigaction
+      1 sigreturn
+      1 time
+      3 rt_sigprocmask
+      3 set_robust_list
+      3 set_tid_address
+      4 clock_getres
+      5 futex
+      6 execve
+      6 exit_group
+      6 set_thread_area
+!   275 fstat64
+!    813 open
+!     12 ioctl
+!     20 getsockname
+#      2 recvfrom
+!      2 recvmsg
+#      2 shutdown
+!      2 statfs64
+!      3 getrlimit
+!      3 readlink
+!      4 openat
+!      5 poll
+!      6 getdents64 #copy a structure
+!      7 lstat64
+#      8 uname
+#    114 write
+#    205 select
+#    222 close
+#    264 stat64
+#    413 read
+#     11 unlink
+#     14 socket
+#     20 recv
+#     43 connect
+#     52 access
+#      1 getegid32 #simple returns
+#      1 geteuid32
+#      1 getgid32
+#      1 getsockopt
+#      1 getuid32
+#      1 sendmmsg
+#      1 sendto
+#      2 getcwd #copy a string
+#      2 listen
+#      2 setsockopt
+#      3 bind
+#      4 accept
+#      5 fcntl64
+#      6 _llseek #Copy one value
+#      8 send
