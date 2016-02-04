@@ -401,6 +401,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('EBX value is: %s', ebx)
     logging.debug('Syscall name (from trace): %s', syscall_object.name)
     ignore_list = [
+                   20, #sys_getpid
                    91, #sys_munprotect
                    125, #sys_mprotect
                    243, #sys_set_thread_area
