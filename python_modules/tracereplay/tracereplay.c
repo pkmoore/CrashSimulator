@@ -141,7 +141,6 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
 
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
-    printf("sizeof long long: %d\n", sizeof(long long));
     pid_t child;
     void* addr;
     loff_t result;
