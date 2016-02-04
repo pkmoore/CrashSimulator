@@ -390,6 +390,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    5 #!!!!!!!! open
                   ]
     handlers = {
+                (197, True): fstat64_entry_handler,
                 (122, True): uname_entry_handler,
                 (183, True): getcwd_entry_handler,
                 (140, True): llseek_entry_handler,
@@ -414,10 +415,94 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (82, True): select_entry_handler,
                 (221, True): fcntl64_entry_handler
                }
-    try:
-        handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
-    except KeyError:
-        pass
+    if syscall_id not in ignore_list:
+        try:
+            handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
+        except KeyError as e:
+            logging.error('Encountered un-ignored syscall with no handler: %s(%s)',
+                          syscall_id,
+                          syscall_object.name)
+            raise e
+def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
+    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    edx = tracereplay.peek_register(pid, tracereplay.EDX)
+    esi = tracereplay.peek_register(pid, tracereplay.ESI)
+    edi = tracereplay.peek_register(pid, tracereplay.EDI)
+    logging.debug('EBX: %x', ebx)
+    logging.debug('ECX: %x', (buf_addr & 0xffffffff))
+    logging.debug('EDX: %x', edx)
+    logging.debug('ESI: %x', esi)
+    logging.debug('EDI: %x', edi)
+    if syscall_object.ret[0] == -1:
+        logging.debug('Got unsuccessful fstat64 call')
+    else:
+        logging.debug('Got successful fstat64 call')
+        st_dev1 = syscall_object.args[1].value
+        st_dev1 = st_dev1[st_dev1.rfind('(')+1:]
+        st_dev2 = syscall_object.args[2].value
+        st_dev2 = st_dev2.strip(')')
+        logging.debug('st_dev1: %s', st_dev1)
+        logging.debug('st_dev2: %s', st_dev2)
+        #HACK: horrible hack to deal with rdev. Fix this later
+        st_rdev1 = 0
+        st_rdev2 = 0
+        if 'st_rdev' in syscall_object.args[10].value:
+            logging.debug('Line contains an rdev')
+            st_rdev1 = syscall_object.args[10].value
+            st_rdev1 = int(st_rdev1.split('=')[1].strip('makedev('))
+            st_rdev2 = syscall_object.args[11].value
+            st_rdev2 = int(st_rdev2.strip(')'))
+            mid_args = list(syscall_object.args[3:10])
+            mid_args = [x.value for x in mid_args]
+            time_args = list(syscall_object.args[12:])
+            time_args = [x.value for x in time_args]
+            #sometimes size is 0 so we need to hardcode it
+            mid_args_dict = {'st_size': 0}
+            mid_args_dict.update({x.split('=')[0]: x.split('=')[1]
+                                  for x in mid_args})
+            mid_args_dict['st_mode'] = cleanup_st_mode(mid_args_dict['st_mode'])
+            mid_args_dict = {x: int(y) for x, y in mid_args_dict.iteritems()}
+            time_args_dict = {x.split('=')[0]: x.split('=')[1] for x in time_args}
+            time_args_dict = {x: int(mktime(strptime(y.strip('}'),
+                                                 '%Y/%m/%d-%H:%M:%S'))) \
+                             for x, y in time_args_dict.iteritems()}
+            logging.debug('st_rdev1: %s', st_rdev1)
+            logging.debug('st_rdev2: %s', st_rdev2)
+        else:
+            mid_args = list(syscall_object.args[3:11])
+            mid_args = [x.value for x in mid_args]
+            time_args = list(syscall_object.args[11:])
+            time_args = [x.value for x in time_args]
+            mid_args_dict = {x.split('=')[0]: x.split('=')[1] for x in mid_args}
+            mid_args_dict['st_mode'] = cleanup_st_mode(mid_args_dict['st_mode'])
+            mid_args_dict = {x: int(y) for x, y in mid_args_dict.iteritems()}
+            time_args_dict = {x.split('=')[0]: x.split('=')[1] for x in time_args}
+            time_args_dict = {x: int(mktime(strptime(y.strip('}'),
+                                                     '%Y/%m/%d-%H:%M:%S'))) \
+                             for x, y in time_args_dict.iteritems()}
+        logging.debug('Middle Args: %s', mid_args_dict)
+        logging.debug('Time Args: %s', time_args_dict)
+        noop_current_syscall(pid)
+        logging.debug('Injecting values into structure')
+        tracereplay.populate_stat64_struct(pid,
+                                           buf_addr,
+                                           int(st_dev1),
+                                           int(st_dev2),
+                                           mid_args_dict['st_blocks'],
+                                           mid_args_dict['st_nlink'],
+                                           mid_args_dict['st_gid'],
+                                           mid_args_dict['st_blksize'],
+                                           st_rdev1,
+                                           st_rdev2,
+                                           mid_args_dict['st_size'],
+                                           mid_args_dict['st_mode'],
+                                           mid_args_dict['st_uid'],
+                                           mid_args_dict['st_ino'],
+                                           time_args_dict['st_ctime'],
+                                           time_args_dict['st_mtime'],
+                                           time_args_dict['st_atime'])
+    apply_return_conditions(pid, syscall_object)
 
 def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)

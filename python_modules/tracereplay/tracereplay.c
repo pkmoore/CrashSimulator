@@ -165,25 +165,29 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     void* addr;
     int st_dev1;
     int st_dev2;
+    int st_rdev1;
+    int st_rdev2;
     dev_t     st_dev;     /* ID of device containing file */
     ino_t     st_ino;     /* inode number */
     mode_t    st_mode;    /* protection */
     nlink_t   st_nlink;   /* number of hard links */
     uid_t     st_uid;     /* user ID of owner */
     gid_t     st_gid;     /* group ID of owner */
-    dev_t     st_rdev = 0;    /* device ID (if special file) */
+    dev_t     st_rdev;    /* device ID (if special file) */
     off_t     st_size;    /* total size, in bytes */
     blksize_t st_blksize; /* blocksize for file system I/O */
     blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
     time_t st__ctime;
     time_t st__mtime;
     time_t st__atime;
-    PyArg_ParseTuple(args, "iiiiiiiiiiiiiii", &child, &addr, &st_dev1, &st_dev2,
+    PyArg_ParseTuple(args, "iiiiiiiiiiiiiiiii", &child, &addr, &st_dev1, &st_dev2,
                     (int*)&st_blocks,    (int*)&st_nlink,  (int*)&st_gid,
-                    (int*)&st_blksize,   (int*)&st_size,   (int*)&st_mode,
+                    (int*)&st_blksize,   (int*)&st_rdev1,  (int*)&st_rdev2,
+                    (int*)&st_size,      (int*)&st_mode,
                     (int*)&st_uid,       (int*)&st_ino,    (int*)&st__ctime,
                     (int*)&st__mtime,    (int*)&st__atime);
     st_dev = makedev(st_dev1, st_dev2);
+    st_rdev = makedev(st_rdev1, st_rdev2);
     s.st_dev = st_dev;
     s.st_ino = st_ino;
     s.st_mode = st_mode;
