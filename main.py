@@ -42,6 +42,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('bind', True): subcall_return_success_handler,
                         ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
+                        ('recvfrom', True): recvfrom_subcall_entry_handler,
                         ('setsockopt', True): subcall_return_success_handler,
                         ('send', True): subcall_return_success_handler,
                         ('connect', True): subcall_return_success_handler,
@@ -209,6 +210,20 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     data = fix_character_literals(data)
     write_buffer(pid, buffer_address, data, buffer_size)
     apply_return_conditions(pid, syscall_object)
+
+def recvfrom_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 4)
+    noop_current_syscall(pid)
+    if params[0] not in FILE_DESCRIPTORS:
+        raise Exception('Tried to recvfrom from non-existant file descriptor')
+    buffer_address = params[1]
+    buffer_size = params[2]
+    data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+    data = fix_character_literals(data)
+    write_buffer(pid, buffer_address, data, buffer_size)
+    apply_return_conditions(pid, syscall_object)
+    _exit(pid)
 
 def read_entry_handler(syscall_id, syscall_object, entering, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
