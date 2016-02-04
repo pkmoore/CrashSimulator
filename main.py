@@ -387,6 +387,14 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    243, #sys_set_thread_area
                    45,  #sys_brk
                    192, #sys_mmap_pgoff/mmap
+                   172, #sys_rt_sigaction
+                   119, #sys_sigreturn
+                   13, #sys_time
+                   126, #sys_sigprocmask
+                   311, #set_robust_list
+                   258, #set_tid_address
+                   266, #set_clock_getres
+                   240, #sys_futex
                    5 #!!!!!!!! open
                   ]
     handlers = {
