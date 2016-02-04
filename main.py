@@ -301,6 +301,31 @@ def uname_entry_handler(syscall_id, syscall_object, entering, pid):
                                          args['domainname'])
     apply_return_conditions(pid, syscall_object)
 
+def getrlimit_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering getrlimit handler')
+    cmd = syscall_object.args[0].value[0]
+    if cmd != 'RLIMIT_STACK':
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('Unimplemented getrlimit command {}'.format(cmd))
+    addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    rlim_cur = syscall_object.args[1].value.strip('{')
+    rlim_cur = rlim_cur.split('=')[1]
+    if rlim_cur.find('*') == -1:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('Unimplemented rlim_cur format {}'.format(rlim_cur))
+    rlim_cur = int(rlim_cur.split('*')[0]) * int(rlim_cur.split('*')[1])
+    rlim_max = syscall_object.args[2].value.strip('}')
+    rlim_max = rlim_max.split('=')[1]
+    if rlim_max != 'RLIM_INFINITY':
+        raise Exception('Unlimited rlim_max format {}'.format(rlim_max))
+    rlim_max = 0x7fffffffffffffff
+    logging.debug('rlim_cur: %s', rlim_cur)
+    logging.debug('rlim_max: %x', rlim_max)
+    logging.debug('Address: %s', addr)
+    noop_current_syscall(pid)
+    tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
+    apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:

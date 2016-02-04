@@ -7,3 +7,4 @@ callstat64
 callllseek
 callgetcwd
 calluname
+callgetrlimit

@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <time.h>
 #include <sys/utsname.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 static PyObject* TraceReplayError;
 
@@ -46,6 +48,38 @@ int copy_buffer_into_child_process_memory(pid_t child,
         addr++;
     }
     return 0;
+}
+
+static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
+                                                       PyObject* args) {
+    pid_t child;
+    void* addr;
+    rlim_t rlim_cur;
+    rlim_t rlim_max;
+
+    PyArg_ParseTuple(args, "iiLL", (int*)&child, (int*)&addr,
+                     (long long*)&rlim_cur, (long long*)&rlim_max);
+    if(DEBUG) {
+        printf("C: getrlimit: child %d\n", (int)child);
+        printf("C: getrlimit: addr %d\n", (int)addr);
+        printf("C: getrlimit: rlim_cur %lld\n", (long long)rlim_cur);
+        printf("C: getrlimit: rlim_max %llx\n", (long long)rlim_max);
+        printf("C: getrlimit: sizeof rlimit %d\n", sizeof(struct rlimit));
+    }
+    struct rlimit64 s;
+    s.rlim_cur = rlim_cur;
+    s.rlim_max = rlim_cur+100;
+    printf("C: sizeof(rlimit64) %d\n", sizeof(struct rlimit64));
+    printf("C: sizeof(rlimit) %d\n", sizeof(struct rlimit));
+    printf("C: sizeof(cur) %d\n", sizeof(s.rlim_cur));
+    printf("C: cur %llx\n", s.rlim_cur);
+    printf("C: sizeof(max) %d\n", sizeof(s.rlim_max));
+    printf("C: max %llx\n", s.rlim_max);
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&s,
+                                          sizeof(s));
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_populate_uname_structure(PyObject* self,
@@ -395,6 +429,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate char buffer"},
     {"populate_uname_structure", tracereplay_populate_uname_structure,
      METH_VARARGS, "populate uname structure"},
+    {"populate_rlimit_structure", tracereplay_populate_rlimit_structure,
+     METH_VARARGS, "populate rlimit structure"},
     {NULL, NULL, 0, NULL}
 };
 
