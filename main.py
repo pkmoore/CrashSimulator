@@ -290,6 +290,10 @@ def write_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Applying return conditions')
         apply_return_conditions(pid, syscall_object)
 
+# Once again, this only has to be here until the new "open" machinery is in lace
+def write_exit_handler(syscall_id, syscall_object, entering, pid):
+    pass
+
 def llseek_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('Entering llseek entry handler')
     result = int(syscall_object.args[2].value.strip('[]'))
@@ -396,6 +400,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (201, True): syscall_return_success_handler,
                 (202, True): syscall_return_success_handler,
                 (4, True): write_entry_handler,
+                (4, False): write_exit_handler,
                 (3, True): read_entry_handler,
                 (3, False): read_exit_handler,
                 (102, True): socketcall_handler,
