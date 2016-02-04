@@ -546,6 +546,7 @@ def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('EDX: %x', edx)
     logging.debug('ESI: %x', esi)
     logging.debug('EDI: %x', edi)
+    noop_current_syscall(pid)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful stat64 call')
     else:
@@ -569,7 +570,6 @@ def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
                          for x, y in time_args_dict.iteritems()}
         logging.debug('Middle Args: %s', mid_args_dict)
         logging.debug('Time Args: %s', time_args_dict)
-        noop_current_syscall(pid)
         logging.debug('Injecting values into structure')
         tracereplay.populate_stat64_struct(pid,
                                            buf_addr,
@@ -579,6 +579,8 @@ def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
                                            mid_args_dict['st_nlink'],
                                            mid_args_dict['st_gid'],
                                            mid_args_dict['st_blksize'],
+                                           0,
+                                           0,
                                            mid_args_dict['st_size'],
                                            mid_args_dict['st_mode'],
                                            mid_args_dict['st_uid'],
