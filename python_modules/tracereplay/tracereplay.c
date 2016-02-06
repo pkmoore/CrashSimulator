@@ -437,7 +437,6 @@ static PyMethodDef TraceReplayMethods[]  = {
     {NULL, NULL, 0, NULL}
 };
 
-
 PyMODINIT_FUNC inittracereplay(void) {
     PyObject* m;
     if((m = Py_InitModule("tracereplay", TraceReplayMethods)) == NULL) {
