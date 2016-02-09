@@ -813,14 +813,14 @@ def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 268 and 'stat' in syscall_object.name:
         return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
-        raise Exception('Syscall validation failed: {0}({1}) is not {2}' \
+        raise Exception('Syscall validation failed: from execution: {0}({1}) is not from trace: {2}' \
                         .format(SYSCALLS[syscall_id][4:], \
                                 syscall_id, \
                                 syscall_object.name))
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
-        raise Exception('Subcall validation failed: {0}({1}) is not {2}' \
+        raise Exception('Subcall validation failed: from execution: {0}({1}) is not from trace:{2}' \
                         .format(SOCKET_SUBCALLS[subcall_id][4:], \
                                 subcall_id, \
                                 syscall_object.name))
