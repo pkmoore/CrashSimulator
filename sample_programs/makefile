@@ -1,4 +1,4 @@
-all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit
+all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets
 
 opensocket: opensocket.c
 	gcc -ggdb -o opensocket -static opensocket.c
@@ -24,8 +24,11 @@ callstat64: callstat64.c
 callgetcwd: callgetcwd.c
 	gcc -ggdb -o callgetcwd -static callgetcwd.c
 
-call uname: calluname.c
-	gcc -ggdb -o calluname -stat-c calluname.c
+calluname: calluname.c
+	gcc -ggdb -o calluname -static calluname.c
+
+calltcgets: calltcgets.c
+	gcc -ggdb -o calltcgets -static calltcgets.c
 
 clean:
 	- rm mtu_receiver_good
@@ -38,3 +41,4 @@ clean:
 	- rm callgetcwd
 	- rm calluname
 	- rm callgetrlimit
+	- rm calltcgets

@@ -8,6 +8,7 @@ import re
 import argparse
 import binascii
 import logging
+import base64
 from struct import pack, unpack
 
 import tracereplay
@@ -393,6 +394,57 @@ def getrlimit_entry_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
     apply_return_conditions(pid, syscall_object)
 
+def ioctl_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering ioctl handler')
+    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    edx = tracereplay.peek_register(pid, tracereplay.EDX)
+    edi = tracereplay.peek_register(pid, tracereplay.EDI)
+    esi = tracereplay.peek_register(pid, tracereplay.ESI)
+    logging.debug('ebx: %x', ebx)
+    logging.debug('ecx: %x', ecx)
+    logging.debug('edx: %x', edx)
+    logging.debug('edi: %x', edi)
+    logging.debug('esi: %x', esi)
+    addr = edx
+    noop_current_syscall(pid)
+    cmd = syscall_object.args[1].value
+    c_iflags = syscall_object.args[2].value
+    c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
+    c_oflags = syscall_object.args[3].value
+    c_oflags = int(c_oflags[c_oflags.rfind('=')+1:], 16)
+    c_cflags = syscall_object.args[4].value
+    c_cflags = int(c_cflags[c_cflags.rfind('=')+1:], 16)
+    c_lflags = syscall_object.args[5].value
+    c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
+    c_line = syscall_object.args[6].value
+    c_line = int(c_line[c_line.rfind('=')+1:])
+    cc = syscall_object.args[7].value
+    cc = cc[cc.rfind('=')+1:].strip('"}')
+    cc = cc.replace('\\x', ' ').strip()
+    cc = bytearray.fromhex(cc)
+    cc_as_string =''.join('{:02x}'.format(x) for x in cc)
+    cc = cc_as_string.decode('hex')
+    logging.debug('pid: %s', pid)
+    logging.debug('Addr: %s', addr)
+    logging.debug('cmd: %s', cmd)
+    logging.debug('c_iflags: %x', c_iflags)
+    logging.debug('c_oflags: %s', c_oflags)
+    logging.debug('c_cflags: %s', c_cflags)
+    logging.debug('c_lflags: %s', c_lflags)
+    logging.debug('c_line: %s', c_line)
+    logging.debug('cc: %s', cc_as_string)
+    logging.debug('len(cc): %s', len(cc))
+    if 'TCGETS' not in cmd:
+        raise NotImplementedError('Unsupported ioctl command')
+    tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
+                                         c_cflags,
+                                         c_lflags,
+                                         c_line,
+                                         cc
+                                         )
+    apply_return_conditions(pid, syscall_object)
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
     if syscall_id == 102:
@@ -441,7 +493,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
                 (168, True): poll_entry_handler,
-                (54, True): syscall_return_success_handler,
+                (54, True): ioctl_entry_handler,
                 (195, True): stat64_entry_handler,
                 (142, True): select_entry_handler,
                 (82, True): select_entry_handler,
@@ -456,6 +508,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                           syscall_object.name)
             os.kill(pid, signal.SIGKILL)
             raise e
+
 def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)

@@ -18,6 +18,7 @@
 #include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <termios.h>
 
 static PyObject* TraceReplayError;
 
@@ -48,6 +49,65 @@ int copy_buffer_into_child_process_memory(pid_t child,
         addr++;
     }
     return 0;
+}
+
+static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
+						      PyObject* args) {
+    pid_t child;
+    void* addr;
+    tcflag_t c_iflag;
+    tcflag_t c_oflag;
+    tcflag_t c_cflag;
+    tcflag_t c_lflag;
+    cc_t c_line;
+    unsigned char* cc_bytes;
+    Py_ssize_t cc_bytes_length;
+    int i; 
+
+    PyArg_ParseTuple(args, "iiIIIIbs#", (int*)&child, (int*)&addr, (unsigned int*)&c_iflag,
+                     (unsigned int*)&c_oflag, (unsigned int*)&c_cflag, (unsigned int*)&c_lflag,
+                     (unsigned char*)&c_line, &cc_bytes, &cc_bytes_length);
+    if(DEBUG) {
+        printf("C: tcgets: child %d\n", child);
+        printf("C: tcgets: addr %p\n", addr);
+        printf("C: tcgets: c_iflag %x\n", c_iflag);
+        printf("C: tcgets: c_oflag %x\n", c_oflag);
+        printf("C: tcgets: c_cflag %x\n", c_cflag);
+        printf("C: tcgets: c_lflag %x\n", c_lflag);
+        printf("C: tcgets: c_line %x\n", c_line);
+        printf("C: tcgets: cc_bytes_length %d\n", cc_bytes_length);
+        printf("C: tcgets: cc_bytes %p\n", cc_bytes);
+        for(i = 0; i < cc_bytes_length; i++) {
+            printf("%02X", cc_bytes[i]);
+        }
+        printf("\n");
+    }
+    struct termios t;
+    t.c_iflag = c_iflag;
+    t.c_oflag = c_oflag;
+    t.c_cflag = c_cflag;
+    t.c_lflag = c_lflag;
+    t.c_line = c_line;
+    memcpy(&t.c_cc, cc_bytes, cc_bytes_length);
+    if(DEBUG) {
+        printf("C: tcgets: sizeof(struct termios) %d\n", sizeof(struct termios));
+        printf("C: tcgets: sizeof(t.c_cc) %d\n", sizeof(t.c_cc));
+        printf("C: tcgets: t.c_iflag %x\n", t.c_iflag);
+        printf("C: tcgets: t.c_oflag %x\n", t.c_oflag);
+        printf("C: tcgets: t.c_cflag %x\n", t.c_cflag);
+        printf("C: tcgets: t.c_lflag %x\n", t.c_lflag);
+        printf("C: tcgets: t.c_line %x\n", t.c_line);
+        printf("C: tcgets: t.cc_c addr %p\n", &t.c_cc);
+        for(i = 0; i < cc_bytes_length; i++) {
+            printf("%02X", t.c_cc[i]);
+        }
+        printf("\n");
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&t,
+                                          17 + 19);
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
@@ -434,6 +494,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate uname structure"},
     {"populate_rlimit_structure", tracereplay_populate_rlimit_structure,
      METH_VARARGS, "populate rlimit structure"},
+    {"populate_tcgets_response", tracereplay_populate_tcgets_response,
+     METH_VARARGS, "populate tcgets response"},
     {NULL, NULL, 0, NULL}
 };
 
