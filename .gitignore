@@ -10,3 +10,5 @@ python_modules/parse-syscall-definitions/
 *.swo
 *.swp
 *.log
+*~
+\#*\#
