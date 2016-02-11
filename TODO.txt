@@ -4,11 +4,7 @@ EASY: Tests for callstat64 and call llseek
 
 EASY: Try to clean up the business with the "entering" parameter
 
-TODO: Maintain list of ignored system calls
-
 TODO: Clean up the duplicate code around validating file descriptors
-
-TODO: statfs64 work
 
 EASY: Change the write_buffer function to use the strategy I used in the print
 buffer function

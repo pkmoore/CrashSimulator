@@ -1,14 +1,11 @@
 !   getrusage
 !    813 open
-!     12 ioctl #non-standard commands and behavior. Going to be weird.
 !     20 getsockname
 !      2 recvmsg
-!      2 statfs64
 !      3 getrlimit
 !      4 openat
 !      5 poll
 !      6 getdents64 #copy a structure, big structure. Going to be weird (~32k)
-!      7 lstat64
 #   275 fstat64
 #    114 write
 #    205 select
@@ -16,6 +13,7 @@
 #    264 stat64
 #    413 read
 #     11 unlink
+#     12 ioctl #non-standard commands and behavior. Going to be weird.
 #     14 socket
 #     20 recv
 #     43 connect
@@ -32,10 +30,12 @@
 #      2 recvfrom
 #      2 setsockopt
 #      2 shutdown
+#      2 statfs64
 #      3 bind
 #      3 readlink
 #      4 accept
 #      5 fcntl64
 #      6 _llseek #Copy one value
+#      7 lstat64
 #      8 send
 #      8 uname
