@@ -1,3 +1,6 @@
+TODO: For low hanging fruit calls, verify that the attempted call has the same
+parameters as the call from the trace
+
 HACK: Clean up the mess around rdev
 
 EASY: Tests for callstat64 and call llseek
