@@ -408,42 +408,117 @@ def ioctl_entry_handler(syscall_id, syscall_object, entering, pid):
     logging.debug('esi: %x', esi)
     addr = edx
     noop_current_syscall(pid)
-    cmd = syscall_object.args[1].value
-    c_iflags = syscall_object.args[2].value
-    c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
-    c_oflags = syscall_object.args[3].value
-    c_oflags = int(c_oflags[c_oflags.rfind('=')+1:], 16)
-    c_cflags = syscall_object.args[4].value
-    c_cflags = int(c_cflags[c_cflags.rfind('=')+1:], 16)
-    c_lflags = syscall_object.args[5].value
-    c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
-    c_line = syscall_object.args[6].value
-    c_line = int(c_line[c_line.rfind('=')+1:])
-    cc = syscall_object.args[7].value
-    cc = cc[cc.rfind('=')+1:].strip('"}')
-    cc = cc.replace('\\x', ' ').strip()
-    cc = bytearray.fromhex(cc)
-    cc_as_string =''.join('{:02x}'.format(x) for x in cc)
-    cc = cc_as_string.decode('hex')
-    logging.debug('pid: %s', pid)
-    logging.debug('Addr: %s', addr)
-    logging.debug('cmd: %s', cmd)
-    logging.debug('c_iflags: %x', c_iflags)
-    logging.debug('c_oflags: %s', c_oflags)
-    logging.debug('c_cflags: %s', c_cflags)
-    logging.debug('c_lflags: %s', c_lflags)
-    logging.debug('c_line: %s', c_line)
-    logging.debug('cc: %s', cc_as_string)
-    logging.debug('len(cc): %s', len(cc))
-    if 'TCGETS' not in cmd:
-        raise NotImplementedError('Unsupported ioctl command')
-    tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
-                                         c_cflags,
-                                         c_lflags,
-                                         c_line,
-                                         cc
-                                         )
+    if syscall_object.ret[0] != -1:
+        cmd = syscall_object.args[1].value
+        c_iflags = syscall_object.args[2].value
+        c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
+        c_oflags = syscall_object.args[3].value
+        c_oflags = int(c_oflags[c_oflags.rfind('=')+1:], 16)
+        c_cflags = syscall_object.args[4].value
+        c_cflags = int(c_cflags[c_cflags.rfind('=')+1:], 16)
+        c_lflags = syscall_object.args[5].value
+        c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
+        c_line = syscall_object.args[6].value
+        c_line = int(c_line[c_line.rfind('=')+1:])
+        cc = syscall_object.args[7].value
+        cc = cc[cc.rfind('=')+1:].strip('"}')
+        cc = cc.replace('\\x', ' ').strip()
+        cc = bytearray.fromhex(cc)
+        cc_as_string =''.join('{:02x}'.format(x) for x in cc)
+        cc = cc_as_string.decode('hex')
+        logging.debug('pid: %s', pid)
+        logging.debug('Addr: %s', addr)
+        logging.debug('cmd: %s', cmd)
+        logging.debug('c_iflags: %x', c_iflags)
+        logging.debug('c_oflags: %s', c_oflags)
+        logging.debug('c_cflags: %s', c_cflags)
+        logging.debug('c_lflags: %s', c_lflags)
+        logging.debug('c_line: %s', c_line)
+        logging.debug('cc: %s', cc_as_string)
+        logging.debug('len(cc): %s', len(cc))
+        if 'TCGETS' not in cmd:
+            raise NotImplementedError('Unsupported ioctl command')
+        tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
+                                            c_cflags,
+                                            c_lflags,
+                                            c_line,
+                                            cc
+                                            )
     apply_return_conditions(pid, syscall_object)
+
+def statfs64_entry_handler(syscall_id, syscall_object, entering, pid):
+    logging.debug('Entering statfs64 handler') 
+    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    edx = tracereplay.peek_register(pid, tracereplay.EDX)
+    edi = tracereplay.peek_register(pid, tracereplay.EDI)
+    esi = tracereplay.peek_register(pid, tracereplay.ESI)
+    logging.debug("EBX: %s, ECX: %s, EDX: %s, ESI: %s, EDI: %s",
+                  ebx, ecx, edx, edi, esi)
+    addr = edx
+    noop_current_syscall(pid)
+    if syscall_object.ret[0] != -1:
+        logging.debug('Got successful statfs64 call')
+        f_type = syscall_object.args[2].value
+        f_type = int(f_type[f_type.rfind('=')+1:].strip('{}'), 16)
+        f_bsize = syscall_object.args[3].value
+        f_bsize = int(f_bsize[f_bsize.rfind('=')+1:])
+        f_blocks = syscall_object.args[4].value
+        f_blocks = int(f_blocks[f_blocks.rfind('=')+1:])
+        f_bfree = syscall_object.args[5].value
+        f_bfree = int(f_bfree[f_bfree.rfind('=')+1:])
+        f_bavail = syscall_object.args[6].value
+        f_bavail = int(f_bavail[f_bavail.rfind('=')+1:])
+        f_files = syscall_object.args[7].value
+        f_files = int(f_files[f_files.rfind('=')+1:])
+        f_ffree = syscall_object.args[8].value
+        f_ffree = int(f_ffree[f_ffree.rfind('=')+1:])
+        f_fsid1 = syscall_object.args[9].value
+        f_fsid1 = int(f_fsid1[f_fsid1.rfind('=')+1:].strip('{}'))
+        f_fsid2 = int(syscall_object.args[10].value.strip('{}'))
+        f_namelen = syscall_object.args[11].value
+        f_namelen = int(f_namelen[f_namelen.rfind('=')+1:])
+        f_frsize = syscall_object.args[12].value
+        f_frsize = int(f_frsize[f_frsize.rfind('=')+1:])
+        f_flags = syscall_object.args[13].value
+        f_flags = int(f_flags[f_flags.rfind('=')+1:].strip('{}'))
+        logging.debug('pid: %d', pid)
+        logging.debug('addr: %x', addr & 0xffffffff)
+        logging.debug('f_type: %x', f_type)
+        logging.debug('f_bsize: %s', f_bsize)
+        logging.debug('f_blocks: %s', f_blocks)
+        logging.debug('f_bfree: %s', f_bfree)
+        logging.debug('f_bavail: %s', f_bavail)
+        logging.debug('f_files: %s', f_files)
+        logging.debug('f_ffree: %s', f_ffree)
+        logging.debug('f_fsid1: %s', f_fsid1)
+        logging.debug('f_fsid2: %s', f_fsid2)
+        logging.debug('f_namelen: %s', f_namelen)
+        logging.debug('f_frsize: %s', f_frsize)
+        logging.debug('f_flags: %s', f_flags)
+        tracereplay.populate_statfs64_structure(pid,
+                                                addr,
+                                                f_type,
+                                                f_bsize,
+                                                f_blocks,
+                                                f_bfree,
+                                                f_bavail,
+                                                f_files,
+                                                f_ffree,
+                                                f_fsid1,
+                                                f_fsid2,
+                                                f_namelen,
+                                                f_frsize,
+                                                f_flags)
+    apply_return_conditions(pid, syscall_object)
+
+def lstat64_entry_handler(syscall_id, syscall_object, entering, pid):
+   logging.debug('Entering lstat64 handler') 
+   noop_current_syscall(pid)
+   if syscall_object.ret[0] != -1:
+       logging.debug('Got successful lstat64 call')
+       raise NotImplementedError('Successful lstat64 not supported')
+   apply_return_conditions(pid, syscall_object)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Sycall id: %s', syscall_id)
@@ -469,7 +544,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    266, #set_clock_getres
                    240, #sys_futex
                    191, #!!!!!!!!! sys_getrlimit
-                   268, #!!!!!!!! sys_statfs64
                    5 #!!!!!!!! open
                   ]
     handlers = {
@@ -497,7 +571,9 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (195, True): stat64_entry_handler,
                 (142, True): select_entry_handler,
                 (82, True): select_entry_handler,
-                (221, True): fcntl64_entry_handler
+                (221, True): fcntl64_entry_handler,
+                (196, True): lstat64_entry_handler,
+                (268, True): statfs64_entry_handler
                }
     if syscall_id not in ignore_list:
         try:
@@ -935,6 +1011,11 @@ if __name__ == '__main__':
                 try:
                     validate_syscall(orig_eax, syscall_object)
                 except Exception as e:
+                    print('EBX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EBX)))
+                    print('ECX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ECX)))
+                    print('EDX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDX)))
+                    print('EDI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDI)))
+                    print('ESI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ESI)))
                     print(e)
                     os.kill(pid, signal.SIGKILL)
                     sys.exit(1)

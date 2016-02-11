@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #define __USE_LARGEFILE64
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
@@ -19,6 +20,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <termios.h>
+#include <sys/statfs.h>
 
 static PyObject* TraceReplayError;
 
@@ -50,6 +52,61 @@ int copy_buffer_into_child_process_memory(pid_t child,
     }
     return 0;
 }
+
+static PyObject* tracreplay_populate_statfs64_structure(PyObject* self,
+                                                        PyObject* args) {
+    pid_t child;
+    void* addr;
+    long f_type;
+    long f_bsize;
+    long f_blocks;
+    long f_bfree;
+    long f_bavail;
+    long f_files;
+    long f_ffree;
+    long f_fsid1;
+    long f_fsid2;
+    long f_namelen;
+    long f_frsize;
+    long f_flags;
+
+    PyArg_ParseTuple(args, "iikkkkkkkkkkkk", &child, &addr, &f_type, &f_bsize,
+                     &f_blocks, &f_bfree, &f_bavail, &f_files, &f_ffree,
+                     &f_fsid1, &f_fsid2, &f_namelen, &f_frsize, &f_flags);
+    if(DEBUG) {
+        printf("C: statfs64: child: %d\n", child);
+        printf("C: statfs64: addr: %p\n", addr);
+        printf("C: statfs64: f_type: %lx\n", f_type);
+        printf("C: statfs64: f_bsize: %ld\n", f_bsize);
+        printf("C: statfs64: f_blocks: %ld\n", f_blocks);
+        printf("C: statfs64: f_bfree: %ld\n", f_bfree);
+        printf("C: statfs64: f_bavail: %ld\n", f_bavail);
+        printf("C: statfs64: f_files: %ld\n", f_files);
+        printf("C: statfs64: f_ffree: %ld\n", f_ffree);
+        printf("C: statfs64: f_fsid1: %ld\n", f_fsid1);
+        printf("C: statfs64: f_fsid2: %ld\n", f_fsid2);
+        printf("C: statfs64: f_namelen: %ld\n", f_namelen);
+        printf("C: statfs64: f_frsize: %ld\n", f_frsize);
+        printf("C: statfs64: f_flags: %ld\n", f_flags);
+    }
+    struct statfs64 s;
+    memset(&s, 0x0, sizeof(s));
+    s.f_type = f_type;
+    s.f_bsize = f_bsize;
+    s.f_blocks = f_blocks;
+    s.f_bfree = f_bfree;
+    s.f_bavail = f_bavail;
+    s.f_files = f_files;
+    s.f_ffree = f_ffree;
+    //NOTICE: fsid is not set here
+    s.f_namelen = f_namelen;
+    s.f_frsize = f_frsize;
+    s.f_flags = f_flags;
+
+    copy_buffer_into_child_process_memory(child, addr, (char*)&s, sizeof(s));
+    Py_RETURN_NONE;
+}
+
 
 static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
 						      PyObject* args) {
@@ -105,7 +162,7 @@ static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (unsigned char*)&t,
+                                          (char*)&t,
                                           17 + 19);
     Py_RETURN_NONE;
 }
@@ -496,6 +553,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate rlimit structure"},
     {"populate_tcgets_response", tracereplay_populate_tcgets_response,
      METH_VARARGS, "populate tcgets response"},
+    {"populate_statfs64_structure",   tracreplay_populate_statfs64_structure,
+     METH_VARARGS, "populate statfs64 structure"},
     {NULL, NULL, 0, NULL}
 };
 
