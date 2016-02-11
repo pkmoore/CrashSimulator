@@ -62,9 +62,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
     except KeyError:
-        logging.warn('No handler for socket subcall %s %s',
-                     syscall_object.name,
-                     'entry' if entering else 'exit')
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('No handler for socket subcall %s %s', syscall_object.name, 'entry' if entering else 'exit')
 
 def _exit(pid):
     os.kill(pid, signal.SIGKILL)
