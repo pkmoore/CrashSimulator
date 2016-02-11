@@ -521,12 +521,12 @@ def lstat64_entry_handler(syscall_id, syscall_object, entering, pid):
    apply_return_conditions(pid, syscall_object)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
-    logging.debug('Sycall id: %s', syscall_id)
+    logging.info('Sycall id: %s', syscall_id)
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
         logging.debug('EBX value is: %s', ebx)
-    logging.debug('Syscall name (from trace): %s', syscall_object.name)
+    logging.info('Syscall name (from trace): %s', syscall_object.name)
     ignore_list = [
                    20, #sys_getpid
                    91, #sys_munprotect
