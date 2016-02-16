@@ -60,7 +60,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         os.kill(pid, signal.SIGKILL)
         sys.exit(1)
     try:
-        subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, entering, pid)
+        subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, pid)
     except KeyError:
         os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('No handler for socket subcall %s %s', syscall_object.name, 'entry' if entering else 'exit')
@@ -69,7 +69,7 @@ def _exit(pid):
     os.kill(pid, signal.SIGKILL)
     sys.exit(1)
 
-def shutdown_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 1)
@@ -91,7 +91,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     else:
         logging.debug('Ignoring shutdown of untracked file descriptor')
 
-def getsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
+def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockopt handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('Extracting parameters from address %s', ecx)
@@ -121,7 +121,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, entering, pid):
 # Generic handler for all calls that just need to return what they returned in
 # the trace.
 # Currently used by send, listen
-def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
+def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering subcall return success handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('Extracting parameters from address %s', ecx)
@@ -139,7 +139,7 @@ def subcall_return_success_handler(syscall_id, syscall_object, entering, pid):
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
-def close_entry_handler(syscall_id, syscall_object, entering, pid):
+def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
@@ -151,11 +151,11 @@ def close_entry_handler(syscall_id, syscall_object, entering, pid):
                             'descriptor from trace')
         logging.debug('Got tracked file descriptor')
         noop_current_syscall(pid)
-        close_exit_handler(syscall_id, syscall_object, entering, pid)
+        close_exit_handler(syscall_id, syscall_object, pid)
     else:
         logging.debug('Ignoring close of non-socket file descriptor')
 
-def close_exit_handler(syscall_id, syscall_object, entering, pid):
+def close_exit_handler(syscall_id, syscall_object, pid):
     fd = syscall_object.args[0].value
     try:
         FILE_DESCRIPTORS.remove(fd)
@@ -163,7 +163,7 @@ def close_exit_handler(syscall_id, syscall_object, entering, pid):
         pass
     apply_return_conditions(pid, syscall_object)
 
-def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     #Before we proceed we need to make sure this is socket call we care about.
     #In order to do this we must that the executing call has the correct first
     #parameter (PF_INET) and that the corresponding line in the trace has the
@@ -201,7 +201,7 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     else:
         logging.info('Ignoring non-PF_INET call to socket')
 
-def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Checking if line from trace is interrupted accept')
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted accept. Will advance past')
@@ -211,9 +211,9 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
     noop_current_syscall(pid)
-    accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid)
+    accept_subcall_exit_handler(syscall_id, syscall_object, pid)
 
-def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
+def accept_subcall_exit_handler(syscall_id, syscall_object, pid):
     fd = syscall_object.ret
     if fd not in FILE_DESCRIPTORS:
         FILE_DESCRIPTORS.append(fd[0])
@@ -221,7 +221,7 @@ def accept_subcall_exit_handler(syscall_id, syscall_object, entering, pid):
         raise Exception('Tried to store the same file descriptor twice')
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
-def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
     noop_current_syscall(pid)
@@ -234,7 +234,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     write_buffer(pid, buffer_address, data, buffer_size)
     apply_return_conditions(pid, syscall_object)
 
-def recvfrom_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
+def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
     noop_current_syscall(pid)
@@ -248,7 +248,7 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, entering, pid):
     apply_return_conditions(pid, syscall_object)
     _exit(pid)
 
-def read_entry_handler(syscall_id, syscall_object, entering, pid):
+def read_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
@@ -270,13 +270,13 @@ def read_entry_handler(syscall_id, syscall_object, entering, pid):
 # This thing must be here to handle exits for read calls that we let pass. This
 # will go away once the new "open" machinery is in place and we intercept all
 # calls to read.
-def read_exit_handler(syscall_id, syscall_object, entering, pid):
+def read_exit_handler(syscall_id, syscall_object, pid):
     pass
 
 #Note: This handler only takes action on syscalls made to file descriptors we
 #are tracking. Otherwise it simply does any required debug-printing and lets it
 #execute
-def write_entry_handler(syscall_id, syscall_object, entering, pid):
+def write_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     msg_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     msg_len = tracereplay.peek_register(pid, tracereplay.EDX)
@@ -291,10 +291,10 @@ def write_entry_handler(syscall_id, syscall_object, entering, pid):
         apply_return_conditions(pid, syscall_object)
 
 # Once again, this only has to be here until the new "open" machinery is in lace
-def write_exit_handler(syscall_id, syscall_object, entering, pid):
+def write_exit_handler(syscall_id, syscall_object, pid):
     pass
 
-def llseek_entry_handler(syscall_id, syscall_object, entering, pid):
+def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
     result = int(syscall_object.args[2].value.strip('[]'))
     result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
@@ -309,7 +309,7 @@ def llseek_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Got unsucceesful llseek call')
     apply_return_conditions(pid, syscall_object)
 
-def getcwd_entry_handler(syscall_id, syscall_object, entering, pid):
+def getcwd_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getcwd entry handler')
     array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
     data = str(syscall_object.args[0].value.strip('"'))
@@ -328,7 +328,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, entering, pid):
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
 
-def readlink_entry_handler(syscall_id, syscall_object, entering, pid):
+def readlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering readlink entry handler')
     array_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     data = str(syscall_object.args[0].value.strip('"'))
@@ -350,7 +350,7 @@ def readlink_entry_handler(syscall_id, syscall_object, entering, pid):
 # This handler assumes that uname cannot fail. The only documented way it can
 # fail is if the buffer it is handed is somehow invalid. This code assumes that
 # well written programs don't do this.
-def uname_entry_handler(syscall_id, syscall_object, entering, pid):
+def uname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering uname handler')
     args = {x.value.split('=')[0]: x.value.split('=')[1]
             for x in syscall_object.args}
@@ -368,7 +368,7 @@ def uname_entry_handler(syscall_id, syscall_object, entering, pid):
                                          args['domainname'])
     apply_return_conditions(pid, syscall_object)
 
-def getrlimit_entry_handler(syscall_id, syscall_object, entering, pid):
+def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getrlimit handler')
     cmd = syscall_object.args[0].value[0]
     if cmd != 'RLIMIT_STACK':
@@ -393,7 +393,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, entering, pid):
     tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
     apply_return_conditions(pid, syscall_object)
 
-def ioctl_entry_handler(syscall_id, syscall_object, entering, pid):
+def ioctl_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering ioctl handler')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -445,7 +445,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, entering, pid):
                                             )
     apply_return_conditions(pid, syscall_object)
 
-def statfs64_entry_handler(syscall_id, syscall_object, entering, pid):
+def statfs64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering statfs64 handler') 
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -511,7 +511,7 @@ def statfs64_entry_handler(syscall_id, syscall_object, entering, pid):
                                                 f_flags)
     apply_return_conditions(pid, syscall_object)
 
-def lstat64_entry_handler(syscall_id, syscall_object, entering, pid):
+def lstat64_entry_handler(syscall_id, syscall_object, pid):
    logging.debug('Entering lstat64 handler') 
    noop_current_syscall(pid)
    if syscall_object.ret[0] != -1:
@@ -525,6 +525,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
         logging.debug('EBX value is: %s', ebx)
+        socketcall_handler(syscall_id, syscall_object, entering, pid)
+        return
     logging.info('Syscall name (from trace): %s', syscall_object.name)
     ignore_list = [
                    20, #sys_getpid
@@ -561,8 +563,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (4, False): write_exit_handler,
                 (3, True): read_entry_handler,
                 (3, False): read_exit_handler,
-                (102, True): socketcall_handler,
-                (102, False): socketcall_handler,
                 (6, True): close_entry_handler,
                 (6, False): close_exit_handler,
                 (168, True): poll_entry_handler,
@@ -576,7 +576,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                }
     if syscall_id not in ignore_list:
         try:
-            handlers[(syscall_id, entering)](syscall_id, syscall_object, entering, pid)
+            handlers[(syscall_id, entering)](syscall_id, syscall_object, pid)
         except KeyError as e:
             logging.error('Encountered un-ignored syscall with no handler: %s(%s)',
                           syscall_id,
@@ -584,7 +584,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
             os.kill(pid, signal.SIGKILL)
             raise e
 
-def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
+def fstat64_entry_handler(syscall_id, syscall_object, pid):
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
@@ -665,7 +665,7 @@ def fstat64_entry_handler(syscall_id, syscall_object, entering, pid):
                                            time_args_dict['st_atime'])
     apply_return_conditions(pid, syscall_object)
 
-def stat64_entry_handler(syscall_id, syscall_object, entering, pid):
+def stat64_entry_handler(syscall_id, syscall_object, pid):
     if 'st_rdev' in syscall_object.original_line:
         raise Exception('stat64 handler can\'t deal with st_rdevs!!')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -732,7 +732,7 @@ def cleanup_st_mode(m):
             tmp = tmp | STAT_CONST[i]
     return tmp
 
-def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
+def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fcntl64 entry handler')
     operation = syscall_object.args[1].value[0].strip('[]\'')
     noop_current_syscall(pid)
@@ -745,7 +745,7 @@ def fcntl64_entry_handler(syscall_id, syscall_object, entering, pid):
 # A lot of the parsing in this function needs to be moved into the
 # posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
 # DESCRIPTORS" parsing class.
-def select_entry_handler(syscall_id, syscall_object, entering, pid):
+def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering select entry handler')
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted select. Will advance past')
@@ -794,19 +794,19 @@ def select_entry_handler(syscall_id, syscall_object, entering, pid):
 
 # Like the subcall return success handler, this handler just no-ops out a call
 # and returns whatever it returned from the trace. Used by ioctl and stat64
-def syscall_return_success_handler(syscall_id, syscall_object, entering, pid):
+def syscall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('Using default "return success" handler')
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
-def poll_entry_handler(syscall_id, syscall_object, entering, pid):
+def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
     noop_current_syscall(pid)
     global pollfd_array_address
     pollfd_array_address = tracereplay.peek_register(pid, tracereplay.EBX)
-    poll_exit_handler(syscall_id, syscall_object, entering, pid)
+    poll_exit_handler(syscall_id, syscall_object, pid)
 
-def poll_exit_handler(syscall_id, syscall_object, entering, pid):
+def poll_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll exit handler')
     ol = syscall_object.original_line
     ret_struct = ol[ol.rfind('('):]
