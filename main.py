@@ -20,12 +20,6 @@ from os_dict import OS_CONST, STAT_CONST
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
 
-def next_syscall():
-    s = os.wait()
-    if os.WIFEXITED(s[1]):
-        return False
-    return True
-
 FILE_DESCRIPTORS = [tracereplay.STDIN]
 
 # Horrible hack
@@ -35,6 +29,12 @@ return_value = 0
 system_calls = None
 entering_syscall = True
 pollfd_array_address = 0
+
+def next_syscall():
+    s = os.wait()
+    if os.WIFEXITED(s[1]):
+        return False
+    return True
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
