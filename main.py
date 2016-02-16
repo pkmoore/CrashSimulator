@@ -50,7 +50,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('getsockopt', True): getsockopt_entry_handler,
                         ('sendmmsg', True): subcall_return_success_handler,
                         ('sendto', True): subcall_return_success_handler,
-                        ('shutdown', True): shutdown_subcall_entry_handler
+                        ('shutdown', True): shutdown_subcall_entry_handler,
+                        ('getsockname', True): getsockname_entry_handler,
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
@@ -68,6 +69,42 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def _exit(pid):
     os.kill(pid, signal.SIGKILL)
     sys.exit(1)
+
+def getsockname_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getsockname handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 3)
+    logging.debug(params)
+    fd = params[0]
+    fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %s', fd)
+    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    if fd in FILE_DESCRIPTORS:
+        if fd != int(fd_from_trace):
+            raise Exception('File descriptor from execution differs from'
+                            'file descriptor from trace')
+
+    noop_current_syscall(pid)
+    if syscall_object.ret[0] != -1:
+        logging.debug('Got successful getsockname call')
+        addr = params[1]
+        logging.debug('Addr: %d', addr)
+        sockfields = syscall_object.args[1].value
+        family = sockfields[0].value
+        port = int(sockfields[1].value)
+        ip = sockfields[2].value
+        logging.debug('Family: %s', family)
+        logging.debug('Port: %d', port)
+        logging.debug('Ip: %s', ip)
+        if family != 'AF_INET':
+            raise NotImplementedException('getsockname only supports AF_INET')
+        tracereplay.populate_getsockname_structure(pid,
+                                                   addr,
+                                                   port,
+                                                   ip)
+    else:
+        logging.debug('Got unsuccessful getsockname call')
+    apply_return_conditions(pid, syscall_object)
 
 def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')

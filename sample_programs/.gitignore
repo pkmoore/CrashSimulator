@@ -10,3 +10,4 @@ calluname
 callgetrlimit
 calltcgets
 callstatfs64
+callgetsockname

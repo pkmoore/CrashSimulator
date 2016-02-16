@@ -21,6 +21,8 @@
 #include <sys/resource.h>
 #include <termios.h>
 #include <sys/statfs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 static PyObject* TraceReplayError;
 
@@ -51,6 +53,34 @@ int copy_buffer_into_child_process_memory(pid_t child,
         addr++;
     }
     return 0;
+}
+
+static PyObject* tracereplay_populate_getsockname_structure(PyObject* self,
+                                                            PyObject* args) {
+    pid_t child;
+    void* addr;
+    char* ip;
+    short port;
+
+    PyArg_ParseTuple(args, "iihs", &child, &addr, &port, &ip);
+    if(DEBUG) {
+        printf("C: getsockname: child: %d\n", child);
+        printf("C: getsockname: addr: %p\n", addr);
+        printf("C: getsockname: ip: %s\n", ip);
+        printf("C: getsockname: port: %d\n", port);
+    }
+    struct sockaddr_in s;    
+    if(DEBUG) {
+        printf("C: getsockname: sizeof(s.sin_port): %d\n", sizeof(s.sin_port));
+    }
+    s.sin_family = AF_INET;
+    s.sin_port = htons(port);
+    inet_aton(ip, &s.sin_addr); 
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&s,
+                                          sizeof(s));
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracreplay_populate_statfs64_structure(PyObject* self,
@@ -555,6 +585,10 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate tcgets response"},
     {"populate_statfs64_structure",   tracreplay_populate_statfs64_structure,
      METH_VARARGS, "populate statfs64 structure"},
+    {"populate_getsockname_structure",
+     tracereplay_populate_getsockname_structure,
+     METH_VARARGS,
+     "populate getsockname structure"},
     {NULL, NULL, 0, NULL}
 };
 
