@@ -198,27 +198,28 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
 
 def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
+    # Pull out everything we can check
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    # Check to make sure everything is the same
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    # Decide if this is a system call we want to replay
     if fd in FILE_DESCRIPTORS:
-        if fd != int(fd_from_trace):
-            raise Exception('File descriptor from execution differs from file '
-                            'descriptor from trace')
-        logging.debug('Got tracked file descriptor')
+        logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        close_exit_handler(syscall_id, syscall_object, pid)
+        if syscall_object.ret[0] != -1:
+            logging.debug('Got unsuccessful close call')
+            fd = syscall_object.args[0].value
+            try:
+                FILE_DESCRIPTORS.remove(fd)
+            except ValueError:
+                pass
+        apply_return_conditions(pid, syscall_object)
     else:
-        logging.debug('Ignoring close of non-socket file descriptor')
-
-def close_exit_handler(syscall_id, syscall_object, pid):
-    fd = syscall_object.args[0].value
-    try:
-        FILE_DESCRIPTORS.remove(fd)
-    except ValueError:
-        pass
-    apply_return_conditions(pid, syscall_object)
+        logging.info('Not replaying this system call')
 
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     #Before we proceed we need to make sure this is socket call we care about.
