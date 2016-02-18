@@ -80,6 +80,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     # We don't compare params[2] because it is the address of an out parameter
     # Get values from trace for comparison
     fd_from_trace = syscall_object.args[0].value
+    # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
@@ -113,17 +114,20 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
 
 def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')
+    # Pull out the info we can check
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    params = extract_socketcall_parameters(pid, ecx, 1)
+    params = extract_socketcall_parameters(pid, ecx, 2)
     fd = params[0]
     fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    # TODO: We need to check the 'how' parameter here
+    # Check to make sure everything is the same 
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    # Decide if we want to replay this system call
     if fd in FILE_DESCRIPTORS:
-        if fd != int(fd_from_trace):
-            raise Exception('File descriptor from execution differs from file '
-                            'descriptor from trace')
-        logging.debug('Got tracked file descriptor')
+        logging.info('Replaying this system call')
         noop_current_syscall(pid)
         try:
             FILE_DESCRIPTORS.remove(fd)
@@ -131,38 +135,49 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
             pass
         apply_return_conditions(pid, syscall_object)
     else:
-        logging.debug('Ignoring shutdown of untracked file descriptor')
+        logging.info('Not replaying this system call')
 
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockopt handler')
+    # Pull out what we can compare
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address %s', ecx)
     params = extract_socketcall_parameters(pid, ecx, 5)
+    fd = params[0]
+    fd_from_trace = int(syscall_object.args[0].value)
+    # We don't check param[3] because it is an address of an empty buffer
+    # We don't check param[4] because it is an address of an empty length
+    # Check to make sure everything is the same
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    # This if is sufficient for now for the implemented options
     if params[1] != 1 or params[2] != 4:
         raise Exception('Unimplemented getsockopt level or optname')
-    optval_addr = params[3]
-    optval_len_addr = params[4]
-    logging.debug('Optval addr: %s', optval_addr)
-    logging.debug('Optval len addr: %s', optval_len_addr)
-    optval = syscall_object.args[3].value.strip('[]')
-    optval_len = syscall_object.args[4].value.strip('[]')
-    logging.debug('Optval: %s', optval)
-    logging.debug('Optval Length: %s', optval_len)
-    noop_current_syscall(pid)
-    logging.debug('Writing values')
-    write_buffer(pid,
-                 optval_addr,
-                 optval,
-                 optval_len)
-    write_buffer(pid,
-                 optval_len_addr,
-                 optval_len,
-                 4)
-    apply_return_conditions(pid, syscall_object)
+    if fd in FILE_DESCRIPTORS:
+        logging.info('Replaying this system call')
+        optval = syscall_object.args[3].value.strip('[]')
+        optval_len = syscall_object.args[4].value.strip('[]')
+        logging.debug('Optval: %s', optval)
+        logging.debug('Optval Length: %s', optval_len)
+        noop_current_syscall(pid)
+        logging.debug('Writing values')
+        write_buffer(pid,
+                    optval_addr,
+                    optval,
+                    optval_len)
+        write_buffer(pid,
+                    optval_len_addr,
+                    optval_len,
+                    4)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.info('Not replaying this system call')
 
 # Generic handler for all calls that just need to return what they returned in
 # the trace.
 # Currently used by send, listen
+
 def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering subcall return success handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
