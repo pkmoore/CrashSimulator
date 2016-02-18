@@ -98,10 +98,10 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Ip: %s', ip)
         if family != 'AF_INET':
             raise NotImplementedException('getsockname only supports AF_INET')
-        tracereplay.populate_getsockname_structure(pid,
-                                                   addr,
-                                                   port,
-                                                   ip)
+        tracereplay.populate_af_inet_sockaddr(pid,
+                                              addr,
+                                              port,
+                                              ip)
     else:
         logging.debug('Got unsuccessful getsockname call')
     apply_return_conditions(pid, syscall_object)

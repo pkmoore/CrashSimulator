@@ -55,8 +55,8 @@ int copy_buffer_into_child_process_memory(pid_t child,
     return 0;
 }
 
-static PyObject* tracereplay_populate_getsockname_structure(PyObject* self,
-                                                            PyObject* args) {
+static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
+                                                       PyObject* args) {
     pid_t child;
     void* addr;
     char* ip;
@@ -585,10 +585,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate tcgets response"},
     {"populate_statfs64_structure",   tracreplay_populate_statfs64_structure,
      METH_VARARGS, "populate statfs64 structure"},
-    {"populate_getsockname_structure",
-     tracereplay_populate_getsockname_structure,
-     METH_VARARGS,
-     "populate getsockname structure"},
+    {"populate_af_inet_sockaddr", tracereplay_populate_af_inet_sockaddr,
+     METH_VARARGS, "populate AF_INET sockaddr"},
     {NULL, NULL, 0, NULL}
 };
 
