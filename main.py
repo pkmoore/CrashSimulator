@@ -557,14 +557,13 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
    apply_return_conditions(pid, syscall_object)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
-    logging.info('Sycall id: %s', syscall_id)
+    logging.debug('Handling syscall')
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
-        logging.debug('EBX value is: %s', ebx)
+        logging.debug('Socketcall id from EBX is: %s', ebx)
         socketcall_handler(syscall_id, syscall_object, entering, pid)
         return
-    logging.info('Syscall name (from trace): %s', syscall_object.name)
     ignore_list = [
                    20, #sys_getpid
                    91, #sys_munprotect
@@ -1009,11 +1008,12 @@ if __name__ == '__main__':
     loglevel = args['loglevel']
     if loglevel:
         numeric_level = getattr(logging, loglevel.upper(), None)
+        print(numeric_level)
         if not isinstance(numeric_level, int):
             raise ValueError('Invalid log level: {}'.format(loglevel))
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
-        tracereplay.enable_debug_output()
+        tracereplay.enable_debug_output(numeric_level)
     logging.debug('About to spawn child process')
     pid = os.fork()
     if pid == 0:
@@ -1025,11 +1025,13 @@ if __name__ == '__main__':
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
-            logging.debug('===')
-            logging.debug('New system call')
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
-            logging.debug('Extracted %s from ORIG_EAX', orig_eax)
-            logging.debug('%s', entering_syscall)
+            logging.info('===')
+            logging.info('Advanced to next system call')
+            logging.info('System call id from execution: %d', orig_eax)
+            logging.info('Looked ip system call name: %s', SYSCALLS[orig_eax])
+            logging.info('This is a system call %s',
+                          'entry' if entering_syscall else 'exit')
             #This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
@@ -1040,22 +1042,22 @@ if __name__ == '__main__':
                 continue
             if entering_syscall:
                 syscall_object = system_calls.next()
-                logging.debug('Selecting next syscall from trace\n%s',
+                logging.info('System call name from trace: %s',
+                             syscall_object.name)
+                logging.debug('System call object contents:\n%s',
                               syscall_object)
             if orig_eax != 102:
-                logging.debug('Validating non-socketcall syscall')
                 try:
                     validate_syscall(orig_eax, syscall_object)
                 except Exception as e:
-                    print('EBX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EBX)))
-                    print('ECX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ECX)))
-                    print('EDX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDX)))
-                    print('EDI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDI)))
-                    print('ESI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ESI)))
+                    logging.debug('EBX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EBX)))
+                    logging.debug('ECX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ECX)))
+                    logging.debug('EDX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDX)))
+                    logging.debug('EDI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDI)))
+                    logging.debug('ESI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ESI)))
                     print(e)
                     os.kill(pid, signal.SIGKILL)
                     sys.exit(1)
-            logging.debug('Handling syscall')
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             entering_syscall = not entering_syscall
             logging.debug('Requesting next syscall')

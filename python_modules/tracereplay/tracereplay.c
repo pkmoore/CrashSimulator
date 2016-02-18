@@ -27,6 +27,7 @@
 static PyObject* TraceReplayError;
 
 bool DEBUG = false;
+bool INFO = false;
 
 int copy_buffer_into_child_process_memory(pid_t child,
                                           void* addr,
@@ -399,12 +400,20 @@ static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
 }
 
 static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args) {
-    DEBUG = true;
+    int numeric_level;
+    PyArg_ParseTuple(args, "i", &numeric_level);
+    switch(numeric_level) {
+    case 10:
+        DEBUG = true;
+    case 20:
+        INFO = true;
+    }
     Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_disable_debug_output(PyObject* self, PyObject* args) {
     DEBUG = false;
+    INFO = false;
     Py_RETURN_NONE;
 }
 
