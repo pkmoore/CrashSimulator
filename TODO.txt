@@ -1,3 +1,10 @@
+FEATURE: Make the C output aware of debug values
+         DO THIS FIRST!!
+
+BUG: recvfrom does not fill out the sockaddr structure out values
+
+HARD: Add validation to handlers where appropriate
+
 EASY: Clean up messages. Make them more useful.
 
 TODO: For low hanging fruit calls, verify that the attempted call has the same

@@ -1,7 +1,7 @@
 !   getpeername
 !   getrusage
 !    813 open
-!     20 getsockname
+#     20 getsockname
 !      2 recvmsg
 !      3 getrlimit
 !      4 openat
