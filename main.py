@@ -262,6 +262,7 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Checking if line from trace is interrupted accept')
+    # Hack to fast forward through interrupted accepts
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted accept. Will advance past')
         syscall_object = system_calls.next()
@@ -269,16 +270,35 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.name != 'accept':
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
-    noop_current_syscall(pid)
-    accept_subcall_exit_handler(syscall_id, syscall_object, pid)
-
-def accept_subcall_exit_handler(syscall_id, syscall_object, pid):
-    fd = syscall_object.ret
-    if fd not in FILE_DESCRIPTORS:
-        FILE_DESCRIPTORS.append(fd[0])
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 3)
+    # Pull out everything we can check
+    fd = params[0]
+    fd_from_trace = syscall_object.args[0].value
+    # We don't check param[1] because it is the address of a buffer
+    # We don't check param[2] because it is the address of a length
+    # Check to make sure everything is the same
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    # Decide if this is a system call we want to replay
+    if fd in FILE_DESCRIPTORS:
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        if syscall_object.ret[0] != -1:
+            ret = syscall_object.ret[0]
+            if ret in FILE_DESCRIPTORS:
+                raise Exception('Syscall object return value ({}) already exists in'
+                                'tracked file descriptors list ({})'
+                                .format(ret, FILE_DESCRIPTORS))
+            FILE_DESCRIPTORS.append(ret)
+        apply_return_conditions(pid, syscall_object)
     else:
-        raise Exception('Tried to store the same file descriptor twice')
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+        logging.info('Not replaying this system call')
+
+def accept_exit_handler(syscall_id, syscall_object, pid):
+    pass
 
 def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
