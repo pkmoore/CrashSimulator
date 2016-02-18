@@ -221,15 +221,15 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.info('Not replaying this system call')
 
+def close_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
+# TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
-    #Before we proceed we need to make sure this is socket call we care about.
-    #In order to do this we must that the executing call has the correct first
-    #parameter (PF_INET) and that the corresponding line in the trace has the
-    #same
     logging.debug('Entering socket subcall entry handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address: %s', ecx)
     params = extract_socketcall_parameters(pid, ecx, 3)
+    # Only PF_INET and PF_LOCAL socket calls are handled
     execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
     trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
     execution_is_PF_LOCAL = (params[0] == 1) #define PF_LOCAL 1
@@ -1074,7 +1074,7 @@ if __name__ == '__main__':
             logging.info('===')
             logging.info('Advanced to next system call')
             logging.info('System call id from execution: %d', orig_eax)
-            logging.info('Looked ip system call name: %s', SYSCALLS[orig_eax])
+            logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
                           'entry' if entering_syscall else 'exit')
             #This if statement is an ugly hack
