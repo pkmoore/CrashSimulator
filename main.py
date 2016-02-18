@@ -337,16 +337,48 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
 def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
-    noop_current_syscall(pid)
-    if params[0] not in FILE_DESCRIPTORS:
-        raise Exception('Tried to recvfrom from non-existant file descriptor')
-    buffer_address = params[1]
-    buffer_size = params[2]
-    data = syscall_object.args[1].value.lstrip('"').rstrip('"')
-    data = fix_character_literals(data)
-    write_buffer(pid, buffer_address, data, buffer_size)
-    apply_return_conditions(pid, syscall_object)
-    _exit(pid)
+    # Pull out everything we can check
+    fd = params[0]
+    fd_from_trace = syscall_object.args[0].value
+    # We don't check params[1] because it is the address of an empty buffer
+    len = params[2]
+    len_from_trace = syscall_object.args[2].value
+    # We don't check params[3] because it is a flags field
+    # We don't check params[4] because it is the address of an empty buffer
+    # We don't check params[5] because it is the address of a length
+    addr = params[4]
+    sockfields = syscall_object.args[4].value
+    family = sockfields[0].value
+    port = int(sockfields[1].value)
+    ip = sockfields[2].value
+    # Check to make everything is the same
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    if len!= int(len_from_trace):
+        raise Exception('Length from execution ({}) does not match '
+                        'length from trace ({})'
+                        .format(len, len_from_trace))
+    # Decide if we want to replay this system call
+    if fd in FILE_DESCRIPTORS:
+        logging.info('Replaying this system call')
+        noop_current_syscall(pid)
+        if params[0] not in FILE_DESCRIPTORS:
+            raise Exception('Tried to recvfrom from non-existant file descriptor')
+        buffer_address = params[1]
+        buffer_size = params[2]
+        data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+        data = fix_character_literals(data)
+        write_buffer(pid, buffer_address, data, buffer_size)
+        tracereplay.populate_sock
+        tracereplay.populate_af_inet_sockaddr(pid,
+                                              addr,
+                                              port,
+                                              ip)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.info('Not replaying this system call')
 
 def read_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
