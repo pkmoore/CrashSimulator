@@ -177,7 +177,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
 # Generic handler for all calls that just need to return what they returned in
 # the trace.
 # Currently used by send, listen
-
+# TODO: check this guy for required parameter checking
 def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering subcall return success handler')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
