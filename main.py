@@ -72,13 +72,23 @@ def _exit(pid):
 
 def getsockname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockname handler')
+    # Pull out the info that we can check
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
-    logging.debug(params)
     fd = params[0]
+    # We don't compare params[1] because is the address of an empty buffer
+    size = peek_data(pid, params[2], 4)
+    # Get values from trace to compare to
     fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
+    size_from_trace = int(syscall_object.args[2].value.strip('[]'), 16)
+    if fd != fd_from_trace:
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    if size != size_from_trace:
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(size, size_from_trace))
     if fd in FILE_DESCRIPTORS:
         if fd != int(fd_from_trace):
             raise Exception('File descriptor from execution differs from'
