@@ -239,11 +239,12 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Exeuction is PF_LOCAL: %s', execution_is_PF_LOCAL)
     logging.debug('Trace is PF_LOCAL: %s', trace_is_PF_LOCAL)
     if execution_is_PF_INET != trace_is_PF_INET:
-        raise Exception('Encountered socket subcall with mismatch between \
-                             execution and trace protocol family')
+        raise Exception('Encountered socket subcall with mismatch between '
+                        'execution protocol family and trace protocol family')
     if execution_is_PF_LOCAL != trace_is_PF_LOCAL:
-        raise Exception('Encountered socket subcall with mismatch between \
-                             execution and trace protocol family')
+        raise Exception('Encountered socket subcall with mismatch between '
+                        'execution protocol family and trace protocol family')
+    # Decide if we want to deal with this socket call or not
     if trace_is_PF_INET or \
        execution_is_PF_INET or \
        trace_is_PF_LOCAL or \

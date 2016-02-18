@@ -4,6 +4,11 @@ OS_CONST = {
     'SO_ERROR' : 4
 }
 
+SOCK_CONST = {
+    'SOCK_STREAM': 1,
+    'SOCK_DGRAM': 2
+}
+
 STAT_CONST = {
     'S_IFMT': 00170000,
     'S_IFSOCK': 0140000,
