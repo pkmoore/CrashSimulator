@@ -566,6 +566,20 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
        raise NotImplementedError('Successful lstat64 not supported')
    apply_return_conditions(pid, syscall_object)
 
+def open_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering open entry handler')
+    logging.debug('Filename from trace: %s', syscall_object.args[0].value .strip('"'))
+    if syscall_object.ret[0] != -1:
+        ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+        fn = peek_string(pid, ebx)
+        logging.debug('Filename from execution: %s', fn)
+        if fn == '/etc/resolv.conf':
+            logging.debug('Got attempt to open resolv.conf')
+            FILE_DESCRIPTORS.append(syscall_object.ret[0])
+
+def open_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
     if syscall_id == 102:
@@ -591,9 +605,10 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    266, #set_clock_getres
                    240, #sys_futex
                    191, #!!!!!!!!! sys_getrlimit
-                   5 #!!!!!!!! open
                   ]
     handlers = {
+                (5, True): open_entry_handler,
+                (5, False): open_exit_handler,
                 (85, True): readlink_entry_handler,
                 (197, True): fstat64_entry_handler,
                 (122, True): uname_entry_handler,
@@ -948,7 +963,7 @@ def write_buffer(pid, address, value, buffer_length):
         d = left + d[len(left):]
         tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
-def print_buffer(pid, address, num_bytes):
+def peek_bytes(pid, address, num_bytes):
     reads = num_bytes // 4
     remainder = num_bytes % 4
     data = ''
@@ -958,7 +973,16 @@ def print_buffer(pid, address, num_bytes):
     if remainder != 0:
         last_chunk = pack('<i', tracereplay.peek_address(pid, address))
         data = data + last_chunk[:remainder]
-    print(data)
+    return data
+
+def peek_string(pid, address):
+    data = ''
+    while True:
+        data =  data + pack('<i', tracereplay.peek_address(pid, address))
+        address = address + 4
+        if '\0' in data:
+            data = data[:data.rfind('\0')]
+            return data
 
 def extract_socketcall_parameters(pid, address, num):
     params = []
