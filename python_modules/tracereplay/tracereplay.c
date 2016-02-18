@@ -349,20 +349,20 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     s.st_atime = st__atime;
 
     if(DEBUG) {
-        printf("s.st_dev: %d\n", s.st_dev);
-        printf("s.st_rdev: %d\n", s.st_rdev);
-        printf("s.st_ino: %d\n", s.st_ino);
-        printf("s.st_mode: %d\n", s.st_mode);
-        printf("s.st_nlink: %d\n", s.st_nlink);
-        printf("s.st_uid: %d\n", s.st_uid);
-        printf("s.st_gid: %d\n", s.st_gid);
-        printf("s.st_rdev: %d\n", s.st_rdev);
-        printf("s.st_size: %d\n", s.st_size);
-        printf("s.st_blksize: %d\n", s.st_blksize);
-        printf("s.st_blocks: %d\n", s.st_blocks);
-        printf("s.st_ctime: %d\n", s.st_ctime);
-        printf("s.st_mtime: %d\n", s.st_mtime);
-        printf("s.st_atime: %d\n", s.st_atime);
+        printf("s.st_dev: %d\n", (int)s.st_dev);
+        printf("s.st_rdev: %d\n", (int)s.st_rdev);
+        printf("s.st_ino: %d\n", (int)s.st_ino);
+        printf("s.st_mode: %d\n", (int)s.st_mode);
+        printf("s.st_nlink: %d\n", (int)s.st_nlink);
+        printf("s.st_uid: %d\n", (int)s.st_uid);
+        printf("s.st_gid: %d\n", (int)s.st_gid);
+        printf("s.st_rdev: %d\n", (int)s.st_rdev);
+        printf("s.st_size: %d\n", (int)s.st_size);
+        printf("s.st_blksize: %d\n", (int)s.st_blksize);
+        printf("s.st_blocks: %d\n", (int)s.st_blocks);
+        printf("s.st_ctime: %d\n", (int)s.st_ctime);
+        printf("s.st_mtime: %d\n", (int)s.st_mtime);
+        printf("s.st_atime: %d\n", (int)s.st_atime);
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
