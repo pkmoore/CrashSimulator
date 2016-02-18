@@ -309,6 +309,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check params[1] because it is the address of an empty buffer
     len = params[2]
     len_from_trace = syscall_object.args[2].value
+    # We don't check params[3] because it is a flags field
     # Check to make everything is the same
     if fd != int(fd_from_trace):
         raise Exception('File descriptor from execution ({}) does not match '
