@@ -10,6 +10,7 @@
 
 int main() {
     struct stat64 s;
+    char buffer[30];
     printf("Address of s: %p\n", &s);
     printf("Sizeof stat64: %d\n", sizeof(struct stat64));
     printf("sizeof int: %d\n", sizeof(int));
@@ -24,8 +25,11 @@ int main() {
     printf("st_size: %x\n", (int)s.st_size);
     printf("st_blksize: %x\n", (int)s.st_blksize);
     printf("st_blocks: %x\n", (int)s.st_blocks);
-    printf("st_ctime: %x\n", (int)s.st_ctime);
-    printf("st_mtime: %x\n", (int)s.st_mtime);
-    printf("st_atime: %x\n", (int)s.st_atime);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&s.st_ctime));
+    printf("st_ctime: %s\n", buffer);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&s.st_mtime));
+    printf("st_mtime: %s\n", buffer);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&s.st_ctime));
+    printf("st_atime: %s\n", buffer)
     return 0;
 }
