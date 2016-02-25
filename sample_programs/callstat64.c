@@ -30,6 +30,6 @@ int main() {
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&s.st_mtime));
     printf("st_mtime: %s\n", buffer);
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&s.st_ctime));
-    printf("st_atime: %s\n", buffer)
+    printf("st_atime: %s\n", buffer);
     return 0;
 }
