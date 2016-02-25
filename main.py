@@ -22,6 +22,8 @@ import Trace
 
 FILE_DESCRIPTORS = [tracereplay.STDIN]
 
+HANDLED_CALLS_COUNT = 0
+
 # Horrible hack
 buffer_address = 0
 buffer_size = 0
@@ -666,7 +668,10 @@ def open_exit_handler(syscall_id, syscall_object, pid):
     pass
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
+    global HANDLED_CALLS_COUNT
     logging.debug('Handling syscall')
+    if entering:
+        HANDLED_CALLS_COUNT += 1
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -1178,6 +1183,7 @@ if __name__ == '__main__':
                     os.kill(pid, signal.SIGKILL)
                     sys.exit(1)
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
+            logging.info('# of System Calls Handled: %d', HANDLED_CALLS_COUNT)
             entering_syscall = not entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
