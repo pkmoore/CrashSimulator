@@ -21,6 +21,4 @@ BUG: Poll parsing fails for some calls to poll due to posix-omni-parser
 BUG: Posix omni parser doesn't return stuff in comments at end of line (poll,
 select)
 
-BUG: netcat_receive test fails because the fstat64 entry handler is now being called and it doesn't handle some edge case
-
 BUG: opensocket test fails because the uname handler is now being called and it is not handling some edge case
