@@ -85,6 +85,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
@@ -104,6 +105,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
+                os.kill(pid, signal.SIGKILL)
                 raise NotImplementedException('getpeername only supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                 addr,
@@ -127,6 +129,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
@@ -146,6 +149,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
+                os.kill(pid, signal.SIGKILL)
                 raise NotImplementedException('getsockname only supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                 addr,
@@ -167,6 +171,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     # TODO: We need to check the 'how' parameter here
     # Check to make sure everything is the same 
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
@@ -193,11 +198,13 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     # We don't check param[4] because it is an address of an empty length
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     # This if is sufficient for now for the implemented options
     if params[1] != 1 or params[2] != 4:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Unimplemented getsockopt level or optname')
     if fd in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
@@ -233,9 +240,11 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution differs from file '
                         'descriptor from trace')
     if fd not in FILE_DESCRIPTORS:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Called {} on untracked file descriptor' \
                         .format(syscall_object.name))
     noop_current_syscall(pid)
@@ -284,9 +293,11 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Exeuction is PF_LOCAL: %s', execution_is_PF_LOCAL)
     logging.debug('Trace is PF_LOCAL: %s', trace_is_PF_LOCAL)
     if execution_is_PF_INET != trace_is_PF_INET:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Encountered socket subcall with mismatch between '
                         'execution protocol family and trace protocol family')
     if execution_is_PF_LOCAL != trace_is_PF_LOCAL:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Encountered socket subcall with mismatch between '
                         'execution protocol family and trace protocol family')
     # Decide if we want to deal with this socket call or not
@@ -300,6 +311,7 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
         if fd not in FILE_DESCRIPTORS:
             FILE_DESCRIPTORS.append(fd[0])
         else:
+            os.kill(pid, signal.SIGKILL)
             raise Exception('File descriptor from trace is already tracked')
         apply_return_conditions(pid, syscall_object)
     else:
@@ -313,6 +325,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         syscall_object = system_calls.next()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'accept':
+            os.kill(pid, signal.SIGKILL)
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -324,6 +337,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check param[2] because it is the address of a length
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
@@ -334,6 +348,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
             if ret in FILE_DESCRIPTORS:
+                os.kill(pid, signal.SIGKILL)
                 raise Exception('Syscall object return value ({}) already exists in'
                                 'tracked file descriptors list ({})'
                                 .format(ret, FILE_DESCRIPTORS))
@@ -357,10 +372,12 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check params[3] because it is a flags field
     # Check to make everything is the same
     if fd != int(fd_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     if len!= int(len_from_trace):
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Length from execution ({}) does not match '
                         'length from trace ({})'
                         .format(len, len_from_trace))
@@ -369,6 +386,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in FILE_DESCRIPTORS:
+            os.kill(pid, signal.SIGKILL)
             raise Exception('Tried to recv from non-existant file descriptor')
         buffer_address = params[1]
         buffer_size = params[2]
@@ -398,10 +416,12 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     ip = sockfields[2].value
     # Check to make everything is the same
     if fd != int(fd_from_trace):
+        os.kill(signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     if len!= int(len_from_trace):
+        os.kill(signal.SIGKILL)
         raise Exception('Length from execution ({}) does not match '
                         'length from trace ({})'
                         .format(len, len_from_trace))
@@ -410,6 +430,7 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in FILE_DESCRIPTORS:
+            os.kill(signal.SIGKILL)
             raise Exception('Tried to recvfrom from non-existant file descriptor')
         buffer_address = params[1]
         buffer_size = params[2]
@@ -432,6 +453,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd in FILE_DESCRIPTORS:
         if fd != int(fd_from_trace):
+            os.kill(pid, signal.SIGKILL)
             raise Exception('File descriptor from execution differs from file '
                             'descriptor from trace')
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -613,6 +635,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('cc: %s', cc_as_string)
         logging.debug('len(cc): %s', len(cc))
         if 'TCGETS' not in cmd:
+            os.kill(signal.SIGKILL)
             raise NotImplementedError('Unsupported ioctl command')
         tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
                                             c_cflags,
@@ -693,6 +716,7 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
    noop_current_syscall(pid)
    if syscall_object.ret[0] != -1:
        logging.debug('Got successful lstat64 call')
+       os.kill(pid, signal.SIGKILL)
        raise NotImplementedError('Successful lstat64 not supported')
    apply_return_conditions(pid, syscall_object)
 
@@ -861,6 +885,7 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
 
 def stat64_entry_handler(syscall_id, syscall_object, pid):
     if 'st_rdev' in syscall_object.original_line:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('stat64 handler can\'t deal with st_rdevs!!')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -933,6 +958,7 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     if operation == 'F_GETFL' or operation == 'F_SETFL':
         apply_return_conditions(pid, syscall_object)
     else:
+        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                   .format(operation))
 
@@ -946,6 +972,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
         syscall_object = system_calls.next()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'select':
+            os.kill(pid, signal.SIGKILL)
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
     readfds = syscall_object.args[1].value.strip('[]').split(' ')
@@ -1010,6 +1037,7 @@ def poll_exit_handler(syscall_id, syscall_object, pid):
     ret_struct = ret_struct[ret_struct.find(' '):]
     revent = ret_struct[ret_struct.find('=') + 1 : ret_struct.find('}')]
     if revent != 'POLLIN':
+        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Encountered unimplemented revent in poll')
     logging.debug('Returned event: %s', revent)
     logging.debug('Writing poll results structure')
@@ -1035,6 +1063,7 @@ def noop_current_syscall(pid):
     next_syscall()
     skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
     if skipping != 20:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
     global entering_syscall
     entering_syscall = False
@@ -1074,6 +1103,7 @@ def cleanup_return_value(val):
                 ret_val = OS_CONST[val]
             except KeyError:
                 logging.debug('Couldn\'t look up value from OS_CONST dict')
+                os.kill(pid, signal.SIGKILL)
                 raise Exception('Couldn\'t get integer form of return value!')
     logging.debug('Cleaned up value %s', ret_val)
     return ret_val
@@ -1144,6 +1174,7 @@ def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 268 and 'stat' in syscall_object.name:
         return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Syscall validation failed: from execution: {0}({1}) is not from trace: {2}' \
                         .format(SYSCALLS[syscall_id][4:], \
                                 syscall_id, \
@@ -1151,6 +1182,7 @@ def validate_syscall(syscall_id, syscall_object):
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
+        os.kill(pid, signal.SIGKILL)
         raise Exception('Subcall validation failed: from execution: {0}({1}) is not from trace:{2}' \
                         .format(SOCKET_SUBCALLS[subcall_id][4:], \
                                 subcall_id, \
