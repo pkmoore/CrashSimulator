@@ -1,3 +1,10 @@
+moderate: add a test and sample program for recvmsg
+
+HARD: Check all calls that have a lenght field to make sure I am populating it
+correctly
+
+Moderate: getpeername sample program and test
+
 AGGRAVATING: Figure out a way to reconcile ints from registers with text flags
 returned by strace
 
