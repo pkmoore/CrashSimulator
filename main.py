@@ -54,6 +54,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('sendto', True): subcall_return_success_handler,
                         ('shutdown', True): shutdown_subcall_entry_handler,
                         ('getsockname', True): getsockname_entry_handler,
+                        ('getpeername', True): getpeername_entry_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
@@ -71,6 +72,48 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def _exit(pid):
     os.kill(pid, signal.SIGKILL)
     sys.exit(1)
+
+def getpeername_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getpeername handler')
+    # Pull out the info that we can check
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 3)
+    fd = params[0]
+    # We don't compare params[1] because it is the address of an empty buffer
+    # We don't compare params[2] because it is the address of an out parameter
+    # Get values from trace for comparison
+    fd_from_trace = syscall_object.args[0].value
+    # Check to make sure everything is the same
+    if fd != int(fd_from_trace):
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd, fd_from_trace))
+    #Decide if this is a file descriptor we want to deal with
+    if fd in FILE_DESCRIPTORS:
+        logging.info('Replaying this system call')
+        noop_current_syscall(pid)
+        if syscall_object.ret[0] != -1:
+            logging.debug('Got successful getpeername call')
+            addr = params[1]
+            logging.debug('Addr: %d', addr)
+            sockfields = syscall_object.args[1].value
+            family = sockfields[0].value
+            port = int(sockfields[1].value)
+            ip = sockfields[2].value
+            logging.debug('Family: %s', family)
+            logging.debug('Port: %d', port)
+            logging.debug('Ip: %s', ip)
+            if family != 'AF_INET':
+                raise NotImplementedException('getpeername only supports AF_INET')
+            tracereplay.populate_af_inet_sockaddr(pid,
+                                                addr,
+                                                port,
+                                                ip)
+        else:
+            logging.debug('Got unsuccessful getpeername call')
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.info('Not replaying this system call')
 
 def getsockname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockname handler')
