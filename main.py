@@ -96,7 +96,11 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.ret[0] != -1:
             logging.debug('Got successful getpeername call')
             addr = params[1]
+            length_addr = params[2]
+            length = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Addr: %d', addr)
+            logging.debug('Length addr: %d', length_addr)
+            logging.debug('Length: %d', length)
             sockfields = syscall_object.args[1].value
             family = sockfields[0].value
             port = int(sockfields[1].value)
@@ -108,9 +112,11 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
                 os.kill(pid, signal.SIGKILL)
                 raise NotImplementedException('getpeername only supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
-                                                addr,
-                                                port,
-                                                ip)
+                                                  addr,
+                                                  port,
+                                                  ip,
+                                                  length_addr,
+                                                  length)
         else:
             logging.debug('Got unsuccessful getpeername call')
         apply_return_conditions(pid, syscall_object)
@@ -140,7 +146,11 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.ret[0] != -1:
             logging.debug('Got successful getsockname call')
             addr = params[1]
+            length_addr = params[2]
+            length = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Addr: %d', addr)
+            logging.debug('Length addr: %d', length_addr)
+            logging.debug('Length: %d', length)
             sockfields = syscall_object.args[1].value
             family = sockfields[0].value
             port = int(sockfields[1].value)
@@ -152,9 +162,11 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
                 os.kill(pid, signal.SIGKILL)
                 raise NotImplementedException('getsockname only supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
-                                                addr,
-                                                port,
-                                                ip)
+                                                  addr,
+                                                  port,
+                                                  ip,
+                                                  length_addr,
+                                                  length)
         else:
             logging.debug('Got unsuccessful getsockname call')
         apply_return_conditions(pid, syscall_object)
@@ -410,6 +422,8 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check params[4] because it is the address of an empty buffer
     # We don't check params[5] because it is the address of a length
     addr = params[4]
+    length_addr = params[5]
+    length = syscall_object.args[5].value.strip('[]')
     sockfields = syscall_object.args[4].value
     family = sockfields[0].value
     port = int(sockfields[1].value)
@@ -437,11 +451,12 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
         data = fix_character_literals(data)
         write_buffer(pid, buffer_address, data, buffer_size)
-        tracereplay.populate_sock
         tracereplay.populate_af_inet_sockaddr(pid,
                                               addr,
                                               port,
-                                              ip)
+                                              ip,
+                                              length_addr,
+                                              length)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')

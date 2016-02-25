@@ -62,13 +62,18 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
     void* addr;
     char* ip;
     short port;
+    void* length_addr;
+    socklen_t length;
 
-    PyArg_ParseTuple(args, "iihs", &child, &addr, &port, &ip);
+    PyArg_ParseTuple(args, "iihsii", &child, &addr,
+                     &port, &ip, &length_addr, &length);
     if(DEBUG) {
-        printf("C: getsockname: child: %d\n", child);
-        printf("C: getsockname: addr: %p\n", addr);
-        printf("C: getsockname: ip: %s\n", ip);
-        printf("C: getsockname: port: %d\n", port);
+        printf("C: pop af_inet: sizeof(socklen_t): %d\n", sizeof(socklen_t));
+        printf("C: pop af_inet: child: %d\n", child);
+        printf("C: pop af_inet: addr: %p\n", addr);
+        printf("C: pop af_inet: ip: %s\n", ip);
+        printf("C: pop af_inet: port: %d\n", port);
+        printf("C: pop af_inet: length: %d\n", length);
     }
     struct sockaddr_in s;    
     if(DEBUG) {
@@ -81,6 +86,11 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
                                           addr,
                                           (char*)&s,
                                           sizeof(s));
+
+    copy_buffer_into_child_process_memory(child,
+                                          length_addr,
+                                          (char*)&length,
+                                          sizeof(length));
     Py_RETURN_NONE;
 }
 
