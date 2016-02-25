@@ -12,8 +12,6 @@ TODO: Clean up the duplicate code around validating file descriptors
 EASY: Change the write_buffer function to use the strategy I used in the print
 buffer function
 
-BUG: Poll implementation only works with one data structure.
-
 BUG: Poll parsing fails for some calls to poll due to posix-omni-parser
 
 BUG: Posix omni parser doesn't return stuff in comments at end of line (poll,
