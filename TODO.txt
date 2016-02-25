@@ -16,5 +16,3 @@ BUG: Poll parsing fails for some calls to poll due to posix-omni-parser
 
 BUG: Posix omni parser doesn't return stuff in comments at end of line (poll,
 select)
-
-BUG: opensocket test fails because the uname handler is now being called and it is not handling some edge case
