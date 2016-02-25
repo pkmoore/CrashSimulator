@@ -7,8 +7,6 @@ HARD: Add validation to handlers where appropriate
 
 HACK: Clean up the mess around rdev
 
-EASY: test for call llseek
-
 TODO: Clean up the duplicate code around validating file descriptors
 
 EASY: Change the write_buffer function to use the strategy I used in the print
