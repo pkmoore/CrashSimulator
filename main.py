@@ -288,7 +288,20 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Not replaying this system call')
 
 def close_exit_handler(syscall_id, syscall_object, pid):
-    pass
+    logging.debug('Entring close exit handler')
+    fd_from_trace = syscall_object.ret[0]
+    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    if syscall_object.ret[0] == -1:
+        errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
+        logging.debug('Errno return value: %d', errno_ret)
+        fd_from_trace = errno_ret
+    if fd_from_execution != fd_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) differs from'
+                        'file descriptor from trace ({})'.format(fd_from_execution,
+                                                                 fd_from_trace))
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
@@ -747,7 +760,20 @@ def open_entry_handler(syscall_id, syscall_object, pid):
             FILE_DESCRIPTORS.append(syscall_object.ret[0])
 
 def open_exit_handler(syscall_id, syscall_object, pid):
-    pass
+    logging.debug('Entring open exit handler')
+    fd_from_trace = syscall_object.ret[0]
+    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    if syscall_object.ret[0] == -1:
+        errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
+        logging.debug('Errno return value: %d', errno_ret)
+        fd_from_trace = errno_ret
+    if fd_from_execution != fd_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) differs from'
+                        'file descriptor from trace ({})'.format(fd_from_execution,
+                                                                 fd_from_trace))
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     global HANDLED_CALLS_COUNT
