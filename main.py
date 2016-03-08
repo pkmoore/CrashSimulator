@@ -483,7 +483,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         if fd != int(fd_from_trace):
             os.kill(pid, signal.SIGKILL)
             raise Exception('File descriptor from execution differs from file '
