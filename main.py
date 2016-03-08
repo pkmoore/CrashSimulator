@@ -32,6 +32,10 @@ system_calls = None
 entering_syscall = True
 pollfd_array_address = 0
 
+def offset_file_descriptor(fd):
+    # The -1 is to account for stdin
+    return fd - (len(FILE_DESCRIPTORS) - 1)
+
 def next_syscall():
     s = os.wait()
     if os.WIFEXITED(s[1]):
@@ -763,19 +767,24 @@ def open_entry_handler(syscall_id, syscall_object, pid):
 
 def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring open exit handler')
-    fd_from_trace = syscall_object.ret[0]
-    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
-    if syscall_object.ret[0] == -1:
+    ret_val_from_trace = syscall_object.ret[0]
+    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    if ret_val_from_trace == -1:
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
-        fd_from_trace = errno_ret
-    if fd_from_execution != fd_from_trace:
+        check_ret_val_from_trace = errno_ret
+    else:
+        #The -1 is to account for STDIN
+        check_ret_val_from_trace = offset_file_descriptor(ret_val_from_trace)
+    logging.debug('Return value from exeuction: %d', ret_val_from_execution)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    logging.debug('Check return value from trace: %d', check_ret_val_from_trace)
+    if ret_val_from_execution != check_ret_val_from_trace:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) differs from '
-                        'file descriptor from trace ({})'.format(fd_from_execution,
-                                                                 fd_from_trace))
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
+        raise Exception('Return value from execution ({}) differs from '
+                        'check return value from trace ({})' \
+                        .format(ret_val_from_execution,
+                                check_ret_val_from_trace))
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     global HANDLED_CALLS_COUNT
