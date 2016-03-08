@@ -191,10 +191,6 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     if fd in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        try:
-            FILE_DESCRIPTORS.remove(fd)
-        except ValueError:
-            pass
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
