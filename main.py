@@ -267,6 +267,8 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     # Pull out everything we can check
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
+    logging.debug('File descriptor from execution: %d', fd)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         raise Exception('File descriptor from execution ({}) does not match '
@@ -289,19 +291,21 @@ def close_entry_handler(syscall_id, syscall_object, pid):
 
 def close_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring close exit handler')
-    fd_from_trace = syscall_object.ret[0]
-    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    ret_val_from_trace = syscall_object.ret[0]
+    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    logging.debug('Return value from execution: %d', ret_val_from_execution)
     if syscall_object.ret[0] == -1:
+        logging.debug('Got unsuccessful close exit')
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
-        fd_from_trace = errno_ret
-    if fd_from_execution != fd_from_trace:
+        ret_val_from_trace = errno_ret
+    if ret_val_from_execution != ret_val_from_trace:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) differs from'
-                        'file descriptor from trace ({})'.format(fd_from_execution,
-                                                                 fd_from_trace))
+        raise Exception('Return value from execution ({}) differs from '
+                        'Return value from trace ({})' \
+                        .format(ret_val_from_execution,
+                                ret_val_from_trace))
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
@@ -750,30 +754,32 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
 
 def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open entry handler')
-    logging.debug('Filename from trace: %s', syscall_object.args[0].value .strip('"'))
-    if syscall_object.ret[0] != -1:
-        ebx = tracereplay.peek_register(pid, tracereplay.EBX)
-        fn = peek_string(pid, ebx)
-        logging.debug('Filename from execution: %s', fn)
-        if fn == '/etc/resolv.conf':
-            logging.debug('Got attempt to open resolv.conf')
-            FILE_DESCRIPTORS.append(syscall_object.ret[0])
+    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    fn_from_execution = peek_string(pid, ebx).strip('\0')
+    fn_from_trace = syscall_object.args[0].value .strip('"').strip()
+    logging.debug('Filename from trace: %s', fn_from_trace)
+    logging.debug('Filename from execution: %s', fn_from_execution)
+    if fn_from_execution != fn_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File name from execution ({}) differs from'
+                        'file name from trace ({})'.format(fn_from_execution,
+                                                           fn_from_trace))
 
 def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring open exit handler')
     fd_from_trace = syscall_object.ret[0]
     fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
     if syscall_object.ret[0] == -1:
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
         fd_from_trace = errno_ret
     if fd_from_execution != fd_from_trace:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) differs from'
+        raise Exception('File descriptor from execution ({}) differs from '
                         'file descriptor from trace ({})'.format(fd_from_execution,
                                                                  fd_from_trace))
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     global HANDLED_CALLS_COUNT
