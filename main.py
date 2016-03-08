@@ -94,7 +94,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -144,7 +144,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -192,7 +192,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     # Decide if we want to replay this system call
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -218,7 +218,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     if params[1] != 1 or params[2] != 4:
         os.kill(pid, signal.SIGKILL)
         raise Exception('Unimplemented getsockopt level or optname')
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         optval = syscall_object.args[3].value.strip('[]')
         optval_len = syscall_object.args[4].value.strip('[]')
@@ -380,7 +380,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     # Decide if this is a system call we want to replay
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -420,7 +420,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
                         'length from trace ({})'
                         .format(len, len_from_trace))
     # Decide if we want to replay this system call
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in FILE_DESCRIPTORS:
@@ -466,7 +466,7 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
                         'length from trace ({})'
                         .format(len, len_from_trace))
     # Decide if we want to replay this system call
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in FILE_DESCRIPTORS:
@@ -518,13 +518,14 @@ def read_exit_handler(syscall_id, syscall_object, pid):
 #execute
 def write_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    fd_from_trace = syscall_object.args[0].value
     msg_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     msg_len = tracereplay.peek_register(pid, tracereplay.EDX)
     logging.debug('Child attempted to write to FD: %s', fd)
     logging.debug('Child\'s message stored at: %s', msg_addr)
     logging.debug('Child\'s message length: %s', msg_len)
     #print_buffer(pid, msg_addr, msg_len)
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
         logging.debug('Applying return conditions')
