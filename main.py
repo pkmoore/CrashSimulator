@@ -267,15 +267,17 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     # Pull out everything we can check
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
+    check_fd_from_trace = offset_file_descriptor(fd_from_trace)
     logging.debug('File descriptor from execution: %d', fd)
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
     # Decide if this is a system call we want to replay
-    if fd in FILE_DESCRIPTORS:
+    if fd_from_trace in FILE_DESCRIPTORS:
+        if fd_from_trace != fd:
+            os.kill(pid, signal.SIGKILL)
+            raise Exception('File descriptor from execution ({}) differs from '
+                            'file descriptor from trace ({})' \
+                            .format(fd, fd_from_trace))
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -288,6 +290,12 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+        if offset_file_descriptor(fd_from_trace) != fd:
+            os.kill(pid, signal.SIGKILL)
+            raise Exception('File descriptor from execution ({}) differs from '
+                            'file descriptor from trace ({})' \
+                            .format(fd, fd_from_trace))
+        logging.info('Replaying this system call')
 
 def close_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring close exit handler')
@@ -295,17 +303,18 @@ def close_exit_handler(syscall_id, syscall_object, pid):
     ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
     logging.debug('Return value from execution: %d', ret_val_from_execution)
+    check_ret_val_from_trace = ret_val_from_trace
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful close exit')
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
-        ret_val_from_trace = errno_ret
-    if ret_val_from_execution != ret_val_from_trace:
+        check_ret_val_from_trace = errno_ret
+    if ret_val_from_execution != check_ret_val_from_trace:
         os.kill(pid, signal.SIGKILL)
         raise Exception('Return value from execution ({}) differs from '
                         'Return value from trace ({})' \
                         .format(ret_val_from_execution,
-                                ret_val_from_trace))
+                                check_ret_val_from_trace))
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
