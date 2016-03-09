@@ -371,9 +371,14 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
         printf("s.st_size: %d\n", (int)s.st_size);
         printf("s.st_blksize: %d\n", (int)s.st_blksize);
         printf("s.st_blocks: %d\n", (int)s.st_blocks);
-        printf("s.st_ctime: %d\n", (int)s.st_ctime);
-        printf("s.st_mtime: %d\n", (int)s.st_mtime);
-        printf("s.st_atime: %d\n", (int)s.st_atime);
+
+        char buffer[100];
+        strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_ctime));
+        printf("s.st_ctime: %s\n", buffer);
+        strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_mtime));
+        printf("s.st_ctime: %s\n", buffer);
+        strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_atime));
+        printf("s.st_ctime: %s\n", buffer);
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
