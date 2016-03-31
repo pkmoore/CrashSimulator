@@ -597,6 +597,58 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
+                                                    PyObject* args) {
+    pid_t child;
+    void* addr;
+    size_t num;
+    PyObject* list_of_lengths;
+    if(!PyArg_ParseTuple(args, "iiiO",
+                         &child,
+                         (int*)&addr,
+                         &num,
+                         &list_of_lengths)) {
+        PyErr_SetString(TraceReplayError,
+                        "write_sendmmsg_lengths arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: sendmmsg_lengths: child: %d\n", child);
+        printf("C: sendmmsg_lengths: addr: %x\n", (int)addr);
+        printf("C: sendmmsg_lengths: num: %d\n", num);
+    }
+    if(!PyList_Check(list_of_lengths)) {
+        PyErr_SetString(TraceReplayError,
+                        "Object received in C code is not a list");
+    }
+    PyObject* iter;
+    if(!(iter = PyObject_GetIter(list_of_lengths))) {
+        PyErr_SetString(TraceReplayError,
+                        "Couldn't get iterator for list of lengths");
+    }
+    PyObject* next = PyIter_Next(iter);
+    Py_ssize_t length;
+    struct mmsghdr m[num];
+    int msghdr_index = 0;
+    while(next) {
+        if(!PyInt_Check(next)) {
+            PyErr_SetString(TraceReplayError,
+                              "Encountered non-Int in list of lengths");
+        }
+        length = PyInt_AsSsize_t(next);
+        if(DEBUG) {
+            printf("C: sendmmsg_lengths: got length %d\n", length);
+        }
+        m[msghdr_index].msg_len = length;
+        next = PyIter_Next(iter);
+        msghdr_index++;
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&m,
+                                          (sizeof(struct mmsghdr) * num));
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef TraceReplayMethods[]  = {
     {"enable_debug_output", tracereplay_enable_debug_output,
      METH_VARARGS, "enable debug messages"},
@@ -632,6 +684,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate statfs64 structure"},
     {"populate_af_inet_sockaddr", tracereplay_populate_af_inet_sockaddr,
      METH_VARARGS, "populate AF_INET sockaddr"},
+    {"write_sendmmsg_lengths", tracereplay_write_sendmmsg_lengths,
+     METH_VARARGS, "populate sendmmsg lengths"},
     {NULL, NULL, 0, NULL}
 };
 
