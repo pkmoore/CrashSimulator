@@ -549,6 +549,11 @@ static PyObject* tracereplay_poke_address(PyObject* self, PyObject* args) {
     int address;
     int data;
     PyArg_ParseTuple(args, "iii", &child, &address, &data);
+    if(DEBUG) {
+        printf("C: poke_address: child: %d\n", child);
+        printf("C: poke_address: address: %x\n", address);
+        printf("C: poke_address: data: %d\n", data);
+    }
     errno = 0;
     if(ptrace(PTRACE_POKEDATA, child, address, data) == -1) {
         perror("Poke into userspace failed");
