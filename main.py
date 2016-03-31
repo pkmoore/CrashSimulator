@@ -848,6 +848,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (168, True): poll_entry_handler,
                 (54, True): ioctl_entry_handler,
                 (195, True): stat64_entry_handler,
+                (195, False): stat64_exit_handler,
                 (142, True): select_entry_handler,
                 (82, True): select_entry_handler,
                 (221, True): fcntl64_entry_handler,
@@ -1276,8 +1277,6 @@ def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' in syscall_object.name:
         return
     if syscall_id == 140 and 'llseek' in syscall_object.name:
-        return
-    if syscall_id == 195 and 'stat' in syscall_object.name:
         return
     if syscall_id == 268 and 'stat' in syscall_object.name:
         return
