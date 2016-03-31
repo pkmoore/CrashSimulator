@@ -650,41 +650,46 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
-        if 'TCGETS' not in cmd:
+        if not ('TCGETS' in cmd or 'FIONREAD' in cmd):
             os.kill(pid, signal.SIGKILL)
             raise NotImplementedError('Unsupported ioctl command')
-        c_iflags = syscall_object.args[2].value
-        c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
-        c_oflags = syscall_object.args[3].value
-        c_oflags = int(c_oflags[c_oflags.rfind('=')+1:], 16)
-        c_cflags = syscall_object.args[4].value
-        c_cflags = int(c_cflags[c_cflags.rfind('=')+1:], 16)
-        c_lflags = syscall_object.args[5].value
-        c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
-        c_line = syscall_object.args[6].value
-        c_line = int(c_line[c_line.rfind('=')+1:])
-        cc = syscall_object.args[7].value
-        cc = cc[cc.rfind('=')+1:].strip('"}')
-        cc = cc.replace('\\x', ' ').strip()
-        cc = bytearray.fromhex(cc)
-        cc_as_string =''.join('{:02x}'.format(x) for x in cc)
-        cc = cc_as_string.decode('hex')
-        logging.debug('pid: %s', pid)
-        logging.debug('Addr: %s', addr)
-        logging.debug('cmd: %s', cmd)
-        logging.debug('c_iflags: %x', c_iflags)
-        logging.debug('c_oflags: %s', c_oflags)
-        logging.debug('c_cflags: %s', c_cflags)
-        logging.debug('c_lflags: %s', c_lflags)
-        logging.debug('c_line: %s', c_line)
-        logging.debug('cc: %s', cc_as_string)
-        logging.debug('len(cc): %s', len(cc))
-        tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
-                                            c_cflags,
-                                            c_lflags,
-                                            c_line,
-                                            cc
-                                            )
+        if 'FIONREAD' in cmd:
+            num_bytes = int(syscall_object.args[2].value.strip('[]'))
+            logging.debug('Number of bytes: %d', num_bytes)
+            tracereplay.poke_address(pid, addr, num_bytes)
+        else:
+            c_iflags = syscall_object.args[2].value
+            c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
+            c_oflags = syscall_object.args[3].value
+            c_oflags = int(c_oflags[c_oflags.rfind('=')+1:], 16)
+            c_cflags = syscall_object.args[4].value
+            c_cflags = int(c_cflags[c_cflags.rfind('=')+1:], 16)
+            c_lflags = syscall_object.args[5].value
+            c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
+            c_line = syscall_object.args[6].value
+            c_line = int(c_line[c_line.rfind('=')+1:])
+            cc = syscall_object.args[7].value
+            cc = cc[cc.rfind('=')+1:].strip('"}')
+            cc = cc.replace('\\x', ' ').strip()
+            cc = bytearray.fromhex(cc)
+            cc_as_string =''.join('{:02x}'.format(x) for x in cc)
+            cc = cc_as_string.decode('hex')
+            logging.debug('pid: %s', pid)
+            logging.debug('Addr: %s', addr)
+            logging.debug('cmd: %s', cmd)
+            logging.debug('c_iflags: %x', c_iflags)
+            logging.debug('c_oflags: %s', c_oflags)
+            logging.debug('c_cflags: %s', c_cflags)
+            logging.debug('c_lflags: %s', c_lflags)
+            logging.debug('c_line: %s', c_line)
+            logging.debug('cc: %s', cc_as_string)
+            logging.debug('len(cc): %s', len(cc))
+            tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
+                                                c_cflags,
+                                                c_lflags,
+                                                c_line,
+                                                cc
+                                                )
     apply_return_conditions(pid, syscall_object)
 
 def statfs64_entry_handler(syscall_id, syscall_object, pid):
