@@ -474,6 +474,10 @@ void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "POLLIN", POLLIN) == -1) {
         return;
     }
+
+    if(PyModule_AddIntConstant(m, "POLLOUT", POLLOUT) == -1) {
+        return;
+    }
 }
 
 static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {

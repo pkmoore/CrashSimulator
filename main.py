@@ -1098,7 +1098,11 @@ def poll_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Returned file descriptor: %s', fd)
     ret_struct = ret_struct[ret_struct.find(' '):]
     revent = ret_struct[ret_struct.find('=') + 1 : ret_struct.find('}')]
-    if revent != 'POLLIN':
+    if syscall_object.args[1].value != 1:
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('encountered more (or less) ' \
+                                  'than one poll struct')
+    if revent not in ['POLLIN', 'POLLOUT']:
         os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Encountered unimplemented revent in poll')
     logging.debug('Returned event: %s', revent)
@@ -1106,15 +1110,57 @@ def poll_exit_handler(syscall_id, syscall_object, pid):
     global pollfd_array_address
     logging.debug('Address: %s', pollfd_array_address)
     logging.debug('File Descriptor: %s', fd)
-    logging.debug('Event: %s', tracereplay.POLLIN)
+    logging.debug('Event: %s', revent)
     logging.debug('Child PID: %s', pid)
+    if revent == 'POLLIN':
+        r = tracereplay.POLLIN
+    else:
+        r = tracereplay.POLLOUT
     tracereplay.write_poll_result(pid,
                                   pollfd_array_address,
                                   fd,
-                                  tracereplay.POLLIN
+                                  r
                                  )
     logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+
+def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering sendmmsg entry handler')
+    sockfd_from_execution = tracereplay.peek_register(pid, tracereplay.EBX)
+    sockfd_from_trace = syscall_object.args[0].value
+    logging.debug('Socket file descriptor from execution %s',
+                  sockfd_from_execution)
+    logging.debug('Socket file descriptor from trace %s', sockfd_from_trace)
+    if sockfd_from_trace != sockfd_from_execution:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) ' \
+                        'differs from file descriptor from trace ({})' \
+                        .format(sockfd_from_execution,
+                                sockfd_from_trace))
+    if sockfd_from_trace in FILE_DESCRIPTORS:
+        logging.debug('Replaying this sytem call')
+        noop_current_syscall(pid)
+        if syscall_object.ret[0] != -1:
+            logging.debug('Got successful sendmmsg call')
+            number_of_messages = syscall_object.ret[0]
+            addr = tracereplay.peek_register(pid, tracereplay.ECX)
+            logging.debug('Number of messages %d', number_of_messages)
+            logging.debug('Address of buffer %x', addr)
+            lengths = [int(syscall_object.args[x].value.rstrip('}'))
+                   for x in range(6, (number_of_messages * 6) + 1, 6)]
+            logging.debug('Lengths: %s', lengths)
+            tracereplay.write_sendmmsg_lengths(pid,
+                                               addr,
+                                               number_of_messages,
+                                               lengths)
+        else:
+            logging.debug('Got unsuccessful sendmmsg call')
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+
+def sendmmsg_exit_handler(syscall_id, syscall_object, pid):
+    pass
 
 # This function leaves the child process in a state of waiting at the point just
 # before execution returns to user code.
