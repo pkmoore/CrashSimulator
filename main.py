@@ -854,6 +854,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (221, True): fcntl64_entry_handler,
                 (196, True): lstat64_entry_handler,
                 (268, True): statfs64_entry_handler,
+                (345, True): sendmmsg_entry_handler,
+                (345, False): sendmmsg_exit_handler
                }
     if syscall_id not in ignore_list:
         try:
