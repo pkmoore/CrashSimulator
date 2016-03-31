@@ -650,6 +650,9 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
+        if 'TCGETS' not in cmd:
+            os.kill(pid, signal.SIGKILL)
+            raise NotImplementedError('Unsupported ioctl command')
         c_iflags = syscall_object.args[2].value
         c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
         c_oflags = syscall_object.args[3].value
@@ -676,9 +679,6 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('c_line: %s', c_line)
         logging.debug('cc: %s', cc_as_string)
         logging.debug('len(cc): %s', len(cc))
-        if 'TCGETS' not in cmd:
-            os.kill(signal.SIGKILL)
-            raise NotImplementedError('Unsupported ioctl command')
         tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
                                             c_cflags,
                                             c_lflags,
