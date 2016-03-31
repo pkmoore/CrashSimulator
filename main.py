@@ -853,7 +853,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (82, True): select_entry_handler,
                 (221, True): fcntl64_entry_handler,
                 (196, True): lstat64_entry_handler,
-                (268, True): statfs64_entry_handler
+                (268, True): statfs64_entry_handler,
                }
     if syscall_id not in ignore_list:
         try:
@@ -946,7 +946,15 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
                                            time_args_dict['st_atime'])
     apply_return_conditions(pid, syscall_object)
 
+def stat64_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
 def stat64_entry_handler(syscall_id, syscall_object, pid):
+    #horrible work arouund
+    print(syscall_object.args[0].value)
+    if syscall_object.args[0].value == '"/etc/resolv.conf"':
+        logging.error('Workaround for stat64 problem')
+        return
     if 'st_rdev' in syscall_object.original_line:
         os.kill(pid, signal.SIGKILL)
         raise Exception('stat64 handler can\'t deal with st_rdevs!!')
@@ -985,6 +993,9 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Middle Args: %s', mid_args_dict)
         logging.debug('Time Args: %s', time_args_dict)
         logging.debug('Injecting values into structure')
+        if('resolv.conf' in syscall_object.args[0].value):
+            logging.debug('Faking st_mtime for stat on resolv.conf')
+            time_args_dict['st_mtime'] = int(time())
         tracereplay.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
