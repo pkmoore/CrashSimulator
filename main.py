@@ -256,10 +256,6 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
         os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution differs from file '
                         'descriptor from trace')
-    if fd not in FILE_DESCRIPTORS:
-        os.kill(pid, signal.SIGKILL)
-        raise Exception('Called {} on untracked file descriptor' \
-                        .format(syscall_object.name))
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
