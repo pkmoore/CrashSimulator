@@ -59,6 +59,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('sendto', True): subcall_return_success_handler,
                         ('shutdown', True): shutdown_subcall_entry_handler,
                         ('getsockname', True): getsockname_entry_handler,
+                        ('getsockname', False): getsockname_exit_handler,
                         ('getpeername', True): getpeername_entry_handler
                        }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
@@ -177,6 +178,9 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+
+def getsockname_exit_handler(syscall_id, syscall_object, pid):
+    pass
 
 def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')
