@@ -45,6 +45,7 @@ def next_syscall():
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
                         ('socket', True): socket_subcall_entry_handler,
+                        ('socket', False): socket_exit_handler,
                         ('accept', True): accept_subcall_entry_handler,
                         ('bind', True): subcall_return_success_handler,
                         ('listen', True): subcall_return_success_handler,
@@ -315,6 +316,9 @@ def close_exit_handler(syscall_id, syscall_object, pid):
                         'Return value from trace ({})' \
                         .format(ret_val_from_execution,
                                 check_ret_val_from_trace))
+#Horrible hack
+def socket_exit_handler(syscall_id, syscall_object, pid):
+    pass
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
