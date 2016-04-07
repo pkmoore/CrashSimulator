@@ -47,7 +47,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('socket', True): socket_subcall_entry_handler,
                         ('socket', False): socket_exit_handler,
                         ('accept', True): accept_subcall_entry_handler,
-                        ('bind', True): subcall_return_success_handler,
+                        ('bind', True): bind_entry_handler,
+                        ('bind', False): bind_exit_handler,
                         ('listen', True): subcall_return_success_handler,
                         ('recv', True): recv_subcall_entry_handler,
                         ('recvfrom', True): recvfrom_subcall_entry_handler,
@@ -56,8 +57,11 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
                         ('connect', True): subcall_return_success_handler,
                         ('getsockopt', True): getsockopt_entry_handler,
                         ('sendmmsg', True): subcall_return_success_handler,
-                        ('sendto', True): subcall_return_success_handler,
+                        ('sendto', True): sendto_entry_handler,
+                        ('sendto', False): sendto_exit_handler,
                         ('shutdown', True): shutdown_subcall_entry_handler,
+                        ('recvmsg', True): recvmsg_entry_handler,
+                        ('recvmsg', False): recvmsg_exit_handler,
                         ('getsockname', True): getsockname_entry_handler,
                         ('getsockname', False): getsockname_exit_handler,
                         ('getpeername', True): getpeername_entry_handler
@@ -78,6 +82,50 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def _exit(pid):
     os.kill(pid, signal.SIGKILL)
     sys.exit(1)
+
+def sendto_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering sendto entry handler')
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 1)
+    fd_from_execution = int(params[0])
+    fd_from_trace = int(syscall_object.args[0].value)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    if fd_from_execution != fd_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd_from_execution, fd_from_trace))
+    if fd_from_trace in FILE_DESCRIPTORS:
+        logging.debug('Replaying this system call')
+        subcall_return_success_handler(syscall_id, syscall_object, pid) 
+    else:
+        logging.debug('Not replaying this call')
+
+def sendto_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
+def bind_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering bind entry handler')
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 1)
+    fd_from_execution = int(params[0])
+    fd_from_trace = int(syscall_object.args[0].value)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    if fd_from_execution != fd_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd_from_execution, fd_from_trace))
+    if fd_from_trace in FILE_DESCRIPTORS:
+        logging.debug('Replaying this system call')
+        subcall_return_success_handler(syscall_id, syscall_object, pid) 
+    else:
+        logging.debug('Not replaying this call')
+
+def bind_exit_handler(syscall_id, syscall_object, pid):
+    pass
 
 def getpeername_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getpeername handler')
@@ -402,6 +450,29 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
 def accept_exit_handler(syscall_id, syscall_object, pid):
     pass
 
+# Bare minimum implementation
+def recvmsg_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering recvmsg entry handler')
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 1)
+    fd_from_execution = int(params[0])
+    fd_from_trace = int(syscall_object.args[0].value)
+    logging.debug('File descriptor from execution: %d', fd_from_execution)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    if fd_from_execution != fd_from_trace:
+        os.kill(pid, signal.SIGKILL)
+        raise Exception('File descriptor from execution ({}) does not match '
+                        'file descriptor from trace ({})'
+                        .format(fd_from_execution, fd_from_trace))
+    if fd_from_trace in FILE_DESCRIPTORS:
+        raise NotImplementedError('recvmsg entry handler not '
+                                  'implemented for tracked sockets')
+    else:
+        logging.debug('Not replaying this system call')
+
+def recvmsg_exit_handler(syscall_id, syscall_object, pid):
+    pass
+        
 def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
