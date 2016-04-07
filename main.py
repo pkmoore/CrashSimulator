@@ -441,13 +441,13 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
 
 def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     p = tracereplay.peek_register(pid, tracereplay.ECX)
-    params = extract_socketcall_parameters(pid, p, 4)
+    params = extract_socketcall_parameters(pid, p, 6)
     # Pull out everything we can check
     fd = params[0]
     fd_from_trace = syscall_object.args[0].value
     # We don't check params[1] because it is the address of an empty buffer
-    len = params[2]
-    len_from_trace = syscall_object.args[2].value
+    buffer_length = params[2]
+    buffer_length_from_trace = syscall_object.args[2].value
     # We don't check params[3] because it is a flags field
     # We don't check params[4] because it is the address of an empty buffer
     # We don't check params[5] because it is the address of a length
@@ -464,11 +464,11 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
-    if len!= int(len_from_trace):
-        os.kill(signal.SIGKILL)
-        raise Exception('Length from execution ({}) does not match '
-                        'length from trace ({})'
-                        .format(len, len_from_trace))
+   # if buffer_length != int(buffer_length_from_trace):
+   #     os.kill(pid, signal.SIGKILL)
+   #     raise Exception('Length from execution ({}) does not match '
+   #                     'length from trace ({})'
+   #                     .format(buffer_length, buffer_length_from_trace))
     # Decide if we want to replay this system call
     if fd_from_trace in FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
@@ -477,16 +477,16 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
             os.kill(signal.SIGKILL)
             raise Exception('Tried to recvfrom from non-existant file descriptor')
         buffer_address = params[1]
-        buffer_size = params[2]
+        buffer_size = int(syscall_object.ret[0])
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
-        data = fix_character_literals(data)
-        write_buffer(pid, buffer_address, data, buffer_size)
+        data = data.decode('string_escape')
+        tracereplay.copy_bytes_into_child_process(pid, buffer_address, data)
         tracereplay.populate_af_inet_sockaddr(pid,
                                               addr,
                                               port,
                                               ip,
                                               length_addr,
-                                              length)
+                                              int(length))
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
