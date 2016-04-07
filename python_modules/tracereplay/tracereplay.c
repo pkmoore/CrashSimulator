@@ -56,6 +56,25 @@ int copy_buffer_into_child_process_memory(pid_t child,
     return 0;
 }
 
+static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
+                                                          PyObject* args) {
+    pid_t child;
+    void* addr;
+    unsigned char* bytes;
+    Py_ssize_t num_bytes;
+    if(!PyArg_ParseTuple(args, "iis#", &child, &addr, &bytes, &num_bytes)) {
+        PyErr_SetString(TraceReplayError,
+                        "copy_bytes failed parse failed");
+    }
+    if(DEBUG) {
+        printf("C: copy_bytes: child: %d\n", child);
+        printf("C: copy_bytes: addr: %x\n", (int)addr);
+        printf("C: copy_bytes: num_bytes %d\n", num_bytes);
+    } 
+        copy_buffer_into_child_process_memory(child, addr, (char*)bytes, num_bytes);
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
                                                        PyObject* args) {
     pid_t child;
@@ -77,7 +96,7 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
     }
     struct sockaddr_in s;    
     if(DEBUG) {
-        printf("C: getsockname: sizeof(s.sin_port): %d\n", sizeof(s.sin_port));
+        printf("C: pop af_inet: sizeof(s.sin_port): %d\n", sizeof(s.sin_port));
     }
     s.sin_family = AF_INET;
     s.sin_port = htons(port);
@@ -691,6 +710,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate AF_INET sockaddr"},
     {"write_sendmmsg_lengths", tracereplay_write_sendmmsg_lengths,
      METH_VARARGS, "populate sendmmsg lengths"},
+    {"copy_bytes_into_child_process", tracereplay_copy_bytes_into_child_process,
+     METH_VARARGS, "copy bytes into child process"},
     {NULL, NULL, 0, NULL}
 };
 
