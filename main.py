@@ -887,6 +887,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         logging.debug('Socketcall id from EBX is: %s', ebx)
         socketcall_handler(syscall_id, syscall_object, entering, pid)
         return
+    logging.debug('Checking syscall against execution')
+    validate_syscall(orig_eax, syscall_object)
     ignore_list = [
                    20, #sys_getpid
                    91, #sys_munprotect
@@ -1445,18 +1447,6 @@ if __name__ == '__main__':
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
                               syscall_object)
-            if orig_eax != 102:
-                try:
-                    validate_syscall(orig_eax, syscall_object)
-                except Exception as e:
-                    logging.debug('EBX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EBX)))
-                    logging.debug('ECX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ECX)))
-                    logging.debug('EDX {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDX)))
-                    logging.debug('EDI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.EDI)))
-                    logging.debug('ESI {0:2x}:'.format(tracereplay.peek_register(pid, tracereplay.ESI)))
-                    print(e)
-                    os.kill(pid, signal.SIGKILL)
-                    sys.exit(1)
             handle_syscall(orig_eax, syscall_object, entering_syscall, pid)
             logging.info('# of System Calls Handled: %d', HANDLED_CALLS_COUNT)
             entering_syscall = not entering_syscall
