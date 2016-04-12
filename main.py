@@ -16,6 +16,7 @@ from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
 from os_dict import OS_CONST, STAT_CONST
+from time_handlers import *
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -899,6 +900,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    174, #sys_rt_sigaction
                    175, #sys_rt_sigprocmask
                    119, #sys_sigreturn
+                   13, #sys_time
                    126, #sys_sigprocmask
                    311, #set_robust_list
                    258, #set_tid_address
