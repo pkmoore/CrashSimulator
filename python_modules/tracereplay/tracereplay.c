@@ -23,6 +23,7 @@
 #include <sys/statfs.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 static PyObject* TraceReplayError;
 
@@ -54,6 +55,34 @@ int copy_buffer_into_child_process_memory(pid_t child,
         addr++;
     }
     return 0;
+}
+static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
+                                                         PyObject* args) {
+    pid_t child;
+    void* addr;
+    time_t seconds;
+    long nanoseconds;
+    if(!PyArg_ParseTuple(args, "iiil", &child, &addr, &seconds, &nanoseconds)) {
+        PyErr_SetString(TraceReplayError,
+                        "copy_bytes failed parse failed");
+    }
+    if(DEBUG) {
+        printf("C: timespec: child: %d\n", child);
+        printf("C: timespec: addr: %p\n", addr);
+        printf("C: timespec: seconds: %d\n", (int)seconds);
+        printf("C: timespec: nanoseconds: %ld\n", nanoseconds);
+        printf("C: timespec: sizeof(seconds): %d\n", sizeof(seconds));
+        printf("C: timespec: sizeof(nanoseconds): %d\n", sizeof(nanoseconds));
+    }
+    struct timespec t;
+    t.tv_sec = seconds;
+    t.tv_nsec = nanoseconds;
+    if(DEBUG) {
+        printf("C: timespec: tv_sec: %d\n", (int)t.tv_sec);
+        printf("C: timespec: tv_nsec: %ld\n", t.tv_nsec);
+    }
+    copy_buffer_into_child_process_memory(child, addr, (char*)&t, sizeof(t));
+    Py_RETURN_NONE; 
 }
 
 static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
@@ -497,6 +526,10 @@ void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "POLLOUT", POLLOUT) == -1) {
         return;
     }
+
+    if(PyModule_AddIntConstant(m, "CLOCK_MONOTONIC", CLOCK_MONOTONIC) == -1) {
+        return;
+    }
 }
 
 static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
@@ -712,6 +745,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate sendmmsg lengths"},
     {"copy_bytes_into_child_process", tracereplay_copy_bytes_into_child_process,
      METH_VARARGS, "copy bytes into child process"},
+    {"populate_timespec_structure", tracereplay_populate_timespec_structure,
+     METH_VARARGS, "populate timespec structure"},
     {NULL, NULL, 0, NULL}
 };
 

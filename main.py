@@ -937,6 +937,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                 (221, True): fcntl64_entry_handler,
                 (196, True): lstat64_entry_handler,
                 (268, True): statfs64_entry_handler,
+                (265, True): clock_gettime_entry_handler,
                 (345, True): sendmmsg_entry_handler,
                 (345, False): sendmmsg_exit_handler
                }
@@ -1258,6 +1259,41 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
 
 def sendmmsg_exit_handler(syscall_id, syscall_object, pid):
     pass
+
+def time_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering time entry handler')
+    _exit(pid)
+
+def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering clock_gettime entry handler')
+    if syscall_object.ret[0] == -1:
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        logging.debug('Got successful clock_gettime call')
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        clock_type_from_trace = syscall_object.args[0].value
+        clock_type_from_execution = tracereplay.peek_register(pid, tracereplay.EBX)
+        #The first arg from execution must be CLOCK_MONOTONIC
+        #The first arg from the trace must be CLOCK_MONOTONIC
+        if syscall_object.args[0].value[0] != "CLOCK_MONOTONIC":
+            raise NotImplementedError('Clock type ({}) from trace is not '
+                                    'CLOCK_MONOTONIC' \
+                                    .format(clock_type_from_trace))
+        if clock_type_from_execution != tracereplay.CLOCK_MONOTONIC:
+            raise NotImplementedError('Clock type ({}) from execution is not '
+                                    'CLOCK_MONOTONIC' \
+                                    .format(clock_type_from_execution))
+        seconds = int(syscall_object.args[1].value.strip('{}'))
+        nanoseconds = int(syscall_object.args[2].value.strip('{}'))
+        addr = tracereplay.peek_register(pid, tracereplay.ECX)
+        logging.debug('Seconds: %d', seconds)
+        logging.debug('Nanoseconds: %d', nanoseconds)
+        logging.debug('Address: %x', addr)
+        logging.debug('Populating timespec strucutre')
+        tracereplay.populate_timespec_structure(pid, addr, seconds, nanoseconds)
+        apply_return_conditions(pid, syscall_object)
 
 # This function leaves the child process in a state of waiting at the point just
 # before execution returns to user code.
