@@ -900,7 +900,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    174, #sys_rt_sigaction
                    175, #sys_rt_sigprocmask
                    119, #sys_sigreturn
-                   13, #sys_time
                    126, #sys_sigprocmask
                    311, #set_robust_list
                    258, #set_tid_address
@@ -909,6 +908,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    191, #!!!!!!!!! sys_getrlimit
                   ]
     handlers = {
+                (13, True): time_entry_handler,
                 (5, True): open_entry_handler,
                 (5, False): open_exit_handler,
                 (85, True): readlink_entry_handler,
@@ -1263,6 +1263,24 @@ def sendmmsg_exit_handler(syscall_id, syscall_object, pid):
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')
     _exit(pid)
+
+def time_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering time entry handler')
+    if syscall_object.ret[0] == -1:
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        noop_current_syscall(pid)
+        variable_from_trace = syscall_object.args[0].value
+        logging.debug('Got successful time call')
+        logging.debug(variable_from_trace)
+        if variable_from_trace != 'NULL':
+            os.kill(pid, signal.SIGKILL)
+            raise NotImplementedError('time calls with out parameter not '
+                                      'supported')
+        t = int(syscall_object.ret[0])
+        logging.debug('time: %d', t)
+        apply_return_conditions(pid, syscall_object)
 
 def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering clock_gettime entry handler')
