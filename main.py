@@ -1274,9 +1274,25 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
 def sendmmsg_exit_handler(syscall_id, syscall_object, pid):
     pass
 
-def time_entry_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering time entry handler')
-    _exit(pid)
+def gettimeofday_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering gettimeofday entry handler')
+    if syscall_object.ret[0] == -1:
+        os.kill(pid, signal.SIGKILL)
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        noop_current_syscall(pid)
+        if syscall_object.args[2].value != 'NULL':
+            os.kill(pid, signal.SIGKILL)
+            raise NotImplementedError('time zones not implemented')
+        addr = tracereplay.peek_register(pid, tracereplay.EBX)
+        seconds = int(syscall_object.args[0].value.strip('{}'))
+        microseconds = int(syscall_object.args[1].value.strip('{}'))
+        logging.debug('Address: %x', addr)
+        logging.debug('Seconds: %d', seconds)
+        logging.debug('Microseconds: %d', microseconds)
+        logging.debug('Populating timeval structure')
+        tracereplay.populate_timeval_structure(pid, addr, seconds, microseconds)
+        apply_return_conditions(pid, syscall_object)
 
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')

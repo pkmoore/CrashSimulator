@@ -56,6 +56,7 @@ int copy_buffer_into_child_process_memory(pid_t child,
     }
     return 0;
 }
+
 static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
                                                          PyObject* args) {
     pid_t child;
@@ -83,6 +84,35 @@ static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child, addr, (char*)&t, sizeof(t));
     Py_RETURN_NONE; 
+}
+
+static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
+                                                        PyObject* args) {
+    pid_t child;
+    void* addr;
+    time_t seconds;
+    suseconds_t microseconds;
+    if(!PyArg_ParseTuple(args, "iiil", &child, &addr, &seconds, &microseconds)) {
+        PyErr_SetString(TraceReplayError,
+                        "copy_bytes failed parse failed");
+    }
+    if(DEBUG) {
+        printf("C: timeval: child: %d\n", child);
+        printf("C: timeval: addr: %p\n", addr);
+        printf("C: timeval: seconds: %d\n", (int)seconds);
+        printf("C: timeval: microseconds: %ld\n", microseconds);
+        printf("C: timeval: sizeof(seconds): %d\n", sizeof(seconds));
+        printf("C: timeval: sizeof(microseconds): %d\n", sizeof(microseconds));
+    }
+    struct timeval t;
+    t.tv_sec = seconds;
+    t.tv_usec = microseconds;
+    if(DEBUG) {
+        printf("C: timeval: tv_sec: %d\n", (int)t.tv_sec);
+        printf("C: timeval: tv_usec: %ld\n", t.tv_usec);
+    }
+    copy_buffer_into_child_process_memory(child, addr, (char*)&t, sizeof(t));
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
@@ -747,6 +777,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "copy bytes into child process"},
     {"populate_timespec_structure", tracereplay_populate_timespec_structure,
      METH_VARARGS, "populate timespec structure"},
+    {"populate_timeval_structure", tracereplay_populate_timeval_structure,
+     METH_VARARGS, "populate timeval structure"},
     {NULL, NULL, 0, NULL}
 };
 
