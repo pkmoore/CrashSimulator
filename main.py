@@ -892,11 +892,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     validate_syscall(orig_eax, syscall_object)
     ignore_list = [
                    20, #sys_getpid
-                   91, #sys_munprotect
                    125, #sys_mprotect
                    243, #sys_set_thread_area
-                   45,  #sys_brk
-                   192, #sys_mmap_pgoff/mmap
                    174, #sys_rt_sigaction
                    175, #sys_rt_sigprocmask
                    119, #sys_sigreturn
@@ -908,6 +905,23 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
                    191, #!!!!!!!!! sys_getrlimit
                   ]
     handlers = {
+                #### These calls just get their return values checked ####
+                (9, True): check_return_value_entry_handler,
+                (9, False): check_return_value_exit_handler,
+
+                (192, True): check_return_value_entry_handler,
+                (192, False): check_return_value_exit_handler,
+
+                (195, True): check_return_value_entry_handler,
+                (195, False): check_return_value_exit_handler,
+
+                (45, True): check_return_value_entry_handler,
+                (45, False): check_return_value_exit_handler,
+
+                (91, True): check_return_value_entry_handler,
+                (91, False): check_return_value_exit_handler,
+                ####                                                  ####
+                (78, True): gettimeofday_entry_handler,
                 (13, True): time_entry_handler,
                 (5, True): open_entry_handler,
                 (5, False): open_exit_handler,
@@ -1312,6 +1326,22 @@ def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Populating timespec strucutre')
         tracereplay.populate_timespec_structure(pid, addr, seconds, nanoseconds)
         apply_return_conditions(pid, syscall_object)
+
+def check_return_value_entry_handler(syscall_id, syscall_object, pid):
+    pass
+
+def check_return_value_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering check_return_value exit handler')
+    ret_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_from_trace = cleanup_return_value(syscall_object.ret[0])
+    logging.debug('Return value from execution %x', ret_from_execution)
+    logging.debug('Return value from trace %x', ret_from_trace)
+    if ret_from_execution < 0:
+        ret_from_execution = ret_from_execution & 0xffffffff
+    if ret_from_execution != ret_from_trace:
+        raise Exception('Return value from execution ({}) differs from '
+                        'return value from trace ({})' \
+                        .format(ret_from_execution, ret_from_trace))
 
 # This function leaves the child process in a state of waiting at the point just
 # before execution returns to user code.
