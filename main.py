@@ -31,7 +31,6 @@ buffer_size = 0
 return_value = 0
 system_calls = None
 entering_syscall = True
-pollfd_array_address = 0
 
 def offset_file_descriptor(fd):
     # The -1 is to account for stdin
@@ -1204,12 +1203,7 @@ def syscall_return_success_handler(syscall_id, syscall_object, pid):
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
     noop_current_syscall(pid)
-    global pollfd_array_address
     pollfd_array_address = tracereplay.peek_register(pid, tracereplay.EBX)
-    poll_exit_handler(syscall_id, syscall_object, pid)
-
-def poll_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering poll exit handler')
     ol = syscall_object.original_line
     ret_struct = ol[ol.rfind('('):]
     logging.debug('Poll return structure: %s', ret_struct)
@@ -1226,7 +1220,6 @@ def poll_exit_handler(syscall_id, syscall_object, pid):
         raise NotImplementedError('Encountered unimplemented revent in poll')
     logging.debug('Returned event: %s', revent)
     logging.debug('Writing poll results structure')
-    global pollfd_array_address
     logging.debug('Address: %s', pollfd_array_address)
     logging.debug('File Descriptor: %s', fd)
     logging.debug('Event: %s', revent)
@@ -1240,8 +1233,7 @@ def poll_exit_handler(syscall_id, syscall_object, pid):
                                   fd,
                                   r
                                  )
-    logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
-    tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
+    apply_return_conditions(pid, syscall_object)
 
 def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendmmsg entry handler')
