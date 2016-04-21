@@ -920,6 +920,13 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
 
                 (91, True): check_return_value_entry_handler,
                 (91, False): check_return_value_exit_handler,
+
+                (33, True): check_return_value_entry_handler,
+                (33, False): check_return_value_exit_handler,
+
+                (125, True): check_return_value_entry_handler,
+                (125, False): check_return_value_exit_handler,
+
                 ####                                                  ####
                 (78, True): gettimeofday_entry_handler,
                 (13, True): time_entry_handler,
