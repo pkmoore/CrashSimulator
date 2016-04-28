@@ -46,9 +46,10 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
         validate_subcall(subcall_id, syscall_object)
-    except Exception as e:
+    except ExecutionAndTraceDeltaError as e:
         os.kill(pid, signal.SIGKILL)
-        raise
+        logging.derror(e)
+        sys.exit(1)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, pid)
     except KeyError:
@@ -864,9 +865,10 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     try:
         validate_syscall(orig_eax, syscall_object)
-    except :
+    except ExecutionAndTraceDeltaError as e:
         os.kill(pid, signal.SIGKILL)
-        raise
+        logging.error(e)
+        sys.exit(1)
     ignore_list = [
                    20, #sys_getpid
                    125, #sys_mprotect

@@ -86,17 +86,21 @@ def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 268 and 'stat' in syscall_object.name:
         return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
-        raise Exception('Syscall validation failed: from execution: {0}({1}) is not from trace: {2}' \
-                        .format(SYSCALLS[syscall_id][4:], \
-                                syscall_id, \
-                                syscall_object.name))
+        raise ExecutionAndTraceDeltaError('System call validation failed: from '
+                                        'execution: {0}({1}) is not from '
+                                        'trace:{2}' \
+                                        .format(SYSCALLS[syscall_id][4:],
+                                                syscall_id, 
+                                                syscall_object.name))
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
-        raise Exception('Subcall validation failed: from execution: {0}({1}) is not from trace:{2}' \
-                        .format(SOCKET_SUBCALLS[subcall_id][4:], \
-                                subcall_id, \
-                                syscall_object.name))
+        raise ExecutionAndTraceDeltaError('Subcall validation failed: from '
+                                        'execution: {0}({1}) is not from '
+                                        'trace:{2}' \
+                                        .format(SOCKET_SUBCALLS[subcall_id][4:],
+                                                subcall_id, 
+                                                syscall_object.name))
 
 # Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
@@ -156,3 +160,6 @@ def apply_return_conditions(pid, syscall_object):
     logging.debug('Injecting return value %s', ret_val)
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
 
+
+class ExecutionAndTraceDeltaError(Exception):
+    pass
