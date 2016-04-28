@@ -1355,9 +1355,8 @@ if __name__ == '__main__':
     loglevel = args['loglevel']
     if loglevel:
         numeric_level = getattr(logging, loglevel.upper(), None)
-        print(numeric_level)
         if not isinstance(numeric_level, int):
-            raise ValueError('Invalid log level: {}'.format(loglevel))
+            raise TypeError('Invalid log level: {}'.format(loglevel))
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
         tracereplay.enable_debug_output(numeric_level)
