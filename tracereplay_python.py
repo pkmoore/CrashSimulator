@@ -86,7 +86,7 @@ def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 268 and 'stat' in syscall_object.name:
         return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
-        raise ExecutionAndTraceDeltaError('System call validation failed: from '
+        raise ReplayDeltaError('System call validation failed: from '
                                         'execution: {0}({1}) is not from '
                                         'trace:{2}' \
                                         .format(SYSCALLS[syscall_id][4:],
@@ -95,7 +95,7 @@ def validate_syscall(syscall_id, syscall_object):
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
-        raise ExecutionAndTraceDeltaError('Subcall validation failed: from '
+        raise ReplayDeltaError('Subcall validation failed: from '
                                         'execution: {0}({1}) is not from '
                                         'trace:{2}' \
                                         .format(SOCKET_SUBCALLS[subcall_id][4:],
@@ -135,7 +135,7 @@ def cleanup_return_value(val):
             except KeyError:
                 logging.debug('Couldn\'t look up value from OS_CONST dict')
                 os.kill(pid, signal.SIGKILL)
-                raise Exception('Couldn\'t get integer form of return value!')
+                raise ValueError('Couldn\'t get integer form of return value!')
     logging.debug('Cleaned up value %s', ret_val)
     return ret_val
 
@@ -161,5 +161,5 @@ def apply_return_conditions(pid, syscall_object):
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
 
 
-class ExecutionAndTraceDeltaError(Exception):
+class ReplayDeltaError(Exception):
     pass

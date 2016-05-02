@@ -46,7 +46,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
     try:
         validate_subcall(subcall_id, syscall_object)
-    except ExecutionAndTraceDeltaError as e:
+    except ReplayDeltaError as e:
         os.kill(pid, signal.SIGKILL)
         logging.derror(e)
         sys.exit(1)
@@ -68,9 +68,9 @@ def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd_from_execution, fd_from_trace))
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})' \
+                               .format(fd_from_execution, fd_from_trace))
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid) 
@@ -90,9 +90,9 @@ def bind_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd_from_execution, fd_from_trace))
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})' \
+                               .format(fd_from_execution, fd_from_trace))
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid) 
@@ -115,9 +115,9 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})' \
+                                .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
@@ -165,7 +165,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
+        raise ReplayDeltaError('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
@@ -216,9 +216,9 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     # Check to make sure everything is the same 
     if fd != int(fd_from_trace):
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})' \
+                               .format(fd, fd_from_trace))
     # Decide if we want to replay this system call
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
@@ -239,13 +239,13 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})'
+                               .format(fd, fd_from_trace))
     # This if is sufficient for now for the implemented options
     if params[1] != 1 or params[2] != 4:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('Unimplemented getsockopt level or optname')
+        raise NotImplementedError('Unimplemented getsockopt level or optname')
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         optval = syscall_object.args[3].value.strip('[]')
@@ -281,8 +281,9 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
         os.kill(pid, signal.SIGKILL)
-        raise Exception('File descriptor from execution differs from file '
-                        'descriptor from trace')
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'differs from file descriptor from trace' \
+                               .format(fd, fd_from_trace))
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
@@ -299,9 +300,10 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         if fd_from_trace != fd:
             os.kill(pid, signal.SIGKILL)
-            raise Exception('File descriptor from execution ({}) differs from '
-                            'file descriptor from trace ({})' \
-                            .format(fd, fd_from_trace))
+            raise ReplayDeltaError('File descriptor from execution ({}) '
+                                   'differs from file descriptor from '
+                                   'trace ({})' \
+                                   .format(fd, fd_from_trace))
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -316,9 +318,10 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Not replaying this system call')
         if offset_file_descriptor(fd_from_trace) != fd:
             os.kill(pid, signal.SIGKILL)
-            raise Exception('File descriptor from execution ({}) differs from '
-                            'file descriptor from trace ({})' \
-                            .format(fd, fd_from_trace))
+            raise ReplayDeltaError('File descriptor from execution ({}) '
+                                   'differs from file descriptor from '
+                                   'trace ({})' \
+                                   .format(fd, fd_from_trace))
         logging.info('Replaying this system call')
 
 def close_exit_handler(syscall_id, syscall_object, pid):
@@ -865,7 +868,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     try:
         validate_syscall(orig_eax, syscall_object)
-    except ExecutionAndTraceDeltaError as e:
+    except ReplayDeltaError as e:
         os.kill(pid, signal.SIGKILL)
         logging.error(e)
         sys.exit(1)
@@ -1043,7 +1046,7 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
         return
     if 'st_rdev' in syscall_object.original_line:
         os.kill(pid, signal.SIGKILL)
-        raise Exception('stat64 handler can\'t deal with st_rdevs!!')
+        raise NotImplementedError('stat64 handler can\'t deal with st_rdevs!!')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
