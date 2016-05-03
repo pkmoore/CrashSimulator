@@ -214,6 +214,8 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     params = extract_socketcall_parameters(pid, ecx, 5)
     fd = params[0]
     fd_from_trace = int(syscall_object.args[0].value)
+    optval_addr = params[3]
+    optval_len_addr = params[4]
     # We don't check param[3] because it is an address of an empty buffer
     # We don't check param[4] because it is an address of an empty length
     # Check to make sure everything is the same
