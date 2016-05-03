@@ -248,26 +248,6 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.info('Not replaying this system call')
 
-# Generic handler for all calls that just need to return what they returned in
-# the trace.
-# Currently used by send, listen
-# TODO: check this guy for required parameter checking
-def subcall_return_success_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering subcall return success handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    logging.debug('Extracting parameters from address %s', ecx)
-    params = extract_socketcall_parameters(pid, ecx, 1)
-    fd = params[0]
-    fd_from_trace = syscall_object.args[0].value
-    logging.debug('File descriptor from execution: %s', fd)
-    logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd != int(fd_from_trace):
-        os.kill(pid, signal.SIGKILL)
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'differs from file descriptor from trace' \
-                               .format(fd, fd_from_trace))
-    noop_current_syscall(pid)
-    apply_return_conditions(pid, syscall_object)
 
 def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
