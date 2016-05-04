@@ -1,7 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 
 # This handler assumes that uname cannot fail. The only documented way it can
 # fail is if the buffer it is handed is somehow invalid. This code assumes that
@@ -29,13 +28,11 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getrlimit handler')
     cmd = syscall_object.args[0].value[0]
     if cmd != 'RLIMIT_STACK':
-        os.kill(pid, signal.SIGKILL)
         raise Exception('Unimplemented getrlimit command {}'.format(cmd))
     addr = tracereplay.peek_register(pid, tracereplay.ECX)
     rlim_cur = syscall_object.args[1].value.strip('{')
     rlim_cur = rlim_cur.split('=')[1]
     if rlim_cur.find('*') == -1:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('Unimplemented rlim_cur format {}'.format(rlim_cur))
     rlim_cur = int(rlim_cur.split('*')[0]) * int(rlim_cur.split('*')[1])
     rlim_max = syscall_object.args[2].value.strip('}')
@@ -67,7 +64,6 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
         if not ('TCGETS' in cmd or 'FIONREAD' in cmd):
-            os.kill(pid, signal.SIGKILL)
             raise NotImplementedError('Unsupported ioctl command')
         if 'FIONREAD' in cmd:
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
