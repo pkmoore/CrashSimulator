@@ -1,7 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 from time import strptime, mktime, time
 
 def close_entry_handler(syscall_id, syscall_object, pid):
@@ -16,7 +15,6 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     # Decide if this is a system call we want to replay
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         if fd_from_trace != fd:
-            os.kill(pid, signal.SIGKILL)
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
                                    'trace ({})' \
@@ -34,7 +32,6 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.info('Not replaying this system call')
         if offset_file_descriptor(fd_from_trace) != fd:
-            os.kill(pid, signal.SIGKILL)
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
                                    'trace ({})' \
@@ -54,7 +51,6 @@ def close_exit_handler(syscall_id, syscall_object, pid):
         logging.debug('Errno return value: %d', errno_ret)
         check_ret_val_from_trace = errno_ret
     if ret_val_from_execution != check_ret_val_from_trace:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('Return value from execution ({}) differs from '
                         'Return value from trace ({})' \
                         .format(ret_val_from_execution,
@@ -66,7 +62,6 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         if fd != int(fd_from_trace):
-            os.kill(pid, signal.SIGKILL)
             raise Exception('File descriptor from execution differs from file '
                             'descriptor from trace')
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -231,7 +226,6 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
    noop_current_syscall(pid)
    if syscall_object.ret[0] != -1:
        logging.debug('Got successful lstat64 call')
-       os.kill(pid, signal.SIGKILL)
        raise NotImplementedError('Successful lstat64 not supported')
    apply_return_conditions(pid, syscall_object)
 
@@ -243,7 +237,6 @@ def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Filename from trace: %s', fn_from_trace)
     logging.debug('Filename from execution: %s', fn_from_execution)
     if fn_from_execution != fn_from_trace:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('File name from execution ({}) differs from'
                         'file name from trace ({})'.format(fn_from_execution,
                                                            fn_from_trace))
@@ -263,7 +256,6 @@ def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Return value from trace: %d', ret_val_from_trace)
     logging.debug('Check return value from trace: %d', check_ret_val_from_trace)
     if ret_val_from_execution != check_ret_val_from_trace:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('Return value from execution ({}) differs from '
                         'check return value from trace ({})' \
                         .format(ret_val_from_execution,
@@ -360,7 +352,6 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
         logging.error('Workaround for stat64 problem')
         return
     if 'st_rdev' in syscall_object.original_line:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('stat64 handler can\'t deal with st_rdevs!!')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -436,7 +427,6 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     if operation == 'F_GETFL' or operation == 'F_SETFL':
         apply_return_conditions(pid, syscall_object)
     else:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                   .format(operation))
 
