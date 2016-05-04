@@ -16,6 +16,7 @@ from socket_handlers import *
 from file_handlers import *
 from kernel_handlers import *
 from multiplex_handlers import *
+from generic_handlers import *
 
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
@@ -164,29 +165,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         except Exception:
             os.kill(pid, signal.SIGKILL)
             raise
-
-# Like the subcall return success handler, this handler just no-ops out a call
-# and returns whatever it returned from the trace. Used by ioctl and stat64
-def syscall_return_success_handler(syscall_id, syscall_object, pid):
-    logging.debug('Using default "return success" handler')
-    noop_current_syscall(pid)
-    apply_return_conditions(pid, syscall_object)
-
-def check_return_value_entry_handler(syscall_id, syscall_object, pid):
-    pass
-
-def check_return_value_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering check_return_value exit handler')
-    ret_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
-    ret_from_trace = cleanup_return_value(syscall_object.ret[0])
-    logging.debug('Return value from execution %x', ret_from_execution)
-    logging.debug('Return value from trace %x', ret_from_trace)
-    if ret_from_execution < 0:
-        ret_from_execution = ret_from_execution & 0xffffffff
-    if ret_from_execution != ret_from_trace:
-        raise Exception('Return value from execution ({}) differs from '
-                        'return value from trace ({})' \
-                        .format(ret_from_execution, ret_from_trace))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SYSCALLS!')
