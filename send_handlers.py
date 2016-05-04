@@ -1,8 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
-
 
 def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendto entry handler')
@@ -13,7 +11,6 @@ def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from execution: %d', fd_from_execution)
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
-        os.kill(pid, signal.SIGKILL)
         raise ReplayDeltaError('File descriptor from execution ({}) '
                                'does not match file descriptor from trace ({})' \
                                .format(fd_from_execution, fd_from_trace))
@@ -34,7 +31,6 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
                   sockfd_from_execution)
     logging.debug('Socket file descriptor from trace %s', sockfd_from_trace)
     if sockfd_from_trace != sockfd_from_execution:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) ' \
                         'differs from file descriptor from trace ({})' \
                         .format(sockfd_from_execution,
