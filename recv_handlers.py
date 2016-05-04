@@ -1,7 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 
 # Bare minimum implementation
 def recvmsg_entry_handler(syscall_id, syscall_object, pid):
@@ -13,7 +12,6 @@ def recvmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from execution: %d', fd_from_execution)
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
-        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd_from_execution, fd_from_trace))
@@ -38,12 +36,10 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check params[3] because it is a flags field
     # Check to make everything is the same
     if fd != int(fd_from_trace):
-        os.kill(pid, signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     if len!= int(len_from_trace):
-        os.kill(pid, signal.SIGKILL)
         raise Exception('Length from execution ({}) does not match '
                         'length from trace ({})'
                         .format(len, len_from_trace))
@@ -52,7 +48,6 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in tracereplay.FILE_DESCRIPTORS:
-            os.kill(pid, signal.SIGKILL)
             raise Exception('Tried to recv from non-existant file descriptor')
         buffer_address = params[1]
         buffer_size = params[2]
@@ -84,12 +79,10 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     ip = sockfields[2].value
     # Check to make everything is the same
     if fd != int(fd_from_trace):
-        os.kill(signal.SIGKILL)
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
    # if buffer_length != int(buffer_length_from_trace):
-   #     os.kill(pid, signal.SIGKILL)
    #     raise Exception('Length from execution ({}) does not match '
    #                     'length from trace ({})'
    #                     .format(buffer_length, buffer_length_from_trace))
@@ -98,7 +91,6 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if params[0] not in tracereplay.FILE_DESCRIPTORS:
-            os.kill(signal.SIGKILL)
             raise Exception('Tried to recvfrom from non-existant file descriptor')
         buffer_address = params[1]
         buffer_size = int(syscall_object.ret[0])
