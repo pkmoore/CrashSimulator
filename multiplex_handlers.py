@@ -1,7 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 
 # A lot of the parsing in this function needs to be moved into the
 # posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
@@ -13,7 +12,6 @@ def select_entry_handler(syscall_id, syscall_object, pid):
         syscall_object = tracereplay.system_calls.next()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'select':
-            os.kill(pid, signal.SIGKILL)
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
     readfds = syscall_object.args[1].value.strip('[]').split(' ')
@@ -66,11 +64,9 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
     ret_struct = ret_struct[ret_struct.find(' '):]
     revent = ret_struct[ret_struct.find('=') + 1 : ret_struct.find('}')]
     if syscall_object.args[1].value != 1:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('encountered more (or less) ' \
                                   'than one poll struct')
     if revent not in ['POLLIN', 'POLLOUT']:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Encountered unimplemented revent in poll')
     logging.debug('Returned event: %s', revent)
     logging.debug('Writing poll results structure')
