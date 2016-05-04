@@ -1,12 +1,10 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')
     if syscall_object.ret[0] == -1:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
         noop_current_syscall(pid)
@@ -14,7 +12,6 @@ def time_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Got successful time call')
         logging.debug(variable_from_trace)
         if variable_from_trace != 'NULL':
-            os.kill(pid, signal.SIGKILL)
             raise NotImplementedError('time calls with out parameter not '
                                       'supported')
         t = int(syscall_object.ret[0])
@@ -24,12 +21,10 @@ def time_entry_handler(syscall_id, syscall_object, pid):
 def gettimeofday_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering gettimeofday entry handler')
     if syscall_object.ret[0] == -1:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
         noop_current_syscall(pid)
         if syscall_object.args[2].value != 'NULL':
-            os.kill(pid, signal.SIGKILL)
             raise NotImplementedError('time zones not implemented')
         addr = tracereplay.peek_register(pid, tracereplay.EBX)
         seconds = int(syscall_object.args[0].value.strip('{}'))
@@ -44,7 +39,6 @@ def gettimeofday_entry_handler(syscall_id, syscall_object, pid):
 def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering clock_gettime entry handler')
     if syscall_object.ret[0] == -1:
-        os.kill(pid, signal.SIGKILL)
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
         logging.debug('Got successful clock_gettime call')
