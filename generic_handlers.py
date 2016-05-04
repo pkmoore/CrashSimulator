@@ -1,7 +1,6 @@
 from tracereplay_python import *
 import os
 import logging
-import signal
 
 # Like the subcall return success handler, this handler just no-ops out a call
 # and returns whatever it returned from the trace. Used by ioctl and stat64
