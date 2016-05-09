@@ -104,12 +104,12 @@ def write_exit_handler(syscall_id, syscall_object, pid):
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
-    result = int(syscall_object.args[2].value.strip('[]'))
-    result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
-    logging.debug('result: %s', result)
-    logging.debug('result_addr: %s', result_addr)
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
+        result = int(syscall_object.args[2].value.strip('[]'))
+        result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
+        logging.debug('result: %s', result)
+        logging.debug('result_addr: %s', result_addr)
         logging.debug('Got successful llseek call')
         logging.debug('Populating result')
         tracereplay.populate_llseek_result(pid, result_addr, result)
