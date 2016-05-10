@@ -164,20 +164,19 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         raise NotImplementedError('Unimplemented getsockopt level or optname')
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
-        optval = syscall_object.args[3].value.strip('[]')
-        optval_len = syscall_object.args[4].value.strip('[]')
+        optval_len = int(syscall_object.args[4].value.strip('[]'))
+        if optval_len != 4:
+            raise NotImplementedException('getsockopt() not implemented for '
+                                          'optval sizes other than 4')
+        optval = int(syscall_object.args[3].value.strip('[]'))
         logging.debug('Optval: %s', optval)
         logging.debug('Optval Length: %s', optval_len)
+        logging.debug('Optval addr: %x', optval_addr % 0xffffffff)
+        logging.debug('Optval Lenght addr: %d', optval_len_addr % 0xffffffff)
         noop_current_syscall(pid)
         logging.debug('Writing values')
-        write_buffer(pid,
-                    optval_addr,
-                    optval,
-                    optval_len)
-        write_buffer(pid,
-                    optval_len_addr,
-                    optval_len,
-                    4)
+        tracereplay.populate_int(pid, optval_addr, optval)
+        tracereplay.populate_int(pid, optval_len_addr, 4)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
