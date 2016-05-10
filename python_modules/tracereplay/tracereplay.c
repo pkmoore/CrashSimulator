@@ -375,6 +375,24 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_populate_int(PyObject* self,
+                                          PyObject* args) {
+    pid_t child;
+    void* addr;
+    int data;
+    PyArg_ParseTuple(args, "iii", (int*)&child, (int*)&addr, &data);
+    if(DEBUG) {
+        printf("C: pop_char_buf: child: %d\n", child);
+        printf("C: pop_char_buf: addr: %d\n", (int)addr);
+        printf("C: pop_char_buf: data: %d\n", data);
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (char*)&data,
+                                          sizeof(int));
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
     pid_t child;
@@ -761,6 +779,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate llseek result"},
     {"populate_char_buffer", tracereplay_populate_char_buffer,
      METH_VARARGS, "populate char buffer"},
+    {"populate_int", tracereplay_populate_int,
+     METH_VARARGS, "populate int"},
     {"populate_uname_structure", tracereplay_populate_uname_structure,
      METH_VARARGS, "populate uname structure"},
     {"populate_rlimit_structure", tracereplay_populate_rlimit_structure,
