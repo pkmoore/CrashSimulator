@@ -5,11 +5,11 @@ cd .. > /dev/null;
 OUTPUT=$(python main.py \
        -c sample_programs/callread \
        -t sample_programs/callread.strace);
-RET=$?
-echo $OUTPUT | grep -q "asdfasd"
-FOUND=$?
-rm sample_programs/callread.strace
+RET=$?;
+echo $OUTPUT | grep -q "asdfasd";
+FOUND=$?;
+rm sample_programs/callread.strace;
 cd test > /dev/null;
 if [ $RET -ne 0 ] || [ $FOUND -ne 0 ];
-   then exit 1
+   then exit 1;
 fi
