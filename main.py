@@ -7,6 +7,7 @@ import re
 import argparse
 import logging
 import base64
+import traceback
 
 from tracereplay_python import *
 from time_handlers import *
@@ -55,15 +56,22 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         validate_subcall(subcall_id, syscall_object)
     except Exception as e:
         os.kill(pid, signal.SIGKILL)
-        raise e
+        traceback.print_exc()
+        sys.exit(1)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, pid)
     except KeyError:
         os.kill(pid, signal.SIGKILL)
-        raise NotImplementedError('No handler for socket subcall %s %s', syscall_object.name, 'entry' if entering else 'exit')
+        try:
+            NotImplementedError('No handler for socket subcall %s %s', syscall_object.name, 'entry' if entering else 'exit')
+        except:
+            os.kill(pid, signal.SIGKILL)
+            traceback.print_exc()
+            sys.exit(1)
     except Exception:
         os.kill(pid, signal.SIGKILL)
-        raise
+        traceback.print_exc()
+        sys.exit(1)
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
@@ -80,7 +88,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         validate_syscall(orig_eax, syscall_object)
     except Exception as e:
         os.kill(pid, signal.SIGKILL)
-        raise e
+        traceback.print_exc()
+        sys.exit(1)
     ignore_list = [
                    20, #sys_getpid
                    125, #sys_mprotect
@@ -158,13 +167,18 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
             handlers[(syscall_id, entering)](syscall_id, syscall_object, pid)
         except KeyError as e:
             os.kill(pid, signal.SIGKILL)
-            raise NotImplementedError('Encountered un-ignored syscall with ' \
-                                      'no handler: {}({})' \
-                                      .format(syscall_id,
-                                              syscall_object.name))
+            try:
+                raise NotImplementedError('Encountered un-ignored syscall with '\
+                                          'no handler: {}({})' \
+                                          .format(syscall_id,
+                                                  syscall_object.name))
+            except:
+                traceback.print_exc()
+                sys.exit(1)
         except Exception:
             os.kill(pid, signal.SIGKILL)
-            raise
+            traceback.print_exc()
+            sys.exit(1)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SYSCALLS!')
@@ -186,7 +200,11 @@ if __name__ == '__main__':
     if loglevel:
         numeric_level = getattr(logging, loglevel.upper(), None)
         if not isinstance(numeric_level, int):
-            raise TypeError('Invalid log level: {}'.format(loglevel))
+            try:
+                TypeError('Invalid log level: {}'.format(loglevel))
+            except:
+                traceback.print_exc()
+                sys.exit(1)
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
         tracereplay.enable_debug_output(numeric_level)
