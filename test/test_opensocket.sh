@@ -5,7 +5,10 @@ cd .. > /dev/null;
 OUTPUT=$(python main.py \
        -c sample_programs/opensocket \
        -t sample_programs/opensocket.strace);
-if ! echo $OUTPUT | grep -q "Success!";
-    then echo "Failed!";
+RET=$?
+echo $OUTPUT | grep -q "Success!"
+FOUND=$?
+cd test > /dev/null;
+if [ $RET -ne 0 ] || [ $FOUND -ne 0 ];
+   then exit 1
 fi
-cd - > /dev/null;

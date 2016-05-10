@@ -5,8 +5,12 @@ cd .. > /dev/null;
 OUTPUT=$(python main.py \
        -c ./sample_programs/calluname \
        -t ./sample_programs/calluname.strace);
-if ! echo $OUTPUT | grep -q "Linux";
-    then echo "Failed!";
-fi
+RET=$?
+echo $OUTPUT | grep -q "Linux"
+FOUND=$?
 rm sample_programs/calluname.strace;
 cd test > /dev/null;
+if [ $RET -ne 0 ] || [ $FOUND -ne 0 ];
+   then exit 1
+fi
+

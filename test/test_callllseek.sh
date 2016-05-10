@@ -8,13 +8,16 @@ echo "asdfasdf" > test.txt
 strace -f -s 9999 -vvvvv -o callllseek.strace ./callllseek;
 cd .. > /dev/null;
 echo "asdfasdf" > test.txt
-output=$(python main.py \
+OUTPUT=$(python main.py \
        -c sample_programs/callllseek \
        -t sample_programs/callllseek.strace);
-if ! echo $output | grep -q "result: 2"
-then echo "$0: failed!";
-fi
+RET=$?
+echo $OUTPUT | grep -q "result: 2"
+FOUND=$?
 rm sample_programs/callllseek.strace;
 rm sample_programs/test.txt;
 rm test.txt;
-cd test /dev/null;
+cd test > /dev/null;
+if [ $RET -ne 0 ] || [ $FOUND -ne 0 ];
+   then exit 1
+fi
