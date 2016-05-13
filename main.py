@@ -5,6 +5,7 @@ import sys
 import argparse
 import logging
 import traceback
+import ConfigParser
 
 from tracereplay_python import *
 from time_handlers import *
@@ -216,7 +217,11 @@ if __name__ == '__main__':
     # At this point we're not using switches so we MUST use a config file
     elif 'config_file' in args:
         config_file = args['config_file']
-        raise NotImplementedError('Config file support not implemented')
+        config = ConfigParser.ConfigParser()
+        config.readfp(open(config_file))
+        command = config.get('Replay', 'command')
+        command = command.split(' ')
+        trace = config.get('Replay', 'trace')
     else:
         raise ArgumentError('Neither switches nor config file specified')
     loglevel = args['loglevel']
