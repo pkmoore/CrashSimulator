@@ -240,9 +240,9 @@ if __name__ == '__main__':
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
                               syscall_object)
-            if orig_eax == 5:
-                print(peek_string(pid, tracereplay.peek_register(pid, tracereplay.EBX)))
-            handle_syscall(orig_eax, syscall_object, tracereplay.entering_syscall, pid)
+            handle_syscall(orig_eax, syscall_object,
+                           tracereplay.entering_syscall,
+                           pid)
             logging.info('# of System Calls Handled: %d',
                          tracereplay.handled_syscalls)
             tracereplay.entering_syscall = not tracereplay.entering_syscall
