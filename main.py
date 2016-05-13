@@ -1,12 +1,9 @@
 from __future__ import print_function
-import datetime
 import os
 import signal
 import sys
-import re
 import argparse
 import logging
-import base64
 import traceback
 
 from tracereplay_python import *
