@@ -24,43 +24,48 @@ from os_dict import OS_CONST, STAT_CONST
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
 
+
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
-                        ('socket', True): socket_subcall_entry_handler,
-                        ('socket', False): socket_exit_handler,
-                        ('accept', True): accept_subcall_entry_handler,
-                        ('bind', True): bind_entry_handler,
-                        ('bind', False): bind_exit_handler,
-                        ('listen', True): subcall_return_success_handler,
-                        ('recv', True): recv_subcall_entry_handler,
-                        ('recvfrom', True): recvfrom_subcall_entry_handler,
-                        ('setsockopt', True): subcall_return_success_handler,
-                        ('send', True): subcall_return_success_handler,
-                        ('connect', True): subcall_return_success_handler,
-                        ('getsockopt', True): getsockopt_entry_handler,
-                        ('sendmmsg', True): subcall_return_success_handler,
-                        ('sendto', True): sendto_entry_handler,
-                        ('sendto', False): sendto_exit_handler,
-                        ('shutdown', True): shutdown_subcall_entry_handler,
-                        ('recvmsg', True): recvmsg_entry_handler,
-                        ('recvmsg', False): recvmsg_exit_handler,
-                        ('getsockname', True): getsockname_entry_handler,
-                        ('getsockname', False): getsockname_exit_handler,
-                        ('getpeername', True): getpeername_entry_handler
-                       }
-    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX);
+        ('socket', True): socket_subcall_entry_handler,
+        ('socket', False): socket_exit_handler,
+        ('accept', True): accept_subcall_entry_handler,
+        ('bind', True): bind_entry_handler,
+        ('bind', False): bind_exit_handler,
+        ('listen', True): subcall_return_success_handler,
+        ('recv', True): recv_subcall_entry_handler,
+        ('recvfrom', True): recvfrom_subcall_entry_handler,
+        ('setsockopt', True): subcall_return_success_handler,
+        ('send', True): subcall_return_success_handler,
+        ('connect', True): subcall_return_success_handler,
+        ('getsockopt', True): getsockopt_entry_handler,
+        ('sendmmsg', True): subcall_return_success_handler,
+        ('sendto', True): sendto_entry_handler,
+        ('sendto', False): sendto_exit_handler,
+        ('shutdown', True): shutdown_subcall_entry_handler,
+        ('recvmsg', True): recvmsg_entry_handler,
+        ('recvmsg', False): recvmsg_exit_handler,
+        ('getsockname', True): getsockname_entry_handler,
+        ('getsockname', False): getsockname_exit_handler,
+        ('getpeername', True): getpeername_entry_handler
+        }
+    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
     try:
         validate_subcall(subcall_id, syscall_object)
-    except Exception as e:
+    except Exception:
         os.kill(pid, signal.SIGKILL)
         traceback.print_exc()
         sys.exit(1)
     try:
-        subcall_handlers[(syscall_object.name, entering)](syscall_id, syscall_object, pid)
+        subcall_handlers[(syscall_object.name, entering)](syscall_id,
+                                                          syscall_object,
+                                                          pid)
     except KeyError:
         os.kill(pid, signal.SIGKILL)
         try:
-            NotImplementedError('No handler for socket subcall %s %s', syscall_object.name, 'entry' if entering else 'exit')
+            NotImplementedError('No handler for socket subcall %s %s',
+                                syscall_object.name,
+                                'entry' if entering else 'exit')
         except:
             os.kill(pid, signal.SIGKILL)
             traceback.print_exc()
@@ -69,6 +74,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         os.kill(pid, signal.SIGKILL)
         traceback.print_exc()
         sys.exit(1)
+
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
@@ -83,90 +89,90 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     try:
         validate_syscall(orig_eax, syscall_object)
-    except Exception as e:
+    except Exception:
         os.kill(pid, signal.SIGKILL)
         traceback.print_exc()
         sys.exit(1)
     ignore_list = [
-                   20, #sys_getpid
-                   125, #sys_mprotect
-                   243, #sys_set_thread_area
-                   174, #sys_rt_sigaction
-                   175, #sys_rt_sigprocmask
-                   119, #sys_sigreturn
-                   126, #sys_sigprocmask
-                   311, #set_robust_list
-                   258, #set_tid_address
-                   266, #set_clock_getres
-                   240, #sys_futex
-                   191, #!!!!!!!!! sys_getrlimit
-                  ]
+        20,   # sys_getpid
+        125,  # sys_mprotect
+        243,  # sys_set_thread_area
+        174,  # sys_rt_sigaction
+        175,  # sys_rt_sigprocmask
+        119,  # sys_sigreturn
+        126,  # sys_sigprocmask
+        311,  # set_robust_list
+        258,  # set_tid_address
+        266,  # set_clock_getres
+        240,  # sys_futex
+        191,  # !!!!!!!!! sys_getrlimit
+        ]
     handlers = {
-                #### These calls just get their return values checked ####
-                (9, True): check_return_value_entry_handler,
-                (9, False): check_return_value_exit_handler,
+        # ### These calls just get their return values checked ####
+        (9, True): check_return_value_entry_handler,
+        (9, False): check_return_value_exit_handler,
 
-                (192, True): check_return_value_entry_handler,
-                (192, False): check_return_value_exit_handler,
+        (192, True): check_return_value_entry_handler,
+        (192, False): check_return_value_exit_handler,
 
-                (195, True): check_return_value_entry_handler,
-                (195, False): check_return_value_exit_handler,
+        (195, True): check_return_value_entry_handler,
+        (195, False): check_return_value_exit_handler,
 
-                (45, True): check_return_value_entry_handler,
-                (45, False): check_return_value_exit_handler,
+        (45, True): check_return_value_entry_handler,
+        (45, False): check_return_value_exit_handler,
 
-                (91, True): check_return_value_entry_handler,
-                (91, False): check_return_value_exit_handler,
+        (91, True): check_return_value_entry_handler,
+        (91, False): check_return_value_exit_handler,
 
-                (33, True): check_return_value_entry_handler,
-                (33, False): check_return_value_exit_handler,
+        (33, True): check_return_value_entry_handler,
+        (33, False): check_return_value_exit_handler,
 
-                (125, True): check_return_value_entry_handler,
-                (125, False): check_return_value_exit_handler,
+        (125, True): check_return_value_entry_handler,
+        (125, False): check_return_value_exit_handler,
 
-                ####                                                  ####
-                (78, True): gettimeofday_entry_handler,
-                (13, True): time_entry_handler,
-                (5, True): open_entry_handler,
-                (5, False): open_exit_handler,
-                (85, True): readlink_entry_handler,
-                (197, True): fstat64_entry_handler,
-                (122, True): uname_entry_handler,
-                (183, True): getcwd_entry_handler,
-                (140, True): llseek_entry_handler,
-                (10, True): syscall_return_success_handler,
-                (33, True): syscall_return_success_handler,
-                (199, True): syscall_return_success_handler,
-                (200, True): syscall_return_success_handler,
-                (201, True): syscall_return_success_handler,
-                (202, True): syscall_return_success_handler,
-                (4, True): write_entry_handler,
-                (4, False): write_exit_handler,
-                (3, True): read_entry_handler,
-                (3, False): read_exit_handler,
-                (6, True): close_entry_handler,
-                (6, False): close_exit_handler,
-                (168, True): poll_entry_handler,
-                (54, True): ioctl_entry_handler,
-                (195, True): stat64_entry_handler,
-                (195, False): stat64_exit_handler,
-                (142, True): select_entry_handler,
-                (82, True): select_entry_handler,
-                (221, True): fcntl64_entry_handler,
-                (196, True): lstat64_entry_handler,
-                (268, True): statfs64_entry_handler,
-                (265, True): clock_gettime_entry_handler,
-                (345, True): sendmmsg_entry_handler,
-                (345, False): sendmmsg_exit_handler
-               }
+        # ###                                                  ####
+        (78, True): gettimeofday_entry_handler,
+        (13, True): time_entry_handler,
+        (5, True): open_entry_handler,
+        (5, False): open_exit_handler,
+        (85, True): readlink_entry_handler,
+        (197, True): fstat64_entry_handler,
+        (122, True): uname_entry_handler,
+        (183, True): getcwd_entry_handler,
+        (140, True): llseek_entry_handler,
+        (10, True): syscall_return_success_handler,
+        (33, True): syscall_return_success_handler,
+        (199, True): syscall_return_success_handler,
+        (200, True): syscall_return_success_handler,
+        (201, True): syscall_return_success_handler,
+        (202, True): syscall_return_success_handler,
+        (4, True): write_entry_handler,
+        (4, False): write_exit_handler,
+        (3, True): read_entry_handler,
+        (3, False): read_exit_handler,
+        (6, True): close_entry_handler,
+        (6, False): close_exit_handler,
+        (168, True): poll_entry_handler,
+        (54, True): ioctl_entry_handler,
+        (195, True): stat64_entry_handler,
+        (195, False): stat64_exit_handler,
+        (142, True): select_entry_handler,
+        (82, True): select_entry_handler,
+        (221, True): fcntl64_entry_handler,
+        (196, True): lstat64_entry_handler,
+        (268, True): statfs64_entry_handler,
+        (265, True): clock_gettime_entry_handler,
+        (345, True): sendmmsg_entry_handler,
+        (345, False): sendmmsg_exit_handler
+        }
     if syscall_id not in ignore_list:
         try:
             handlers[(syscall_id, entering)](syscall_id, syscall_object, pid)
-        except KeyError as e:
+        except KeyError:
             os.kill(pid, signal.SIGKILL)
             try:
-                raise NotImplementedError('Encountered un-ignored syscall with '\
-                                          'no handler: {}({})' \
+                raise NotImplementedError('Encountered un-ignored syscall '
+                                          'with no handler: {}({})'
                                           .format(syscall_id,
                                                   syscall_object.name))
             except:
@@ -185,11 +191,12 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('-t',
                         '--trace',
-                        help='The system call trace to be replayed during the specified command',
+                        help='The system call trace to be replayed during the '
+                        'specified command',
                         required=True)
     parser.add_argument('-l',
                         '--loglevel',
-                        help='Log Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
+                        help='Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
     args = vars(parser.parse_args())
     command = args['command'].split(' ')
     trace = args['trace']
@@ -222,8 +229,8 @@ if __name__ == '__main__':
             logging.info('System call id from execution: %d', orig_eax)
             logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
-                          'entry' if tracereplay.entering_syscall else 'exit')
-            #This if statement is an ugly hack
+                         'entry' if tracereplay.entering_syscall else 'exit')
+            # This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
