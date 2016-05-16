@@ -55,8 +55,8 @@ def select_entry_handler(syscall_id, syscall_object, pid):
 
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
-    noop_current_syscall(pid)
     pollfd_array_address = tracereplay.peek_register(pid, tracereplay.EBX)
+    noop_current_syscall(pid)
     ol = syscall_object.original_line
     ret_struct = ol[ol.rfind('('):]
     logging.debug('Poll return structure: %s', ret_struct)
