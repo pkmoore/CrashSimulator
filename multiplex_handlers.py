@@ -2,6 +2,7 @@ from tracereplay_python import *
 import os
 import logging
 
+
 # A lot of the parsing in this function needs to be moved into the
 # posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
 # DESCRIPTORS" parsing class.
@@ -23,11 +24,10 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     exceptfds = syscall_object.args[3].value.strip('[]').split(' ')
     exceptfds = [None if x == 'NULL' else int(x) for x in exceptfds]
     logging.debug('exceptfds: %s', exceptfds)
-    fd = int(syscall_object.original_line[
-                                         syscall_object.original_line.rfind('[')
-                                         :
-                                         syscall_object.original_line.rfind(']')
-                                         ].strip('[]) '))
+    fd = int(syscall_object.original_line
+             [syscall_object.original_line.rfind('['):
+              syscall_object.original_line.rfind(']')]
+             .strip('[]) '))
     logging.debug('Got active file descriptor: %s', fd)
     readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('readfds addr: %s', readfds_addr)
@@ -52,6 +52,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Injecting return value: {}'.format(syscall_object.ret[0]))
     tracereplay.poke_register(pid, tracereplay.EAX, syscall_object.ret[0])
 
+
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
     noop_current_syscall(pid)
@@ -62,9 +63,9 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
     fd = int(ret_struct[ret_struct.find('=') + 1:ret_struct.find(',')])
     logging.debug('Returned file descriptor: %s', fd)
     ret_struct = ret_struct[ret_struct.find(' '):]
-    revent = ret_struct[ret_struct.find('=') + 1 : ret_struct.find('}')]
+    revent = ret_struct[ret_struct.find('=') + 1: ret_struct.find('}')]
     if syscall_object.args[1].value != 1:
-        raise NotImplementedError('encountered more (or less) ' \
+        raise NotImplementedError('encountered more (or less) '
                                   'than one poll struct')
     if revent not in ['POLLIN', 'POLLOUT']:
         raise NotImplementedError('Encountered unimplemented revent in poll')
@@ -81,6 +82,5 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
     tracereplay.write_poll_result(pid,
                                   pollfd_array_address,
                                   fd,
-                                  r
-                                 )
+                                  r)
     apply_return_conditions(pid, syscall_object)
