@@ -204,18 +204,20 @@ if __name__ == '__main__':
                         help='Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
     args = vars(parser.parse_args())
     # Don't allow switches combined with config file option
-    if ('command' in args or 'trace' in args) and 'config-file' in args:
-        raise ArgumentError('Cannot combine command/trace switches with'
-                            'config  file option')
+    if (args.get('command') is not None or args.get('trace') is not None) \
+       and args.get('config_file') is not None:
+        parser.error('Cannot combine command/trace switches with'
+                     'config  file option')
     # If we're going with switches, we must have both
-    if 'command' in args or 'trace' in args:
-        if not ('command' in args and 'trace' in args):
-            raise ArgumentError('Command and trace switches must be specified '
-                                'together')
+    if args.get('command') is not None or args.get('trace') is not None:
+        if not (args.get('command') is not None
+                and args.get('trace') is not None):
+            parser.error('Command and trace switches must be specified '
+                         'together')
         command = args['command'].split(' ')
         trace = args['trace']
     # At this point we're not using switches so we MUST use a config file
-    elif 'config_file' in args:
+    elif args.get('config_file') is not None:
         config_file = args['config_file']
         config = ConfigParser.ConfigParser()
         config.readfp(open(config_file))
@@ -223,7 +225,7 @@ if __name__ == '__main__':
         command = command.split(' ')
         trace = config.get('Replay', 'trace')
     else:
-        raise ArgumentError('Neither switches nor config file specified')
+        parser.error('Neither switches nor config file specified')
     loglevel = args['loglevel']
     if loglevel:
         numeric_level = getattr(logging, loglevel.upper(), None)
