@@ -3,6 +3,7 @@ import os
 import logging
 from time import strptime, mktime, time
 
+
 def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
     # Pull out everything we can check
@@ -17,7 +18,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         if fd_from_trace != fd:
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
-                                   'trace ({})' \
+                                   'trace ({})'
                                    .format(fd, fd_from_trace))
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
@@ -34,9 +35,10 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         if offset_file_descriptor(fd_from_trace) != fd:
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
-                                   'trace ({})' \
+                                   'trace ({})'
                                    .format(fd, fd_from_trace))
         logging.info('Replaying this system call')
+
 
 def close_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring close exit handler')
@@ -52,9 +54,11 @@ def close_exit_handler(syscall_id, syscall_object, pid):
         check_ret_val_from_trace = errno_ret
     if ret_val_from_execution != check_ret_val_from_trace:
         raise Exception('Return value from execution ({}) differs from '
-                        'Return value from trace ({})' \
+                        'Return value from trace ({})'
                         .format(ret_val_from_execution,
                                 check_ret_val_from_trace))
+
+
 def read_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
@@ -74,15 +78,17 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
 
+
 # This thing must be here to handle exits for read calls that we let pass. This
 # will go away once the new "open" machinery is in place and we intercept all
 # calls to read.
 def read_exit_handler(syscall_id, syscall_object, pid):
     pass
 
-#Note: This handler only takes action on syscalls made to file descriptors we
-#are tracking. Otherwise it simply does any required debug-printing and lets it
-#execute
+
+# Note: This handler only takes action on syscalls made to file descriptors we
+# are tracking. Otherwise it simply does any required debug-printing and lets
+# it execute
 def write_entry_handler(syscall_id, syscall_object, pid):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     fd_from_trace = syscall_object.args[0].value
@@ -91,16 +97,18 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Child attempted to write to FD: %s', fd)
     logging.debug('Child\'s message stored at: %s', msg_addr)
     logging.debug('Child\'s message length: %s', msg_len)
-    #print_buffer(pid, msg_addr, msg_len)
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
         logging.debug('Applying return conditions')
         apply_return_conditions(pid, syscall_object)
 
-# Once again, this only has to be here until the new "open" machinery is in lace
+
+# Once again, this only has to be here until the new "open" machinery
+# is in place
 def write_exit_handler(syscall_id, syscall_object, pid):
     pass
+
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
@@ -116,6 +124,7 @@ def llseek_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.debug('Got unsucceesful llseek call')
     apply_return_conditions(pid, syscall_object)
+
 
 def getcwd_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getcwd entry handler')
@@ -136,6 +145,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
 
+
 def readlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering readlink entry handler')
     array_addr = tracereplay.peek_register(pid, tracereplay.ECX)
@@ -155,8 +165,9 @@ def readlink_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Got unsuccessful readlink call')
     apply_return_conditions(pid, syscall_object)
 
+
 def statfs64_entry_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering statfs64 handler') 
+    logging.debug('Entering statfs64 handler')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
@@ -221,13 +232,15 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
                                                 f_flags)
     apply_return_conditions(pid, syscall_object)
 
+
 def lstat64_entry_handler(syscall_id, syscall_object, pid):
-   logging.debug('Entering lstat64 handler') 
-   noop_current_syscall(pid)
-   if syscall_object.ret[0] != -1:
-       logging.debug('Got successful lstat64 call')
-       raise NotImplementedError('Successful lstat64 not supported')
-   apply_return_conditions(pid, syscall_object)
+    logging.debug('Entering lstat64 handler')
+    noop_current_syscall(pid)
+    if syscall_object.ret[0] != -1:
+        logging.debug('Got successful lstat64 call')
+        raise NotImplementedError('Successful lstat64 not supported')
+    apply_return_conditions(pid, syscall_object)
+
 
 def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open entry handler')
@@ -241,6 +254,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
                         'file name from trace ({})'.format(fn_from_execution,
                                                            fn_from_trace))
 
+
 def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring open exit handler')
     ret_val_from_trace = syscall_object.ret[0]
@@ -250,16 +264,18 @@ def open_exit_handler(syscall_id, syscall_object, pid):
         logging.debug('Errno return value: %d', errno_ret)
         check_ret_val_from_trace = errno_ret
     else:
-        #The -1 is to account for STDIN
+        # The -1 is to account for STDIN
         check_ret_val_from_trace = offset_file_descriptor(ret_val_from_trace)
     logging.debug('Return value from exeuction: %d', ret_val_from_execution)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
-    logging.debug('Check return value from trace: %d', check_ret_val_from_trace)
+    logging.debug('Check return value from trace: %d',
+                  check_ret_val_from_trace)
     if ret_val_from_execution != check_ret_val_from_trace:
         raise Exception('Return value from execution ({}) differs from '
-                        'check return value from trace ({})' \
+                        'check return value from trace ({})' 
                         .format(ret_val_from_execution,
                                 check_ret_val_from_trace))
+
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -342,11 +358,13 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
                                            time_args_dict['st_atime'])
     apply_return_conditions(pid, syscall_object)
 
+
 def stat64_exit_handler(syscall_id, syscall_object, pid):
     pass
 
+
 def stat64_entry_handler(syscall_id, syscall_object, pid):
-    #horrible work arouund
+    # horrible work arouund
     print(syscall_object.args[0].value)
     if syscall_object.args[0].value == '"/etc/resolv.conf"':
         logging.error('Workaround for stat64 problem')
@@ -410,6 +428,7 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
                                            time_args_dict['st_atime'])
     apply_return_conditions(pid, syscall_object)
 
+
 def cleanup_st_mode(m):
     m = m.split('|')
     tmp = 0
@@ -420,6 +439,7 @@ def cleanup_st_mode(m):
             tmp = tmp | STAT_CONST[i]
     return tmp
 
+
 def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fcntl64 entry handler')
     operation = syscall_object.args[1].value[0].strip('[]\'')
@@ -429,4 +449,3 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     else:
         raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                   .format(operation))
-
