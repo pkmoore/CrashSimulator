@@ -100,7 +100,6 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
-        logging.debug('Applying return conditions')
         apply_return_conditions(pid, syscall_object)
 
 
