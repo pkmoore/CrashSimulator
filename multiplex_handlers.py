@@ -55,7 +55,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
 
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
-    pollfd_array_address = tracereplay.peek_register(pid, tracereplay.EBX)
+    array_address = tracereplay.peek_register(pid, tracereplay.EBX)
     noop_current_syscall(pid)
     ol = syscall_object.original_line
     ret_struct = ol[ol.rfind('('):]
@@ -64,23 +64,38 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Returned file descriptor: %s', fd)
     ret_struct = ret_struct[ret_struct.find(' '):]
     revent = ret_struct[ret_struct.find('=') + 1: ret_struct.find('}')]
-    if syscall_object.args[1].value != 1:
-        raise NotImplementedError('encountered more (or less) '
-                                  'than one poll struct')
+    if syscall_object.ret[0] != 1:
+        raise NotImplementedError('Cannot handle poll calls that return more '
+                                  'than one pollfd structure')
     if revent not in ['POLLIN', 'POLLOUT']:
         raise NotImplementedError('Encountered unimplemented revent in poll')
+    index = _get_pollfds_array_index_for_fd(syscall_object, fd)
     logging.debug('Returned event: %s', revent)
     logging.debug('Writing poll results structure')
-    logging.debug('Address: %s', pollfd_array_address)
+    logging.debug('Address: %s', array_address)
     logging.debug('File Descriptor: %s', fd)
     logging.debug('Event: %s', revent)
     logging.debug('Child PID: %s', pid)
+    logging.debug('Index: %d', index)
+    array_address = array_address + (index * tracereplay.POLLFDSIZE)
+    logging.debug('Offset address: %s', array_address)
     if revent == 'POLLIN':
         r = tracereplay.POLLIN
     else:
         r = tracereplay.POLLOUT
     tracereplay.write_poll_result(pid,
-                                  pollfd_array_address,
+                                  array_address,
                                   fd,
                                   r)
     apply_return_conditions(pid, syscall_object)
+
+
+def _get_pollfds_array_index_for_fd(syscall_object, fd):
+    polled_fds = [int(x.value[0]) for x in syscall_object.args[0].value]
+    logging.debug('Polled fds: %s', polled_fds)
+    logging.debug('File descriptor: %d', fd)
+    for i in range(len(polled_fds)):
+        if polled_fds[i] == fd:
+            return i
+    raise ValueError('File descriptor from trace return value was not '
+                     'found in trace polled file descriptor structures')

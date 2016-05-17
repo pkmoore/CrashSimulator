@@ -575,6 +575,10 @@ void init_constants(PyObject* m) {
         return;
     }
 
+    if(PyModule_AddIntConstant(m, "POLLFDSIZE", sizeof(struct pollfd)) == -1) {
+        return;
+    }
+
     if(PyModule_AddIntConstant(m, "CLOCK_MONOTONIC", CLOCK_MONOTONIC) == -1) {
         return;
     }
