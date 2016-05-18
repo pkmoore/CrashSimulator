@@ -69,33 +69,33 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
                                   'than one pollfd structure')
     if revent not in ['POLLIN', 'POLLOUT']:
         raise NotImplementedError('Encountered unimplemented revent in poll')
-    index = _get_pollfds_array_index_for_fd(syscall_object, fd)
+    logging.debug('Returned file descriptor: %d', fd)
     logging.debug('Returned event: %s', revent)
-    logging.debug('Writing poll results structure')
-    logging.debug('Address: %s', array_address)
-    logging.debug('File Descriptor: %s', fd)
-    logging.debug('Event: %s', revent)
+    logging.debug('Pollfd array address: %s', array_address)
     logging.debug('Child PID: %s', pid)
-    logging.debug('Index: %d', index)
-    array_address = array_address + (index * tracereplay.POLLFDSIZE)
-    logging.debug('Offset address: %s', array_address)
     if revent == 'POLLIN':
         r = tracereplay.POLLIN
     else:
         r = tracereplay.POLLOUT
-    tracereplay.write_poll_result(pid,
-                                  array_address,
-                                  fd,
-                                  r)
+    found_returned_fd = False
+    for index, obj in enumerate(syscall_object.args[0].value):
+        array_address = array_address + (index * tracereplay.POLLFDSIZE)
+        obj_fd = syscall_object.args[0].value[index].value[0]
+        if obj_fd == fd:
+            tracereplay.write_poll_result(pid,
+                                          array_address,
+                                          fd,
+                                          r)
+            found_returned_fd = True
+        else:
+            # For applications that re-use the pollfd array, we must clear
+            # the revents field in case they don't do it themselves.
+            tracereplay.write_poll_result(pid,
+                                          array_address,
+                                          obj_fd,
+                                          0)
+    if not found_returned_fd:
+        raise ReplayDeltaError('File descriptor from trace return value was '
+                               'not found in trace polled file descriptor '
+                               'structures')
     apply_return_conditions(pid, syscall_object)
-
-
-def _get_pollfds_array_index_for_fd(syscall_object, fd):
-    polled_fds = [int(x.value[0]) for x in syscall_object.args[0].value]
-    logging.debug('Polled fds: %s', polled_fds)
-    logging.debug('File descriptor: %d', fd)
-    for i in range(len(polled_fds)):
-        if polled_fds[i] == fd:
-            return i
-    raise ValueError('File descriptor from trace return value was not '
-                     'found in trace polled file descriptor structures')
