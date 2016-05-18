@@ -109,7 +109,15 @@ def write_entry_handler(syscall_id, syscall_object, pid):
 # Once again, this only has to be here until the new "open" machinery
 # is in place
 def write_exit_handler(syscall_id, syscall_object, pid):
-    pass
+    logging.debug('Entering write exit handler')
+    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
 
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
