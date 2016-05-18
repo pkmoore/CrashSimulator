@@ -72,8 +72,11 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
         noop_current_syscall(pid)
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
-        data = fix_character_literals(data)
-        write_buffer(pid, buffer_address, data, buffer_size)
+        data = data.decode('string_escape')
+        tracereplay.populate_char_buffer(pid,
+                                         buffer_address,
+                                         data,
+                                         buffer_size)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
