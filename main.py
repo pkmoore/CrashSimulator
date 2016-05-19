@@ -78,6 +78,9 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
+    debug_printers = {
+        5: open_entry_debug_printer
+        }
     logging.debug('Handling syscall')
     if entering:
         tracereplay.handled_syscalls += 1
@@ -91,8 +94,12 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     try:
         validate_syscall(orig_eax, syscall_object)
     except Exception:
-        os.kill(pid, signal.SIGKILL)
         traceback.print_exc()
+        try:
+            debug_printers[orig_eax](pid, orig_eax, syscall_object)
+        except KeyError:
+            logging.warning('This syscall ID has no debug printer!')
+        os.kill(pid, signal.SIGKILL)
         sys.exit(1)
     ignore_list = [
         20,   # sys_getpid

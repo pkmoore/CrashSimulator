@@ -459,3 +459,10 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     else:
         raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                   .format(operation))
+
+
+def open_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to open: %s',
+                  peek_string(pid,
+                              tracereplay.peek_register(pid,
+                                                        tracereplay.EBX)))
