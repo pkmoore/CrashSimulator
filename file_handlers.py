@@ -375,7 +375,6 @@ def stat64_exit_handler(syscall_id, syscall_object, pid):
 
 def stat64_entry_handler(syscall_id, syscall_object, pid):
     # horrible work arouund
-    print(syscall_object.args[0].value)
     if syscall_object.args[0].value == '"/etc/resolv.conf"':
         logging.error('Workaround for stat64 problem')
         return
