@@ -300,6 +300,7 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('EDI: %x', edi)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful fstat64 call')
+        noop_current_syscall(pid)
     else:
         logging.debug('Got successful fstat64 call')
         st_dev1 = syscall_object.args[1].value
