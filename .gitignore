@@ -12,4 +12,3 @@ python_modules/parse-syscall-definitions/
 *.log
 *~
 \#*\#
-glibc-2.21/
