@@ -13,3 +13,4 @@ callstatfs64
 callgetsockname
 callpoll_null
 callgetaddrinfo
+callsetlocale
