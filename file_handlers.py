@@ -12,6 +12,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     check_fd_from_trace = offset_file_descriptor(fd_from_trace)
     logging.debug('File descriptor from execution: %d', fd)
     logging.debug('File descriptor from trace: %d', fd_from_trace)
+    logging.debug('Check fd from trace: %d', check_fd_from_trace)
     # Check to make sure everything is the same
     # Decide if this is a system call we want to replay
     if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
@@ -32,7 +33,8 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        if offset_file_descriptor(fd_from_trace) != fd:
+        # fd != 1 is a horrible hack to deal with programs that close stdout
+        if offset_file_descriptor(fd_from_trace) != fd and fd != 1:
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
                                    'trace ({})'
