@@ -69,7 +69,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
             raise Exception('File descriptor from execution differs from file '
                             'descriptor from trace')
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-        buffer_size = tracereplay.peek_register(pid, tracereplay.EDX)
+        buffer_size = syscall_object.ret[0]
         noop_current_syscall(pid)
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
         data = data.decode('string_escape')
@@ -466,3 +466,9 @@ def open_entry_debug_printer(pid, orig_eax, syscall_object):
                   peek_string(pid,
                               tracereplay.peek_register(pid,
                                                         tracereplay.EBX)))
+
+def write_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to write: %s',
+                  peek_string(pid,
+                              tracereplay.peek_register(pid,
+                                                        tracereplay.ECX)))

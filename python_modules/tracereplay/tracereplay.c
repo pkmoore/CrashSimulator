@@ -44,15 +44,45 @@ int copy_buffer_into_child_process_memory(pid_t child,
         }
         printf("\n");
     }
-    for(i = 0; i < writes; i++) {
+    // Special case for buffers smaller than one 4 byte write
+    if(buf_length < 4) {
         if(DEBUG) {
-            printf("C: copy_buffer: poking (%p)%08X into %p\n", &buffer[i],
-                   *((int*)&buffer[i]), addr);
+            printf("C: copy_buffer: got a small write\n");
         }
-        if((ptrace(PTRACE_POKEDATA, child, addr, *((int*)&buffer[i])) == -1)) {
+        char temp_buffer[4];
+        *((int*)&temp_buffer) = (int)ptrace(PTRACE_PEEKDATA, child, addr, NULL);
+        if(DEBUG) {
+            printf("Peeked data: ");
+            for(i = 0; i < 4; i++) {
+                printf("%02X ", temp_buffer[i]);
+            }
+            printf("\n");
+        }
+        for(i = 0; i < buf_length; i++) {
+            temp_buffer[i] = buffer[i];
+        }
+        if(DEBUG) {
+            printf("'Diff'd data: ");
+            for(i = 0; i < 4; i++) {
+                printf("%02X ", temp_buffer[i]);
+            }
+            printf("\n");
+        }
+        if((ptrace(PTRACE_POKEDATA, child, addr, *((int*)&temp_buffer)) == -1)) {
             PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
         }
-        addr++;
+    }
+    else {
+        for(i = 0; i < writes; i++) {
+            if(DEBUG) {
+                printf("C: copy_buffer: poking (%p)%08X into %p\n", &buffer[i],
+                    *((int*)&buffer[i]), addr);
+            }
+            if((ptrace(PTRACE_POKEDATA, child, addr, *((int*)&buffer[i])) == -1)) {
+                PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+            }
+            addr++;
+        }
     }
     return 0;
 }
@@ -258,13 +288,26 @@ static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
         }
         printf("\n");
     }
-    struct termios t;
+
+    struct k_termios
+    {
+        tcflag_t c_iflag;/* input mode flags */
+        tcflag_t c_oflag;/* output mode flags */
+        tcflag_t c_cflag;/* control mode flags */
+        tcflag_t c_lflag;/* local mode flags */
+        cc_t c_line;/* line discipline */
+        cc_t c_cc[19];/* control characters */
+    };
+
+    struct k_termios t;
     t.c_iflag = c_iflag;
     t.c_oflag = c_oflag;
     t.c_cflag = c_cflag;
     t.c_lflag = c_lflag;
     t.c_line = c_line;
-    memcpy(&t.c_cc, cc_bytes, cc_bytes_length);
+    for(i = 0; i < 19; i++) {
+        t.c_cc[i] = cc_bytes[i];
+    }
     if(DEBUG) {
         printf("C: tcgets: sizeof(struct termios) %d\n", sizeof(struct termios));
         printf("C: tcgets: sizeof(t.c_cc) %d\n", sizeof(t.c_cc));
@@ -364,7 +407,7 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
                      &data, &data_length);
     if(DEBUG) {
         printf("C: pop_char_buf: child: %d\n", child);
-        printf("C: pop_char_buf: addr: %d\n", (int)addr);
+        printf("C: pop_char_buf: addr: %x\n", (int)addr);
         printf("C: pop_char_buf: data: %s\n", data);
         printf("C: pop_char_buf: data_length %ld\n", data_length);
     }
