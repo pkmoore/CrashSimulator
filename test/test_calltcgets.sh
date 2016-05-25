@@ -6,7 +6,7 @@ OUTPUT=$(python main.py \
        -c sample_programs/calltcgets \
        -t sample_programs/calltcgets.strace);
 RET=$?
-echo $OUTPUT | grep -q "8a3b"
+echo $OUTPUT | grep -q "ca3b"
 FOUND=$?
 rm sample_programs/calltcgets.strace;
 cd test > /dev/null;
