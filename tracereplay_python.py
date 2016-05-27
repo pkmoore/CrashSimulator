@@ -13,8 +13,9 @@ tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
 tracereplay.FILE_DESCRIPTORS = [tracereplay.STDIN]
 
-# This function leaves the child process in a state of waiting at the point just
-# before execution returns to user code.
+
+# This function leaves the child process in a state of waiting at the point
+# just before execution returns to user code.
 def noop_current_syscall(pid):
     logging.debug('Nooping the current system call in pid: %s', pid)
     tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
@@ -22,9 +23,10 @@ def noop_current_syscall(pid):
     next_syscall()
     skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
     if skipping != 20:
-        os.kill(pid, signal.SIGKILL)
-        raise Exception('Nooping did not result in getpid exit. Got {}'.format(skipping))
+        raise Exception('Nooping did not result in getpid exit. Got {}'
+                        .format(skipping))
     tracereplay.entering_syscall = False
+
 
 def next_syscall():
     s = os.wait()
@@ -32,34 +34,34 @@ def next_syscall():
         return False
     return True
 
+
 def offset_file_descriptor(fd):
     # The -1 is to account for stdin
     return fd - (len(tracereplay.FILE_DESCRIPTORS) - 1)
 
-def _exit(pid):
-    os.kill(pid, signal.SIGKILL)
-    sys.exit(1)
 
 def peek_bytes(pid, address, num_bytes):
     reads = num_bytes // 4
     remainder = num_bytes % 4
     data = ''
     for i in range(reads):
-        data =  data + pack('<i', tracereplay.peek_address(pid, address))
+        data = data + pack('<i', tracereplay.peek_address(pid, address))
         address = address + 4
     if remainder != 0:
         last_chunk = pack('<i', tracereplay.peek_address(pid, address))
         data = data + last_chunk[:remainder]
     return data
 
+
 def peek_string(pid, address):
     data = ''
     while True:
-        data =  data + pack('<i', tracereplay.peek_address(pid, address))
+        data = data + pack('<i', tracereplay.peek_address(pid, address))
         address = address + 4
         if '\0' in data:
             data = data[:data.rfind('\0')]
             return data
+
 
 def extract_socketcall_parameters(pid, address, num):
     params = []
@@ -68,6 +70,7 @@ def extract_socketcall_parameters(pid, address, num):
         address = address + 4
     logging.debug('Extracted socketcall parameters: %s', params)
     return params
+
 
 def fix_character_literals(string):
     logging.debug('Cleaning up string')
@@ -78,6 +81,7 @@ def fix_character_literals(string):
     logging.debug(string)
     return string
 
+
 def validate_syscall(syscall_id, syscall_object):
     if syscall_id == 192 and 'mmap' in syscall_object.name:
         return
@@ -87,20 +91,22 @@ def validate_syscall(syscall_id, syscall_object):
         return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
         raise ReplayDeltaError('System call validation failed: from '
-                                        'execution: {0}({1}) is not from '
-                                        'trace:{2}' \
-                                        .format(SYSCALLS[syscall_id][4:],
-                                                syscall_id, 
-                                                syscall_object.name))
+                               'execution: {0}({1}) is not from '
+                               'trace:{2}'
+                               .format(SYSCALLS[syscall_id][4:],
+                                       syscall_id,
+                                       syscall_object.name))
+
 
 def validate_subcall(subcall_id, syscall_object):
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
         raise ReplayDeltaError('Subcall validation failed: from '
-                                        'execution: {0}({1}) is not from '
-                                        'trace:{2}' \
-                                        .format(SOCKET_SUBCALLS[subcall_id][4:],
-                                                subcall_id, 
-                                                syscall_object.name))
+                               'execution: {0}({1}) is not from '
+                               'trace:{2}'
+                               .format(SOCKET_SUBCALLS[subcall_id][4:],
+                                       subcall_id,
+                                       syscall_object.name))
+
 
 # Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
@@ -120,6 +126,7 @@ def write_buffer(pid, address, value, buffer_length):
         d = left + d[len(left):]
         tracereplay.poke_address(pid, address, unpack('i', d)[0])
 
+
 def cleanup_return_value(val):
     try:
         ret_val = int(val)
@@ -134,22 +141,22 @@ def cleanup_return_value(val):
                 ret_val = OS_CONST[val]
             except KeyError:
                 logging.debug('Couldn\'t look up value from OS_CONST dict')
-                os.kill(pid, signal.SIGKILL)
                 raise ValueError('Couldn\'t get integer form of return value!')
     logging.debug('Cleaned up value %s', ret_val)
     return ret_val
 
-# Applies the return conditions from the specified syscall object to the syscall
-# currently being executed by the process identified by PID. Return conditions
-# at this point are: setting the return value appropriately. Setting the value
-# of errno by suppling -ERROR in the eax register. This function should only be
-# called in exit handlers.
+
+# Applies the return conditions from the specified syscall object to the
+# syscall currently being executed by the process identified by PID. Return
+# conditions at this point are: setting the return value appropriately. Setting
+# the value of errno by suppling -ERROR in the eax register. This function
+# should only be called in exit handlers.
 def apply_return_conditions(pid, syscall_object):
     logging.debug('Applying return conditions')
     ret_val = syscall_object.ret[0]
-    if  syscall_object.ret[0] == -1  and syscall_object.ret[1] is not None:
+    if syscall_object.ret[0] == -1 and syscall_object.ret[1] is not None:
         logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
-        error_code = ERRNO_CODES[syscall_object.ret[1]];
+        error_code = ERRNO_CODES[syscall_object.ret[1]]
         logging.debug('Looked up error number: %s', error_code)
         ret_val = -error_code
         logging.debug('Will return: %s instead of %s',
@@ -159,6 +166,7 @@ def apply_return_conditions(pid, syscall_object):
         ret_val = cleanup_return_value(ret_val)
     logging.debug('Injecting return value %s', ret_val)
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
+
 
 # Generic handler for all calls that just need to return what they returned in
 # the trace.
@@ -174,9 +182,8 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd != int(fd_from_trace):
-        os.kill(pid, signal.SIGKILL)
         raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'differs from file descriptor from trace' \
+                               'differs from file descriptor from trace'
                                .format(fd, fd_from_trace))
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
