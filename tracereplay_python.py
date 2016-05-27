@@ -193,7 +193,7 @@ class ReplayDeltaError(Exception):
     pass
 
 
-def validate_integer_argument(pid, syscall_object, arg_pos):
+def validate_integer_argument(pid, syscall_object, arg_pos, params=None):
     logging.debug('Validating integer argument (position: %d)', arg_pos)
     # EAX is the system call number
     POS_TO_REG = {0: tracereplay.EBX,
@@ -201,13 +201,17 @@ def validate_integer_argument(pid, syscall_object, arg_pos):
                   2: tracereplay.EDX,
                   3: tracereplay.ESI,
                   4: tracereplay.EDI}
-    arg = tracereplay.peek_register(pid, POS_TO_REG[arg_pos])
-    arg_from_trace = syscall_object.args[arg_pos].value
+    if not params:
+        arg = tracereplay.peek_register(pid, POS_TO_REG[arg_pos])
+    else:
+        arg = params[arg_pos]
+    arg_from_trace = int(syscall_object.args[arg_pos].value)
     logging.debug('Argument from execution: %d', arg)
     logging.debug('Argument from trace: %d', arg_from_trace)
     # Check to make sure everything is the same
     # Decide if this is a system call we want to replay
     if arg_from_trace != arg:
-        raise ReplayDeltaError('Argument value at position {} from execution '
-                               '({})differs argument value from trace ({})'
+        raise ReplayDeltaError('Argument value at position {} from '
+                               'execution ({})differs argument value '
+                               'from trace ({})'
                                .format(arg_pos, arg, arg_from_trace))
