@@ -188,7 +188,11 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
             except:
                 traceback.print_exc()
                 sys.exit(1)
-        except Exception:
+        except:
+            try:
+                debug_printers[orig_eax](pid, orig_eax, syscall_object)
+            except KeyError:
+                logging.warning('This call has no debug printer')
             os.kill(pid, signal.SIGKILL)
             traceback.print_exc()
             sys.exit(1)
