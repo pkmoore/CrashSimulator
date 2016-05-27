@@ -16,5 +16,6 @@ int main() {
         perror("Failed: ");
         exit(1);
     }
+    printf("Worked\n");
     return 0;
 }
