@@ -104,3 +104,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
                                                 )
     apply_return_conditions(pid, syscall_object)
 
+
+def brk_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to use address: %x',
+                  tracereplay.peek_register(pid, tracereplay.EBX))

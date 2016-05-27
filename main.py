@@ -80,7 +80,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     debug_printers = {
         5: open_entry_debug_printer,
-        4: write_entry_debug_printer
+        4: write_entry_debug_printer,
+        45: brk_entry_debug_printer
         }
     logging.debug('Handling syscall')
     if entering:
