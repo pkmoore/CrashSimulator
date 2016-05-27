@@ -181,5 +181,27 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
+
 class ReplayDeltaError(Exception):
     pass
+
+
+def validate_fd_argument(pid, syscall_object, arg_pos):
+    # EAX is the system call number
+    POS_TO_REG = {0: tracereplay.EBX,
+                  1: tracereplay.ECX,
+                  2: tracereplay.EDX,
+                  3: tracereplay.ESI,
+                  4: tracereplay.EDI}
+    fd = tracereplay.peek_register(pid, POS_TO_REG[arg_pos])
+    fd_from_trace = syscall_object.args[arg_pos].value
+    logging.debug('File descriptor from execution: %d', fd)
+    logging.debug('File descriptor from trace: %d', fd_from_trace)
+    # Check to make sure everything is the same
+    # Decide if this is a system call we want to replay
+    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+        if fd_from_trace != fd:
+            raise ReplayDeltaError('File descriptor from execution ({}) '
+                                   'differs from file descriptor from '
+                                   'trace ({})'
+                                   .format(fd, fd_from_trace))
