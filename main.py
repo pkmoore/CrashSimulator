@@ -78,11 +78,6 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
-    debug_printers = {
-        5: open_entry_debug_printer,
-        4: write_entry_debug_printer,
-        45: brk_entry_debug_printer
-        }
     logging.debug('Handling syscall')
     if entering:
         tracereplay.handled_syscalls += 1
@@ -93,16 +88,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         socketcall_handler(syscall_id, syscall_object, entering, pid)
         return
     logging.debug('Checking syscall against execution')
-    try:
-        validate_syscall(orig_eax, syscall_object)
-    except Exception:
-        traceback.print_exc()
-        try:
-            debug_printers[orig_eax](pid, orig_eax, syscall_object)
-        except KeyError:
-            logging.warning('This syscall ID has no debug printer!')
-        os.kill(pid, signal.SIGKILL)
-        sys.exit(1)
+    validate_syscall(orig_eax, syscall_object)
     ignore_list = [
         20,   # sys_getpid
         125,  # sys_mprotect
@@ -179,23 +165,10 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         try:
             handlers[(syscall_id, entering)](syscall_id, syscall_object, pid)
         except KeyError:
-            os.kill(pid, signal.SIGKILL)
-            try:
-                raise NotImplementedError('Encountered un-ignored syscall '
-                                          'with no handler: {}({})'
-                                          .format(syscall_id,
-                                                  syscall_object.name))
-            except:
-                traceback.print_exc()
-                sys.exit(1)
-        except:
-            try:
-                debug_printers[orig_eax](pid, orig_eax, syscall_object)
-            except KeyError:
-                logging.warning('This call has no debug printer')
-            os.kill(pid, signal.SIGKILL)
-            traceback.print_exc()
-            sys.exit(1)
+            raise NotImplementedError('Encountered un-ignored syscall '
+                                      'with no handler: {}({})'
+                                      .format(syscall_id,
+                                              syscall_object.name))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='SYSCALLS!')
@@ -257,6 +230,11 @@ if __name__ == '__main__':
         tracereplay.traceme()
         os.execvp(command[0], command)
     else:
+        debug_printers = {
+            5: open_entry_debug_printer,
+            4: write_entry_debug_printer,
+            45: brk_entry_debug_printer
+        }
         t = Trace.Trace(trace)
         tracereplay.system_calls = iter(t.syscalls)
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
@@ -283,9 +261,18 @@ if __name__ == '__main__':
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
                               syscall_object)
-            handle_syscall(orig_eax, syscall_object,
-                           tracereplay.entering_syscall,
-                           pid)
+            try:
+                handle_syscall(orig_eax, syscall_object,
+                               tracereplay.entering_syscall,
+                               pid)
+            except:
+                traceback.print_exc()
+                os.kill(pid, signal.SIGKILL)
+                try:
+                    debug_printers[orig_eax](pid, orig_eax, syscall_object)
+                except KeyError:
+                    logging.warning('This system call has no debug printer')
+                sys.exit(1)
             logging.info('# of System Calls Handled: %d',
                          tracereplay.handled_syscalls)
             tracereplay.entering_syscall = not tracereplay.entering_syscall
