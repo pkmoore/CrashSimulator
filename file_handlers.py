@@ -20,7 +20,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Check fd from trace: %d', check_fd_from_trace)
     # Check to make sure everything is the same
     # Decide if this is a system call we want to replay
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         if fd_from_trace != fd:
             raise ReplayDeltaError('File descriptor from execution ({}) '
                                    'differs from file descriptor from '
@@ -32,7 +32,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Got unsuccessful close call')
             fd = syscall_object.args[0].value
             try:
-                tracereplay.FILE_DESCRIPTORS.remove(fd)
+                tracereplay.REPLAY_FILE_DESCRIPTORS.remove(fd)
             except ValueError:
                 pass
         apply_return_conditions(pid, syscall_object)
@@ -71,7 +71,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         if fd != int(fd_from_trace):
             raise Exception('File descriptor from execution differs from file '
                             'descriptor from trace')
@@ -107,7 +107,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Child attempted to write to FD: %s', fd)
     logging.debug('Child\'s message stored at: %s', msg_addr)
     logging.debug('Child\'s message length: %s', msg_len)
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -289,7 +289,7 @@ def open_exit_handler(syscall_id, syscall_object, pid):
                   check_ret_val_from_trace)
     if ret_val_from_execution != check_ret_val_from_trace:
         raise Exception('Return value from execution ({}) differs from '
-                        'check return value from trace ({})' 
+                        'check return value from trace ({})'
                         .format(ret_val_from_execution,
                                 check_ret_val_from_trace))
 

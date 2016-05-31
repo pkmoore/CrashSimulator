@@ -14,7 +14,7 @@ def bind_entry_handler(syscall_id, syscall_object, pid):
         raise ReplayDeltaError('File descriptor from execution ({}) '
                                'does not match file descriptor from trace ({})' \
                                .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid)
     else:
@@ -39,7 +39,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
                                'does not match file descriptor from trace ({})' \
                                 .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -87,7 +87,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     #Decide if this is a file descriptor we want to deal with
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -136,7 +136,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
                                'does not match file descriptor from trace ({})' \
                                .format(fd, fd_from_trace))
     # Decide if we want to replay this system call
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -162,7 +162,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     # This if is sufficient for now for the implemented options
     if params[1] != 1 or params[2] != 4:
         raise NotImplementedError('Unimplemented getsockopt level or optname')
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         optval_len = int(syscall_object.args[4].value.strip('[]'))
         if optval_len != 4:
@@ -213,8 +213,8 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         fd = syscall_object.ret
         logging.debug('File Descriptor from trace: %s', fd)
-        if fd not in tracereplay.FILE_DESCRIPTORS:
-            tracereplay.FILE_DESCRIPTORS.append(fd[0])
+        if fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+            tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd[0])
         else:
             raise Exception('File descriptor from trace is already tracked')
         apply_return_conditions(pid, syscall_object)
@@ -244,16 +244,16 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
                         'file descriptor from trace ({})'
                         .format(fd, fd_from_trace))
     # Decide if this is a system call we want to replay
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
-            if ret in tracereplay.FILE_DESCRIPTORS:
+            if ret in tracereplay.REPLAY_FILE_DESCRIPTORS:
                 raise Exception('Syscall object return value ({}) already exists in'
                                 'tracked file descriptors list ({})'
-                                .format(ret, tracereplay.FILE_DESCRIPTORS))
-            tracereplay.FILE_DESCRIPTORS.append(ret)
+                                .format(ret, tracereplay.REPLAY_FILE_DESCRIPTORS))
+            tracereplay.REPLAY_FILE_DESCRIPTORS.append(ret)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')

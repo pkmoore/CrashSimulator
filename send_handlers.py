@@ -14,7 +14,7 @@ def sendto_entry_handler(syscall_id, syscall_object, pid):
         raise ReplayDeltaError('File descriptor from execution ({}) '
                                'does not match file descriptor from trace ({})' \
                                .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid) 
     else:
@@ -35,7 +35,7 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
                         'differs from file descriptor from trace ({})' \
                         .format(sockfd_from_execution,
                                 sockfd_from_trace))
-    if sockfd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if sockfd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this sytem call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:

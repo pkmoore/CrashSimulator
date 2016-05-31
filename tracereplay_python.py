@@ -11,7 +11,8 @@ from os_dict import OS_CONST, STAT_CONST
 tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
-tracereplay.FILE_DESCRIPTORS = [tracereplay.STDIN]
+tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN]
+tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 1, 'trace_fd': 1}]
 
 
 # This function leaves the child process in a state of waiting at the point
@@ -37,7 +38,7 @@ def next_syscall():
 
 def offset_file_descriptor(fd):
     # The -1 is to account for stdin
-    return fd - (len(tracereplay.FILE_DESCRIPTORS) - 1)
+    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 1)
 
 
 def peek_bytes(pid, address, num_bytes):

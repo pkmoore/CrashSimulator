@@ -15,7 +15,7 @@ def recvmsg_entry_handler(syscall_id, syscall_object, pid):
         raise Exception('File descriptor from execution ({}) does not match '
                         'file descriptor from trace ({})'
                         .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         raise NotImplementedError('recvmsg entry handler not '
                                   'implemented for tracked sockets')
     else:
@@ -37,10 +37,10 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, params)
     validate_integer_argument(pid, syscall_object, 2, params)
     # Decide if we want to replay this system call
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        if params[0] not in tracereplay.FILE_DESCRIPTORS:
+        if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
             raise Exception('Tried to recv from non-existant file descriptor')
         buffer_address = params[1]
         buffer_size = syscall_object.ret[0]
@@ -90,10 +90,10 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     #                     'length from trace ({})'
     #                     .format(buffer_length, buffer_length_from_trace))
     # Decide if we want to replay this system call
-    if fd_from_trace in tracereplay.FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        if params[0] not in tracereplay.FILE_DESCRIPTORS:
+        if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
             raise Exception('Tried to recvfrom from non-existant file '
                             'descriptor')
         buffer_address = params[1]
