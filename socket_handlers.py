@@ -1,6 +1,6 @@
 from tracereplay_python import *
-import os
 import logging
+
 
 def bind_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering bind entry handler')
@@ -12,7 +12,7 @@ def bind_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
         raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})' \
+                               'does not match file descriptor from trace ({})'
                                .format(fd_from_execution, fd_from_trace))
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
@@ -20,8 +20,10 @@ def bind_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.debug('Not replaying this call')
 
+
 def bind_exit_handler(syscall_id, syscall_object, pid):
     pass
+
 
 def getpeername_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getpeername handler')
@@ -36,9 +38,9 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})' \
-                                .format(fd, fd_from_trace))
-    #Decide if this is a file descriptor we want to deal with
+                               'does not match file descriptor from trace ({})'
+                               .format(fd, fd_from_trace))
+    # Decide if this is a file descriptor we want to deal with
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
@@ -58,7 +60,8 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
-                raise NotImplementedException('getpeername only supports AF_INET')
+                raise NotImplementedException('getpeername only '
+                                              'supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                   addr,
                                                   port,
@@ -70,6 +73,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+
 
 def getsockname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockname handler')
@@ -83,10 +87,10 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     # Check to make sure everything is the same
     if fd != int(fd_from_trace):
-        raise ReplayDeltaError('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
-    #Decide if this is a file descriptor we want to deal with
+        raise ReplayDeltaError('File descriptor from execution ({}) does '
+                               'not match file descriptor from trace ({})'
+                               .format(fd, fd_from_trace))
+    # Decide if this is a file descriptor we want to deal with
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
@@ -106,7 +110,8 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
-                raise NotImplementedException('getsockname only supports AF_INET')
+                raise NotImplementedException('getsockname only supports '
+                                              'AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                   addr,
                                                   port,
@@ -119,8 +124,10 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.info('Not replaying this system call')
 
+
 def getsockname_exit_handler(syscall_id, syscall_object, pid):
     pass
+
 
 def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')
@@ -130,10 +137,10 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     fd = params[0]
     fd_from_trace = syscall_object.args[0].value
     # TODO: We need to check the 'how' parameter here
-    # Check to make sure everything is the same 
+    # Check to make sure everything is the same
     if fd != int(fd_from_trace):
         raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})' \
+                               'does not match file descriptor from trace ({})'
                                .format(fd, fd_from_trace))
     # Decide if we want to replay this system call
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
@@ -142,6 +149,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+
 
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockopt handler')
@@ -181,9 +189,11 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.info('Not replaying this system call')
 
-#Horrible hack
+
+# Horrible hack
 def socket_exit_handler(syscall_id, syscall_object, pid):
     pass
+
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
@@ -193,7 +203,7 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     # Only PF_INET and PF_LOCAL socket calls are handled
     execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
     trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
-    execution_is_PF_LOCAL = (params[0] == 1) #define PF_LOCAL 1
+    execution_is_PF_LOCAL = (params[0] == 1)  # define PF_LOCAL 1
     trace_is_PF_LOCAL = (str(syscall_object.args[0]) == '[\'PF_LOCAL\']')
     logging.debug('Execution is PF_INET: %s', execution_is_PF_INET)
     logging.debug('Trace is PF_INET: %s', trace_is_PF_INET)
@@ -220,6 +230,7 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Ignoring non-PF_INET call to socket')
+
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Checking if line from trace is interrupted accept')
@@ -250,13 +261,15 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
             if ret in tracereplay.REPLAY_FILE_DESCRIPTORS:
-                raise Exception('Syscall object return value ({}) already exists in'
-                                'tracked file descriptors list ({})'
-                                .format(ret, tracereplay.REPLAY_FILE_DESCRIPTORS))
+                raise Exception('Syscall object return value ({}) already '
+                                'exists in tracked file descriptors list ({})'
+                                .format(ret,
+                                        tracereplay.REPLAY_FILE_DESCRIPTORS))
             tracereplay.REPLAY_FILE_DESCRIPTORS.append(ret)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+
 
 def accept_exit_handler(syscall_id, syscall_object, pid):
     pass
