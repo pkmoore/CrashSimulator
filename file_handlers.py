@@ -4,6 +4,11 @@ import logging
 from time import strptime, mktime, time
 
 
+def dup_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering dup handler')
+    validate_integer_argument(pid, syscall_object, 0)
+
+
 def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
     # Pull out everything we can check
