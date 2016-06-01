@@ -1,5 +1,4 @@
 from tracereplay_python import *
-import os
 import logging
 from time import strptime, mktime, time
 
@@ -44,7 +43,8 @@ def close_entry_handler(syscall_id, syscall_object, pid):
                                    'differs from file descriptor from '
                                    'trace ({})'
                                    .format(fd, fd_from_trace))
-        logging.info('Replaying this system call')
+        if fd >= 0:
+            remove_os_fd_mapping(fd, fd_from_trace)
 
 
 def close_exit_handler(syscall_id, syscall_object, pid):
@@ -274,7 +274,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
 
 def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring open exit handler')
-    ret_val_from_trace = syscall_object.ret[0]
+    ret_val_from_trace = int(syscall_object.ret[0])
     ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
     if ret_val_from_trace == -1:
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
@@ -292,6 +292,8 @@ def open_exit_handler(syscall_id, syscall_object, pid):
                         'check return value from trace ({})'
                         .format(ret_val_from_execution,
                                 check_ret_val_from_trace))
+    if ret_val_from_execution >= 0:
+        add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
 
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):

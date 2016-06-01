@@ -12,7 +12,7 @@ tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
 tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN]
-tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 1, 'trace_fd': 1}]
+tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 0, 'trace_fd': 0}]
 
 
 # This function leaves the child process in a state of waiting at the point
@@ -216,3 +216,29 @@ def validate_integer_argument(pid, syscall_object, arg_pos, params=None):
                                'execution ({})differs argument value '
                                'from trace ({})'
                                .format(arg_pos, arg, arg_from_trace))
+
+
+def add_os_fd_mapping(os_fd, trace_fd):
+    logging.debug('Mappings: {}'.format(tracereplay.OS_FILE_DESCRIPTORS))
+    new = {'os_fd': os_fd, 'trace_fd': trace_fd}
+    logging.debug('Adding mapping: {}'.format(new))
+    if len(tracereplay.OS_FILE_DESCRIPTORS) != 0:
+        for i in tracereplay.OS_FILE_DESCRIPTORS:
+            if i['os_fd'] == os_fd and i['trace_fd'] == trace_fd:
+                raise ReplayDeltaError('Mapping ({}) already exists!')
+    tracereplay.OS_FILE_DESCRIPTORS.append(new)
+
+
+def remove_os_fd_mapping(os_fd, trace_fd):
+    logging.debug('Mappings: {}'.format(tracereplay.OS_FILE_DESCRIPTORS))
+    remove = {'os_fd': os_fd, 'trace_fd': trace_fd}
+    logging.debug('Removing mapping: {}'.format(remove))
+    found = False
+    index = None
+    for i, item in enumerate(tracereplay.OS_FILE_DESCRIPTORS):
+        if item['os_fd'] == os_fd and item['trace_fd'] == trace_fd:
+            found = True
+            index = i
+    if not found:
+        raise ReplayDeltaError('Tried to remove non-existant mapping')
+    tracereplay.OS_FILE_DESCRIPTORS.pop(index)
