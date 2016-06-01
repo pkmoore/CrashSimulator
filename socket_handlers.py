@@ -190,9 +190,17 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Not replaying this system call')
 
 
-# Horrible hack
 def socket_exit_handler(syscall_id, syscall_object, pid):
-    pass
+    logging.debug('Entering socket exit handler')
+    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    fd_from_trace = int(syscall_object.ret[0])
+    if offset_file_descriptor(fd_from_trace) != fd_from_execution:
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'differs from file descriptor from '
+                               'trace ({})'
+                               .format(fd, fd_from_trace))
+        if fd_from_execution >= 0:
+            add_os_fd_mapping(fd_from_execution, fd_from_trace)
 
 
 # TODO: There is a lot more checking to be done here
