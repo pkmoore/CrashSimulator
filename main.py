@@ -165,9 +165,10 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         try:
             handlers[(syscall_id, entering)](syscall_id, syscall_object, pid)
         except KeyError:
-            raise NotImplementedError('Encountered un-ignored syscall '
+            raise NotImplementedError('Encountered un-ignored syscall {} '
                                       'with no handler: {}({})'
-                                      .format(syscall_id,
+                                      .format('entry' if entering else 'exit',
+                                              syscall_id,
                                               syscall_object.name))
 
 if __name__ == '__main__':
