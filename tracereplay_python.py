@@ -12,7 +12,8 @@ tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
 tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN]
-tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 0, 'trace_fd': 0}]
+tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 0, 'trace_fd': 0},
+                                   {'os_fd': 1, 'trace_fd': 1}]
 
 
 # This function leaves the child process in a state of waiting at the point
