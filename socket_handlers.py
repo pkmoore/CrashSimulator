@@ -252,6 +252,8 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
                             'failed. Next system call was not accept!')
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
+    sockaddr_addr = params[1]
+    sockaddr_len_addr = params[2]
     # Pull out everything we can check
     fd = params[0]
     fd_from_trace = syscall_object.args[0].value
@@ -266,6 +268,26 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
+        if syscall_object.args[1].value != 'NULL':
+            sockfields = syscall_object.args[1].value
+            family = sockfields[0].value
+            port = int(sockfields[1].value)
+            ip = sockfields[2].value
+            sockaddr_length = int(syscall_object.args[2].value.strip('[]'))
+            logging.debug('Family: %s', family)
+            logging.debug('Port: %s', port)
+            logging.debug('IP: %s', ip)
+            logging.debug('sockaddr Length: %s', sockaddr_length)
+            logging.debug('sockaddr addr: %x', sockaddr_addr & 0xffffffff)
+            logging.debug('sockaddr length addr: %x',
+                          sockaddr_len_addr & 0xffffffff)
+            logging.debug('pid: %s', pid)
+            tracereplay.populate_af_inet_sockaddr(pid,
+                                                  sockaddr_addr,
+                                                  port,
+                                                  ip,
+                                                  sockaddr_len_addr,
+                                                  sockaddr_length)
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
             if ret in tracereplay.REPLAY_FILE_DESCRIPTORS:
