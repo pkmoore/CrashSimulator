@@ -43,7 +43,12 @@ def close_entry_handler(syscall_id, syscall_object, pid):
                                    'differs from file descriptor from '
                                    'trace ({})'
                                    .format(fd, fd_from_trace))
-        if fd >= 0:
+        # This is a hack. We have to try to remove the mapping here because we
+        # know the file descriptor from both the os and the trace.
+        # Unfortunately, we don't know if the call was successful or not for
+        # the execution until the call exits. All we can do is look at the
+        # system call object and base our action on it.
+        if fd >= 0 and syscall_object.ret[0] != -1:
             remove_os_fd_mapping(fd, fd_from_trace)
 
 
