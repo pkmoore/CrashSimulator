@@ -481,8 +481,14 @@ def open_entry_debug_printer(pid, orig_eax, syscall_object):
                               tracereplay.peek_register(pid,
                                                         tracereplay.EBX)))
 
+
 def write_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to write: %s',
                   peek_string(pid,
                               tracereplay.peek_register(pid,
                                                         tracereplay.ECX)))
+
+
+def fstat64_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to fstat: %s',
+                  tracereplay.peek_register(pid, tracereplay.EBX))
