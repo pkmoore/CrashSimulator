@@ -199,8 +199,8 @@ def socket_exit_handler(syscall_id, syscall_object, pid):
                                'differs from file descriptor from '
                                'trace ({})'
                                .format(fd, fd_from_trace))
-        if fd_from_execution >= 0:
-            add_os_fd_mapping(fd_from_execution, fd_from_trace)
+    if fd_from_execution >= 0:
+        add_os_fd_mapping(fd_from_execution, fd_from_trace)
 
 
 # TODO: There is a lot more checking to be done here
