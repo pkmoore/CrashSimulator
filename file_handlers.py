@@ -134,18 +134,38 @@ def write_exit_handler(syscall_id, syscall_object, pid):
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
-    noop_current_syscall(pid)
-    if syscall_object.ret[0] != -1:
-        result = int(syscall_object.args[2].value.strip('[]'))
-        result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
-        logging.debug('result: %s', result)
-        logging.debug('result_addr: %s', result_addr)
-        logging.debug('Got successful llseek call')
-        logging.debug('Populating result')
-        tracereplay.populate_llseek_result(pid, result_addr, result)
+    d = fd_pair_for_trace_fd(int(syscall_object.args[0].value))
+    if d:
+        logging.debug('Call using non-replayed fd, not replaying')
+        logging.debug('Looked up trace_fd: %d', d['trace_fd'])
+        logging.debug('Looked up os_fd: %d', d['os_fd'])
+        execution_fd = tracereplay.peek_register(pid, tracereplay.EBX)
+        logging.debug('Execution fd: %d', execution_fd)
+        if d['os_fd'] != execution_fd:
+            raise ReplayDeltaError('Execution file descriptor ({}) does not '
+                                   'match os fd we looked up from '
+                                   'OS_FILE_DESCRIPTORS list ({})'
+                                   .format(execution_fd,
+                                           d['os_fd']))
     else:
-        logging.debug('Got unsucceesful llseek call')
-    apply_return_conditions(pid, syscall_object)
+        logging.debug('Call using replayed file descriptor. Replaying this '
+                      'system call')
+        noop_current_syscall(pid)
+        if syscall_object.ret[0] != -1:
+            result = int(syscall_object.args[2].value.strip('[]'))
+            result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
+            logging.debug('result: %s', result)
+            logging.debug('result_addr: %s', result_addr)
+            logging.debug('Got successful llseek call')
+            logging.debug('Populating result')
+            tracereplay.populate_llseek_result(pid, result_addr, result)
+        else:
+            logging.debug('Got unsucceesful llseek call')
+        apply_return_conditions(pid, syscall_object)
+
+
+def llseek_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('llseek exit handler doesn\'t do anything')
 
 
 def getcwd_entry_handler(syscall_id, syscall_object, pid):

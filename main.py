@@ -136,6 +136,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (122, True): uname_entry_handler,
         (183, True): getcwd_entry_handler,
         (140, True): llseek_entry_handler,
+        (140, False): llseek_exit_handler,
         (10, True): syscall_return_success_handler,
         (33, True): syscall_return_success_handler,
         (199, True): syscall_return_success_handler,
@@ -234,7 +235,8 @@ if __name__ == '__main__':
         debug_printers = {
             5: open_entry_debug_printer,
             4: write_entry_debug_printer,
-            45: brk_entry_debug_printer
+            45: brk_entry_debug_printer,
+            197: fstat64_entry_debug_printer
         }
         t = Trace.Trace(trace)
         tracereplay.system_calls = iter(t.syscalls)
