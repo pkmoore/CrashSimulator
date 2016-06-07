@@ -309,16 +309,11 @@ def open_exit_handler(syscall_id, syscall_object, pid):
 
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
-    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    logging.debug('Entering fstat64 handler')
+    if not should_replay_based_on_fd(pid, int(syscall_object.args[0].value)):
+        return
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    edx = tracereplay.peek_register(pid, tracereplay.EDX)
-    esi = tracereplay.peek_register(pid, tracereplay.ESI)
-    edi = tracereplay.peek_register(pid, tracereplay.EDI)
-    logging.debug('EBX: %x', ebx)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
-    logging.debug('EDX: %x', edx)
-    logging.debug('ESI: %x', esi)
-    logging.debug('EDI: %x', edi)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful fstat64 call')
         noop_current_syscall(pid)
@@ -389,6 +384,10 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
                                            time_args_dict['st_mtime'],
                                            time_args_dict['st_atime'])
     apply_return_conditions(pid, syscall_object)
+
+
+def fstat64_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('fstat64 exit handler does nothing')
 
 
 def stat64_exit_handler(syscall_id, syscall_object, pid):
