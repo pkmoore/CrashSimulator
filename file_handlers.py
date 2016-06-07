@@ -134,20 +134,7 @@ def write_exit_handler(syscall_id, syscall_object, pid):
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
-    d = fd_pair_for_trace_fd(int(syscall_object.args[0].value))
-    if d:
-        logging.debug('Call using non-replayed fd, not replaying')
-        logging.debug('Looked up trace_fd: %d', d['trace_fd'])
-        logging.debug('Looked up os_fd: %d', d['os_fd'])
-        execution_fd = tracereplay.peek_register(pid, tracereplay.EBX)
-        logging.debug('Execution fd: %d', execution_fd)
-        if d['os_fd'] != execution_fd:
-            raise ReplayDeltaError('Execution file descriptor ({}) does not '
-                                   'match os fd we looked up from '
-                                   'OS_FILE_DESCRIPTORS list ({})'
-                                   .format(execution_fd,
-                                           d['os_fd']))
-    else:
+    if should_replay_based_on_fd(pid, int(syscall_object.args[0].value)):
         logging.debug('Call using replayed file descriptor. Replaying this '
                       'system call')
         noop_current_syscall(pid)
