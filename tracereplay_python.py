@@ -243,3 +243,18 @@ def remove_os_fd_mapping(os_fd, trace_fd):
     if not found:
         raise ReplayDeltaError('Tried to remove non-existant mapping')
     tracereplay.OS_FILE_DESCRIPTORS.pop(index)
+
+
+def fd_pair_for_trace_fd(trace_fd):
+    logging.debug('Looking up trace file descriptor %d', trace_fd)
+    res = [x for x in tracereplay.OS_FILE_DESCRIPTORS
+           if x['trace_fd'] == trace_fd]
+    logging.debug(res)
+    if len(res) > 1:
+        raise RuntimeError('More than one entry for a given trace file '
+                           'descriptor')
+    elif len(res) == 0:
+        logging.debug('Could not find entry fortrace file descriptor in list')
+        return None
+    else:
+        return res[0]
