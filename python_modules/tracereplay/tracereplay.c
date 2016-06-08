@@ -30,6 +30,68 @@ static PyObject* TraceReplayError;
 bool DEBUG = false;
 bool INFO = false;
 
+int copy_child_process_memory_into_buffer(pid_t child,
+                                          void* addr,
+                                          char* buffer,
+                                          size_t buf_length){
+    char* buf_addr = buffer;
+    size_t peeks = buf_length - (sizeof(int) - 1 );
+    int i;
+    if(DEBUG) {
+        printf("C: peek_buffer: number of peeks: %d\n", peeks);
+    }
+    // Special case for buffers smaller than one 4 byte write
+    if(buf_length < 4) {
+        if(DEBUG) {
+            printf("C: peek_buffer: got a small peek\n");
+        }
+        unsigned char temp_buffer[4];
+        *((int*)&temp_buffer) = ptrace(PTRACE_PEEKDATA, child, addr, NULL);
+        if(DEBUG) {
+            printf("Peeked data: ");
+            for(i = 0; i < 4; i++) {
+                printf("%02X ", temp_buffer[i]);
+            }
+            printf("\n");
+        }
+        for(i = sizeof(int); i > buf_length; i--) {
+            temp_buffer[i-1] = buf_addr[i-1];
+        }
+        if(DEBUG) {
+            printf("'Diff'd data: ");
+            for(i = 0; i < 4; i++) {
+                printf("%02X ", temp_buffer[i]);
+            }
+            printf("\n");
+        }
+        for(i = 0; i < buf_length; i++) {
+            buf_addr[i] = temp_buffer[i];
+        }
+    }
+    else {
+        unsigned int t;
+        for(i = 0; i < peeks; i++) {
+            if(DEBUG) {
+                printf("%d\n", peeks);
+                printf("C: peek_buffer: peeking %p into %p\n", addr, &buf_addr[i]);
+            }
+            errno = 0;
+            t = ptrace(PTRACE_PEEKDATA, child, addr, NULL);
+            if(errno != 0) {
+                perror("C: peek_data: error string: ");
+                PyErr_SetString(TraceReplayError,
+                                "large peek failed in copy child\n");
+            }
+            if(DEBUG) {
+                printf("%02X\n", t);
+            }
+            memcpy(&buf_addr[i], &t, sizeof(int));
+            addr++;
+        }
+    }
+    return 0;
+}
+
 int copy_buffer_into_child_process_memory(pid_t child,
                                           void* addr,
                                           const char* const buffer,
@@ -69,7 +131,8 @@ int copy_buffer_into_child_process_memory(pid_t child,
             printf("\n");
         }
         if((ptrace(PTRACE_POKEDATA, child, addr, *((int*)&temp_buffer)) == -1)) {
-            PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+            PyErr_SetString(TraceReplayError,
+                            "Failed to poke small buffer in copy buffer");
         }
     }
     else {
@@ -79,7 +142,8 @@ int copy_buffer_into_child_process_memory(pid_t child,
                     *((int*)&buffer[i]), addr);
             }
             if((ptrace(PTRACE_POKEDATA, child, addr, *((int*)&buffer[i])) == -1)) {
-                PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+                PyErr_SetString(TraceReplayError,
+                                "Failed to poke large buffer in copy buffer\n");
             }
             addr++;
         }
