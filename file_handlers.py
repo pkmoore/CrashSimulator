@@ -112,7 +112,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Child attempted to write to FD: %s', fd)
     logging.debug('Child\'s message stored at: %s', msg_addr)
     logging.debug('Child\'s message length: %s', msg_len)
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if fd != 1 and fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
