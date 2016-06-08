@@ -282,6 +282,16 @@ def open_entry_handler(syscall_id, syscall_object, pid):
         raise Exception('File name from execution ({}) differs from '
                         'file name from trace ({})'.format(fn_from_execution,
                                                            fn_from_trace))
+    fd_from_trace = int(syscall_object.ret[0])
+    if not is_mmapd_before_close(fd_from_trace):
+        logging.debug('File descriptor is not mmap\'d before it is closed '
+                      'so we will replay it')
+        noop_current_syscall(pid)
+        if fd_from_trace not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+            tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd_from_trace)
+        else:
+            raise ReplayDeltaError('Tried to already existing file descriptor '
+                                   'to replay file descriptors list')
 
 
 def open_exit_handler(syscall_id, syscall_object, pid):
