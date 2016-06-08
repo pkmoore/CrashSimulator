@@ -12,9 +12,8 @@ from os_dict import OS_CONST, STAT_CONST
 tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
-tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN]
-tracereplay.OS_FILE_DESCRIPTORS = [{'os_fd': 0, 'trace_fd': 0},
-                                   {'os_fd': 1, 'trace_fd': 1}]
+tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1]
+tracereplay.OS_FILE_DESCRIPTORS = []
 
 
 # This function leaves the child process in a state of waiting at the point
@@ -40,7 +39,7 @@ def next_syscall():
 
 def offset_file_descriptor(fd):
     # The -1 is to account for stdin
-    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 1)
+    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 2)
 
 
 def peek_bytes(pid, address, num_bytes):
@@ -264,7 +263,7 @@ def fd_pair_for_trace_fd(trace_fd):
 def should_replay_based_on_fd(pid, trace_fd):
     logging.debug('Should we replay?')
     d = fd_pair_for_trace_fd(trace_fd)
-    if d:
+    if d and trace_fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Call using non-replayed fd, not replaying')
         logging.debug('Looked up trace_fd: %d', d['trace_fd'])
         logging.debug('Looked up os_fd: %d', d['os_fd'])
@@ -276,8 +275,22 @@ def should_replay_based_on_fd(pid, trace_fd):
                                    'OS_FILE_DESCRIPTORS list ({})'
                                    .format(execution_fd,
                                            d['os_fd']))
-        logging.debug('We should not replay, there is an os fd for this call')
+        logging.debug('We should not replay, there is an os fd for this call '
+                      'and no entry for it in REPLAY_FILE_DESCRIPTORS')
         return False
+    elif not d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        logging.debug('This fd %d has no OS_FILE_DESCRIPTORS entry but does '
+                      'exist in REPLAY_FILE_DESCRIPTORS. Should be replayed',
+                      trace_fd)
+        return True
+    elif d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        raise ReplayDeltaError('This fd ({}) is in both the OS file '
+                               'descriptor list and the replay file '
+                               'descriptor list'.format(trace_fd))
+    else:
+        raise ReplayDeltaError('No entry in either list for fd {}. Maybe this '
+                               'is an improperly handled unsuccessful call?'
+                               .format(trace_fd))
     logging.debug('We should replay, there is not an os fd for this call')
     return True
 
