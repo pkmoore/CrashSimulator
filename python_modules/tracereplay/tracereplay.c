@@ -403,7 +403,7 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
     void* addr;
     char* data;
     long int data_length;
-    PyArg_ParseTuple(args, "iisl", (int*)&child, (int*)&addr, 
+    PyArg_ParseTuple(args, "iis#", (int*)&child, (int*)&addr,
                      &data, &data_length);
     if(DEBUG) {
         printf("C: pop_char_buf: child: %d\n", child);

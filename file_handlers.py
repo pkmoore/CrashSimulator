@@ -81,14 +81,26 @@ def read_entry_handler(syscall_id, syscall_object, pid):
             raise Exception('File descriptor from execution differs from file '
                             'descriptor from trace')
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-        buffer_size = syscall_object.ret[0]
+        buffer_size_from_execution = tracereplay.peek_register(pid,
+                                                               tracereplay.EDX)
+        buffer_size_from_trace = int(syscall_object.args[2].value)
+        logging.debug('Address: %x', buffer_address & 0xffffffff)
+        logging.debug('Buffer size from execution: %d',
+                      buffer_size_from_execution)
+        logging.debug('Buffer size from trace: %d', buffer_size_from_trace)
+        ret_val = int(syscall_object.ret[0])
+        if buffer_size_from_execution != buffer_size_from_trace:
+            raise ReplayDeltaError('Buffer size from execution does not match '
+                                   'buffer size from trace')
         noop_current_syscall(pid)
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
         data = data.decode('string_escape')
+        if len(data) != ret_val:
+            raise ReplayDeltaError('Decoded bytes length does not equal '
+                                   'return value from trace')
         tracereplay.populate_char_buffer(pid,
                                          buffer_address,
-                                         data,
-                                         buffer_size)
+                                         data)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
@@ -168,8 +180,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Populating character array')
         tracereplay.populate_char_buffer(pid,
                                          array_addr,
-                                         data,
-                                         data_length)
+                                         data)
     else:
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
@@ -188,8 +199,7 @@ def readlink_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Populating character array')
         tracereplay.populate_char_buffer(pid,
                                          array_addr,
-                                         data,
-                                         data_length)
+                                         data)
     else:
         logging.debug('Got unsuccessful readlink call')
     apply_return_conditions(pid, syscall_object)

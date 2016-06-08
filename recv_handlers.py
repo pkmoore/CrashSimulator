@@ -43,13 +43,11 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
             raise Exception('Tried to recv from non-existant file descriptor')
         buffer_address = params[1]
-        buffer_size = syscall_object.ret[0]
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
         data = data.decode('string_escape')
         tracereplay.populate_char_buffer(pid,
                                          buffer_address,
-                                         data,
-                                         buffer_size)
+                                         data)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
