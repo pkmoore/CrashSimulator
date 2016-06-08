@@ -2,6 +2,7 @@ import tracereplay
 import os
 import logging
 import binascii
+import itertools
 from struct import pack, unpack
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
@@ -279,3 +280,43 @@ def should_replay_based_on_fd(pid, trace_fd):
         return False
     logging.debug('We should replay, there is not an os fd for this call')
     return True
+
+
+def find_close_for_fd(fd):
+    logging.debug('Finding close for file descriptor: %d', fd)
+    # This list will not have the current syscall in it
+    # Must unroll the iterator
+    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
+    tmp_syscalls = list(tmp_syscalls)
+    close_index = None
+    for index, obj in enumerate(tmp_syscalls):
+        print dir(obj)
+        if obj.name == 'close' and int(obj.args[0].value) == fd:
+            close_index = index
+            logging.debug('Found close for this open\'s file descriptor %d '
+                          'calls away', close_index)
+            break
+    if not close_index:
+        logging.debug('File descriptor is never closed')
+    return close_index
+
+
+def is_mmapd_before_close(fd):
+    # This list will not have the current syscall in it
+    # Must unroll the iterator
+    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
+    tmp_syscalls = list(tmp_syscalls)
+    close_index = find_close_for_fd(fd)
+    if close_index:
+        logging.debug('Looking for mmap2 of fd %d up to %d calls away',
+                      fd, close_index)
+        tmp_syscalls = tmp_syscalls[:close_index]
+    else:
+        logging.debug('Looking for mmap2 of fd %d before end of trace', fd)
+    for index, obj in enumerate(tmp_syscalls):
+        if obj.name == 'mmap2' and int(obj.args[4].value) == fd:
+            logging.debug('Found mmap2 call for fd %d %d calls away',
+                          fd, index)
+            return True
+    logging.debug('This file descriptor is not mmap2\'d before it is closed')
+    return False
