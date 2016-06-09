@@ -255,6 +255,7 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
     if(DEBUG) {
         printf("C: pop af_inet: sizeof(s.sin_port): %d\n", sizeof(s.sin_port));
     }
+    copy_child_process_memory_into_buffer(child, addr, (char*)&s, sizeof(s));
     s.sin_family = AF_INET;
     s.sin_port = htons(port);
     inet_aton(ip, &s.sin_addr); 
@@ -798,8 +799,8 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     if(!PyArg_ParseTuple(args, "iihh", &child, (int*)&addr, &fd, &re)) {
         PyErr_SetString(TraceReplayError, "write_poll_result arg parse failed");
     }
+    copy_child_process_memory_into_buffer(child, addr, (char*)&s, sizeof(s));
     s.fd = fd;
-    s.events = 0;
     s.revents = re;
     if(DEBUG) {
         printf("POLLOUT: %d\n", POLLOUT);
