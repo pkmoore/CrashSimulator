@@ -526,3 +526,8 @@ def write_entry_debug_printer(pid, orig_eax, syscall_object):
 def fstat64_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to fstat: %s',
                   tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def close_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to close: %s',
+                  tracereplay.peek_register(pid, tracereplay.EBX))

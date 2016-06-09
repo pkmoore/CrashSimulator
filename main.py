@@ -220,6 +220,7 @@ if __name__ == '__main__':
     else:
         debug_printers = {
             5: open_entry_debug_printer,
+            6: close_entry_debug_printer,
             4: write_entry_debug_printer,
             45: brk_entry_debug_printer,
             102: socketcall_debug_printer,
