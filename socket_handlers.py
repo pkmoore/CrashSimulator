@@ -312,3 +312,14 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
                                .format(fd, fd_from_trace))
         if fd_from_execution >= 0:
             add_os_fd_mapping(fd_from_execution, fd_from_trace)
+
+
+def socketcall_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('Warning this handler only does things with send')
+    if tracereplay.peek_register(pid, tracereplay.EBX) == 9:
+        p = tracereplay.peek_register(pid, tracereplay.ECX)
+        params = extract_socketcall_parameters(pid, p, 4)
+        addr = params[1]
+        size = params[2]
+        logging.debug('This call tried to send: %s',
+                      peek_bytes(pid, addr, size).encode('string-escape'))
