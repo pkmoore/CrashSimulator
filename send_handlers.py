@@ -1,6 +1,6 @@
 from tracereplay_python import *
-import os
 import logging
+
 
 def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendto entry handler')
@@ -12,16 +12,18 @@ def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from trace: %d', fd_from_trace)
     if fd_from_execution != fd_from_trace:
         raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})' \
+                               'does not match file descriptor from trace ({})'
                                .format(fd_from_execution, fd_from_trace))
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Replaying this system call')
-        subcall_return_success_handler(syscall_id, syscall_object, pid) 
+        subcall_return_success_handler(syscall_id, syscall_object, pid)
     else:
         logging.debug('Not replaying this call')
 
+
 def sendto_exit_handler(syscall_id, syscall_object, pid):
     pass
+
 
 def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendmmsg entry handler')
@@ -31,8 +33,8 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
                   sockfd_from_execution)
     logging.debug('Socket file descriptor from trace %s', sockfd_from_trace)
     if sockfd_from_trace != sockfd_from_execution:
-        raise Exception('File descriptor from execution ({}) ' \
-                        'differs from file descriptor from trace ({})' \
+        raise Exception('File descriptor from execution ({}) '
+                        'differs from file descriptor from trace ({})'
                         .format(sockfd_from_execution,
                                 sockfd_from_trace))
     if sockfd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
@@ -45,7 +47,7 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Number of messages %d', number_of_messages)
             logging.debug('Address of buffer %x', addr)
             lengths = [int(syscall_object.args[x].value.rstrip('}'))
-                   for x in range(6, (number_of_messages * 6) + 1, 6)]
+                       for x in range(6, (number_of_messages * 6) + 1, 6)]
             logging.debug('Lengths: %s', lengths)
             tracereplay.write_sendmmsg_lengths(pid,
                                                addr,
@@ -57,6 +59,6 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
     else:
         logging.debug('Not replaying this system call')
 
+
 def sendmmsg_exit_handler(syscall_id, syscall_object, pid):
     pass
-
