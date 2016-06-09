@@ -24,6 +24,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <sys/ioctl.h>
 
 static PyObject* TraceReplayError;
 
@@ -229,6 +230,51 @@ static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
         }
     } 
         copy_buffer_into_child_process_memory(child, addr, (char*)bytes, num_bytes);
+    Py_RETURN_NONE;
+}
+
+static PyObject* tracereplay_populate_winsize_structure(PyObject* self,
+                                                        PyObject* args) {
+    pid_t child;
+    void* addr;
+    unsigned short ws_row;
+    unsigned short ws_col;
+    unsigned short ws_xpixel;
+    unsigned short ws_ypixel;
+    if(!PyArg_ParseTuple(args, "iihhhh", &child, &addr, &ws_row, &ws_col,
+                         &ws_xpixel, &ws_ypixel)) {
+        PyErr_SetString(TraceReplayError,
+                        "pop_winsize parse fialed");
+    }
+    if(DEBUG) {
+        printf("child: %d\n", child);
+        printf("addr: %p\n", addr);
+        printf("ws_row: %d\n", ws_row);
+        printf("ws_col: %d\n", ws_col);
+        printf("ws_xpixel: %d\n", ws_xpixel);
+        printf("ws_ypixel: %d\n", ws_ypixel);
+    }
+    struct winsize w;
+    copy_child_process_memory_into_buffer(child, addr, (char*)&w, sizeof(w));
+    w.ws_row = ws_row;
+    w.ws_col = ws_col;
+    w.ws_xpixel = ws_xpixel;
+    w.ws_ypixel = ws_ypixel;
+    if(DEBUG) {
+        printf("w.ws_row: %d\n", w.ws_row);
+        printf("w.ws_col: %d\n", w.ws_col);
+        printf("w.ws_xpixel: %d\n", w.ws_xpixel);
+        printf("w.ws_ypixel: %d\n", w.ws_ypixel);
+    } 
+    copy_buffer_into_child_process_memory(child, addr, (char*)&w, sizeof(w));
+    struct winsize r;
+    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    if(DEBUG) {
+        printf("r.ws_row: %d\n", r.ws_row);
+        printf("r.ws_col: %d\n", r.ws_col);
+        printf("r.ws_xpixel: %d\n", r.ws_xpixel);
+        printf("r.ws_ypixel: %d\n", r.ws_ypixel);
+    } 
     Py_RETURN_NONE;
 }
 
@@ -938,6 +984,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate timespec structure"},
     {"populate_timeval_structure", tracereplay_populate_timeval_structure,
      METH_VARARGS, "populate timeval structure"},
+    {"populate_winsize_structure", tracereplay_populate_winsize_structure,
+     METH_VARARGS, "populate winsize structure"},
     {NULL, NULL, 0, NULL}
 };
 

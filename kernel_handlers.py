@@ -50,24 +50,40 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
 
 def ioctl_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering ioctl handler')
-    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    trace_fd = int(syscall_object.args[0].value)
+    if not should_replay_based_on_fd(pid, trace_fd):
+        logging.debug('Not replaying this system call')
+        return
+    logging.debug('Replaying this system call')
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
-    edi = tracereplay.peek_register(pid, tracereplay.EDI)
-    esi = tracereplay.peek_register(pid, tracereplay.ESI)
-    logging.debug('ebx: %x', ebx)
-    logging.debug('ecx: %x', ecx)
     logging.debug('edx: %x', edx)
-    logging.debug('edi: %x', edi)
-    logging.debug('esi: %x', esi)
     addr = edx
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
         if not ('TCGETS' in cmd or 'FIONREAD' in cmd or 'TCSETSW' in cmd or
-                'FIONBIO' in cmd):
+                'FIONBIO' in cmd or 'TIOCGWINSZ' in cmd):
             raise NotImplementedError('Unsupported ioctl command')
-        if 'FIONREAD' in cmd:
+        if 'TIOCGWINSZ' in cmd:
+            ws_row = syscall_object.args[2].value
+            ws_row = int(ws_row.split('=')[1])
+            ws_col = syscall_object.args[3].value
+            ws_col = int(ws_col.split('=')[1])
+            ws_xpixel = syscall_object.args[4].value
+            ws_xpixel = int(ws_xpixel.split('=')[1])
+            ws_ypixel = syscall_object.args[5].value
+            ws_ypixel = int(ws_ypixel.split('=')[1].strip('}'))
+            logging.debug('ws_row: %s', ws_row)
+            logging.debug('ws_col: %s', ws_col)
+            logging.debug('ws_xpixel: %s', ws_xpixel)
+            logging.debug('ws_ypixel: %s', ws_ypixel)
+            tracereplay.populate_winsize_structure(pid,
+                                                   addr,
+                                                   ws_row,
+                                                   ws_col,
+                                                   ws_xpixel,
+                                                   ws_ypixel)
+        elif 'FIONREAD' in cmd:
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
             tracereplay.poke_address(pid, addr, num_bytes)
@@ -77,7 +93,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         elif 'FIONBIO' in cmd:
             logging.debug('Got a FIONBIO ioctl() call')
             logging.debug('WARNING: NO SIDE EFFECTS REPLICATED')
-        else:
+        elif 'TCGETS' in cmd:
             c_iflags = syscall_object.args[2].value
             c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
             c_oflags = syscall_object.args[3].value
