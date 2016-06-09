@@ -51,30 +51,15 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         ('getpeername', True): getpeername_entry_handler
         }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
-    try:
-        validate_subcall(subcall_id, syscall_object)
-    except Exception:
-        os.kill(pid, signal.SIGKILL)
-        traceback.print_exc()
-        sys.exit(1)
+    validate_subcall(subcall_id, syscall_object)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id,
                                                           syscall_object,
                                                           pid)
     except KeyError:
-        os.kill(pid, signal.SIGKILL)
-        try:
-            NotImplementedError('No handler for socket subcall %s %s',
-                                syscall_object.name,
-                                'entry' if entering else 'exit')
-        except:
-            os.kill(pid, signal.SIGKILL)
-            traceback.print_exc()
-            sys.exit(1)
-    except Exception:
-        os.kill(pid, signal.SIGKILL)
-        traceback.print_exc()
-        sys.exit(1)
+        raise NotImplementedError('No handler for socket subcall %s %s',
+                                  syscall_object.name,
+                                  'entry' if entering else 'exit')
 
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
@@ -237,6 +222,7 @@ if __name__ == '__main__':
             5: open_entry_debug_printer,
             4: write_entry_debug_printer,
             45: brk_entry_debug_printer,
+            102: socketcall_debug_printer,
             197: fstat64_entry_debug_printer
         }
         t = Trace.Trace(trace)
