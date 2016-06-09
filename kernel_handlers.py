@@ -1,10 +1,9 @@
 from tracereplay_python import *
-import os
 import logging
+
 
 # This handler assumes that uname cannot fail. The only documented way it can
 # fail is if the buffer it is handed is somehow invalid. This code assumes that
-
 # well written programs don't do this.
 def uname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering uname handler')
@@ -23,6 +22,7 @@ def uname_entry_handler(syscall_id, syscall_object, pid):
                                          args['machine'],
                                          args['domainname'])
     apply_return_conditions(pid, syscall_object)
+
 
 def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getrlimit handler')
@@ -46,6 +46,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
     apply_return_conditions(pid, syscall_object)
+
 
 def ioctl_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering ioctl handler')
@@ -91,7 +92,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             cc = cc[cc.rfind('=')+1:].strip('"}')
             cc = cc.replace('\\x', ' ').strip()
             cc = bytearray.fromhex(cc)
-            cc_as_string =''.join('{:02x}'.format(x) for x in cc)
+            cc_as_string = ''.join('{:02x}'.format(x) for x in cc)
             cc = cc_as_string.decode('hex')
             logging.debug('pid: %s', pid)
             logging.debug('Addr: %s', addr)
@@ -104,11 +105,10 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('cc: %s', cc_as_string)
             logging.debug('len(cc): %s', len(cc))
             tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
-                                                c_cflags,
-                                                c_lflags,
-                                                c_line,
-                                                cc
-                                                )
+                                                 c_cflags,
+                                                 c_lflags,
+                                                 c_line,
+                                                 cc)
     apply_return_conditions(pid, syscall_object)
 
 
