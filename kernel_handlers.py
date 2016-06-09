@@ -62,7 +62,8 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
         if not ('TCGETS' in cmd or 'FIONREAD' in cmd or 'TCSETSW' in cmd or
-                'FIONBIO' in cmd or 'TIOCGWINSZ' in cmd):
+                'FIONBIO' in cmd or 'TIOCGWINSZ' in cmd or
+                'TIOCSWINSZ' in cmd):
             raise NotImplementedError('Unsupported ioctl command')
         if 'TIOCGWINSZ' in cmd:
             ws_row = syscall_object.args[2].value
@@ -87,12 +88,6 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
             tracereplay.poke_address(pid, addr, num_bytes)
-        elif 'TCSETSW' in cmd:
-            logging.debug('Got a TCSETSW ioctl() call')
-            logging.debug('WARNING: NO SIDE EFFECTS REPLICATED')
-        elif 'FIONBIO' in cmd:
-            logging.debug('Got a FIONBIO ioctl() call')
-            logging.debug('WARNING: NO SIDE EFFECTS REPLICATED')
         elif 'TCGETS' in cmd:
             c_iflags = syscall_object.args[2].value
             c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
@@ -125,6 +120,9 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
                                                  c_lflags,
                                                  c_line,
                                                  cc)
+        else:
+            logging.debug('Got a %s ioctl() call', cmd)
+            logging.debug('WARNING: NO SIDE EFFECTS REPLICATED')
     apply_return_conditions(pid, syscall_object)
 
 
