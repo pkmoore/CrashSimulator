@@ -43,9 +43,14 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.ret[0] != -1:
             logging.debug('Got successful sendmmsg call')
             number_of_messages = syscall_object.ret[0]
-            addr = tracereplay.peek_register(pid, tracereplay.ECX)
+            if syscall_id == 102:
+                p = tracereplay.peek_register(pid, tracreplay.ECX)
+                params = extract_socketcall_parameters(pid, p, 4)
+                addr = params[1]
+            else:
+                addr = tracereplay.peek_register(pid, tracereplay.ECX)
             logging.debug('Number of messages %d', number_of_messages)
-            logging.debug('Address of buffer %x', addr)
+            logging.debug('Address of buffer %x', addr & 0xffffffff)
             lengths = [int(syscall_object.args[x].value.rstrip('}'))
                        for x in range(6, (number_of_messages * 6) + 1, 6)]
             logging.debug('Lengths: %s', lengths)
