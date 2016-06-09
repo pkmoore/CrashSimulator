@@ -219,10 +219,14 @@ static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
         PyErr_SetString(TraceReplayError,
                         "copy_bytes failed parse failed");
     }
+    int i;
     if(DEBUG) {
         printf("C: copy_bytes: child: %d\n", child);
         printf("C: copy_bytes: addr: %x\n", (int)addr);
         printf("C: copy_bytes: num_bytes %d\n", num_bytes);
+        for(i = 0; i < num_bytes; i++) {
+            printf("%02X ", bytes[i]);
+        }
     } 
         copy_buffer_into_child_process_memory(child, addr, (char*)bytes, num_bytes);
     Py_RETURN_NONE;
@@ -798,6 +802,8 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     s.events = 0;
     s.revents = re;
     if(DEBUG) {
+        printf("POLLOUT: %d\n", POLLOUT);
+        printf("POLLIN: %d\n", POLLIN);
         printf("E Size: %d\n", sizeof(s.events));
         printf("FD Size: %d\n", sizeof(s.fd));
         printf("RE Size: %d\n", sizeof(s.revents));
@@ -810,6 +816,13 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
                                           addr,
                                           (char*)&s,
                                           sizeof(struct pollfd));
+    struct pollfd r;
+    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    if(DEBUG) {
+        printf("C: FD %d\n", r.fd);
+        printf("C: E %d\n", r.events);
+        printf("C: RE %d\n", r.revents);
+    }
     Py_RETURN_NONE;
 }
 
@@ -844,6 +857,13 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
     PyObject* next = PyIter_Next(iter);
     Py_ssize_t length;
     struct mmsghdr m[num];
+    char* b = m;
+    copy_child_process_memory_into_buffer(child, addr, (char*)&m, (sizeof(struct mmsghdr) * num));
+    int i;
+    for(i = 0; i < sizeof(m); i++) {
+        printf("%02X ", b[i]);
+    }
+    printf("\n");
     int msghdr_index = 0;
     while(next) {
         if(!PyInt_Check(next)) {
@@ -862,6 +882,13 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
                                           addr,
                                           (char*)&m,
                                           (sizeof(struct mmsghdr) * num));
+    struct mmsghdr r[num];
+    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    if(DEBUG) {
+        for(i = 0; i < num; i++) {
+            printf("C: sendmmsg_lengths: length %d: %d\n", i, r[i].msg_len);
+        }
+    }
     Py_RETURN_NONE;
 }
 
