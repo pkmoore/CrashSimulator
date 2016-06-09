@@ -40,7 +40,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         ('send', True): subcall_return_success_handler,
         ('connect', True): subcall_return_success_handler,
         ('getsockopt', True): getsockopt_entry_handler,
-        ('sendmmsg', True): subcall_return_success_handler,
+        ('sendmmsg', True): sendmmsg_entry_handler,
         ('sendto', True): sendto_entry_handler,
         ('sendto', False): sendto_exit_handler,
         ('shutdown', True): shutdown_subcall_entry_handler,
