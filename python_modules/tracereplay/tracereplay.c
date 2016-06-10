@@ -33,9 +33,9 @@ bool INFO = false;
 
 int copy_child_process_memory_into_buffer(pid_t child,
                                           void* addr,
-                                          char* buffer,
+                                          unsigned char* buffer,
                                           size_t buf_length){
-    char* buf_addr = buffer;
+    unsigned char* buf_addr = buffer;
     size_t peeks = buf_length - (sizeof(int) - 1 );
     int i;
     if(DEBUG) {
@@ -95,7 +95,7 @@ int copy_child_process_memory_into_buffer(pid_t child,
 
 int copy_buffer_into_child_process_memory(pid_t child,
                                           void* addr,
-                                          const char* const buffer,
+                                          const unsigned char* const buffer,
                                           size_t buf_length){
     size_t writes = buf_length - (sizeof(int) - 1 );
     int i;
@@ -112,7 +112,7 @@ int copy_buffer_into_child_process_memory(pid_t child,
         if(DEBUG) {
             printf("C: copy_buffer: got a small write\n");
         }
-        char temp_buffer[4];
+        unsigned char temp_buffer[4];
         *((int*)&temp_buffer) = (int)ptrace(PTRACE_PEEKDATA, child, addr, NULL);
         if(DEBUG) {
             printf("Peeked data: ");
@@ -177,7 +177,7 @@ static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
         printf("C: timespec: tv_sec: %d\n", (int)t.tv_sec);
         printf("C: timespec: tv_nsec: %ld\n", t.tv_nsec);
     }
-    copy_buffer_into_child_process_memory(child, addr, (char*)&t, sizeof(t));
+    copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&t, sizeof(t));
     Py_RETURN_NONE; 
 }
 
@@ -206,7 +206,7 @@ static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
         printf("C: timeval: tv_sec: %d\n", (int)t.tv_sec);
         printf("C: timeval: tv_usec: %ld\n", t.tv_usec);
     }
-    copy_buffer_into_child_process_memory(child, addr, (char*)&t, sizeof(t));
+    copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&t, sizeof(t));
     Py_RETURN_NONE;
 }
 
@@ -229,7 +229,7 @@ static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
             printf("%02X ", bytes[i]);
         }
     } 
-        copy_buffer_into_child_process_memory(child, addr, (char*)bytes, num_bytes);
+        copy_buffer_into_child_process_memory(child, addr, (unsigned char*)bytes, num_bytes);
     Py_RETURN_NONE;
 }
 
@@ -255,7 +255,7 @@ static PyObject* tracereplay_populate_winsize_structure(PyObject* self,
         printf("ws_ypixel: %d\n", ws_ypixel);
     }
     struct winsize w;
-    copy_child_process_memory_into_buffer(child, addr, (char*)&w, sizeof(w));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&w, sizeof(w));
     w.ws_row = ws_row;
     w.ws_col = ws_col;
     w.ws_xpixel = ws_xpixel;
@@ -266,9 +266,9 @@ static PyObject* tracereplay_populate_winsize_structure(PyObject* self,
         printf("w.ws_xpixel: %d\n", w.ws_xpixel);
         printf("w.ws_ypixel: %d\n", w.ws_ypixel);
     } 
-    copy_buffer_into_child_process_memory(child, addr, (char*)&w, sizeof(w));
+    copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&w, sizeof(w));
     struct winsize r;
-    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&r, sizeof(r));
     if(DEBUG) {
         printf("r.ws_row: %d\n", r.ws_row);
         printf("r.ws_col: %d\n", r.ws_col);
@@ -301,18 +301,18 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
     if(DEBUG) {
         printf("C: pop af_inet: sizeof(s.sin_port): %d\n", sizeof(s.sin_port));
     }
-    copy_child_process_memory_into_buffer(child, addr, (char*)&s, sizeof(s));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&s, sizeof(s));
     s.sin_family = AF_INET;
     s.sin_port = htons(port);
     inet_aton(ip, &s.sin_addr); 
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&s,
+                                          (unsigned char*)&s,
                                           sizeof(s));
 
     copy_buffer_into_child_process_memory(child,
                                           length_addr,
-                                          (char*)&length,
+                                          (unsigned char*)&length,
                                           sizeof(length));
     Py_RETURN_NONE;
 }
@@ -367,7 +367,7 @@ static PyObject* tracreplay_populate_statfs64_structure(PyObject* self,
     s.f_frsize = f_frsize;
     s.f_flags = f_flags;
 
-    copy_buffer_into_child_process_memory(child, addr, (char*)&s, sizeof(s));
+    copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&s, sizeof(s));
     Py_RETURN_NONE;
 }
 
@@ -439,7 +439,7 @@ static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&t,
+                                          (unsigned char*)&t,
                                           17 + 19);
     Py_RETURN_NONE;
 }
@@ -471,7 +471,7 @@ static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
     printf("C: max %llx\n", s.rlim_max);
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&s,
+                                          (unsigned char*)&s,
                                           sizeof(s));
     Py_RETURN_NONE;
 }
@@ -507,7 +507,7 @@ static PyObject* tracereplay_populate_uname_structure(PyObject* self,
     strncpy(s.domainname, domainname, 64);
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&s,
+                                          (unsigned char*)&s,
                                           sizeof(s));
     Py_RETURN_NONE;
 }
@@ -516,7 +516,7 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
                                                   PyObject* args) {
     pid_t child;
     void* addr;
-    char* data;
+    unsigned char* data;
     long int data_length;
     PyArg_ParseTuple(args, "iis#", (int*)&child, (int*)&addr,
                      &data, &data_length);
@@ -546,7 +546,7 @@ static PyObject* tracereplay_populate_int(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&data,
+                                          (unsigned char*)&data,
                                           sizeof(int));
     Py_RETURN_NONE;
 }
@@ -564,7 +564,7 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&result,
+                                          (unsigned char*)&result,
                                           sizeof(long long));
     Py_RETURN_NONE;
 }
@@ -636,7 +636,7 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&s,
+                                          (unsigned char*)&s,
                                           sizeof(s));
     Py_RETURN_NONE;
 }
@@ -845,7 +845,7 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     if(!PyArg_ParseTuple(args, "iihh", &child, (int*)&addr, &fd, &re)) {
         PyErr_SetString(TraceReplayError, "write_poll_result arg parse failed");
     }
-    copy_child_process_memory_into_buffer(child, addr, (char*)&s, sizeof(s));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&s, sizeof(s));
     s.fd = fd;
     s.revents = re;
     if(DEBUG) {
@@ -861,10 +861,10 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&s,
+                                          (unsigned char*)&s,
                                           sizeof(struct pollfd));
     struct pollfd r;
-    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&r, sizeof(r));
     if(DEBUG) {
         printf("C: FD %d\n", r.fd);
         printf("C: E %d\n", r.events);
@@ -904,8 +904,8 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
     PyObject* next = PyIter_Next(iter);
     Py_ssize_t length;
     struct mmsghdr m[num];
-    char* b = m;
-    copy_child_process_memory_into_buffer(child, addr, (char*)&m, (sizeof(struct mmsghdr) * num));
+    unsigned char* b = m;
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&m, (sizeof(struct mmsghdr) * num));
     int i;
     for(i = 0; i < sizeof(m); i++) {
         printf("%02X ", b[i]);
@@ -927,10 +927,10 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
-                                          (char*)&m,
+                                          (unsigned char*)&m,
                                           (sizeof(struct mmsghdr) * num));
     struct mmsghdr r[num];
-    copy_child_process_memory_into_buffer(child, addr, (char*)&r, sizeof(r));
+    copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&r, sizeof(r));
     if(DEBUG) {
         for(i = 0; i < num; i++) {
             printf("C: sendmmsg_lengths: length %d: %d\n", i, r[i].msg_len);
