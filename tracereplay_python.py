@@ -303,7 +303,6 @@ def find_close_for_fd(fd):
     tmp_syscalls = list(tmp_syscalls)
     close_index = None
     for index, obj in enumerate(tmp_syscalls):
-        print dir(obj)
         if obj.name == 'close' and int(obj.args[0].value) == fd:
             close_index = index
             logging.debug('Found close for this open\'s file descriptor %d '

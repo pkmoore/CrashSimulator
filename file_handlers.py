@@ -308,8 +308,9 @@ def open_entry_handler(syscall_id, syscall_object, pid):
                                        'list')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
-    logging.debug('Resultant file descriptor is mmap\'d before close. Will '
-                  'not replay')
+    else:
+        logging.debug('Resultant file descriptor is mmap\'d before close. '
+                      'Will not replay')
 
 
 def open_exit_handler(syscall_id, syscall_object, pid):
