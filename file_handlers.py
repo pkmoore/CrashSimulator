@@ -395,6 +395,8 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Time Args: %s', time_args_dict)
         noop_current_syscall(pid)
         logging.debug('Injecting values into structure')
+        logging.debug('pid: %d', pid)
+        logging.debug('addr: %d', buf_addr)
         tracereplay.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
@@ -403,8 +405,8 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
                                            mid_args_dict['st_nlink'],
                                            mid_args_dict['st_gid'],
                                            mid_args_dict['st_blksize'],
-                                           st_rdev1,
-                                           st_rdev2,
+                                           int(st_rdev1),
+                                           int(st_rdev2),
                                            mid_args_dict['st_size'],
                                            mid_args_dict['st_mode'],
                                            mid_args_dict['st_uid'],
