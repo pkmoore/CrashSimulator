@@ -371,8 +371,9 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
     else:
         logging.debug('Got successful fstat64 call')
+        # There should always be an st_dev
         idx, arg = find_arg_matching_string(syscall_object.args[1:],
-                                            'st_dev')
+                                            'st_dev')[0]
         st_dev1 = arg
         st_dev1 = int(st_dev1.split('(')[1])
         # must increment idx by 2 in order to account for slicing out the

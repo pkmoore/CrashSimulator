@@ -351,7 +351,7 @@ def remove_replay_fd(fd):
 
 def find_arg_matching_string(args, s):
     r = [(x, y.value) for x, y in enumerate(args) if s in y.value]
-    if len(r) != 1:
+    if len(r) > 1:
         raise ReplayDeltaError('Found more than one arg for specified string '
                                '({}) ({})'.format(r, s))
-    return r[0]
+    return r
