@@ -382,15 +382,21 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         st_dev2 = int(st_dev2.strip(')'))
         logging.debug('st_dev1: %s', st_dev1)
         logging.debug('st_dev2: %s', st_dev2)
-        #HACK: horrible hack to deal with rdev. Fix this later
+
+        # st_rdev is optional
         st_rdev1 = 0
         st_rdev2 = 0
-        if 'st_rdev' in syscall_object.args[10].value:
-            logging.debug('Line contains an rdev')
-            st_rdev1 = syscall_object.args[10].value
-            st_rdev1 = int(st_rdev1.split('=')[1].strip('makedev('))
-            st_rdev2 = syscall_object.args[11].value
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_rdev')
+        if len(r) > 0:
+            idx, arg = r[0]
+            logging.debug('We have a st_rdev argument')
+            st_rdev1 = arg
+            st_rdev1 = int(st_rdev1.split('(')[1])
+            st_rdev2 = syscall_object.args[idx+2].value
             st_rdev2 = int(st_rdev2.strip(')'))
+            logging.debug('st_rdev1: %d', st_rdev1)
+            logging.debug('st_rdev2: %d', st_rdev2)
             mid_args = list(syscall_object.args[3:10])
             mid_args = [x.value for x in mid_args]
             time_args = list(syscall_object.args[12:])
