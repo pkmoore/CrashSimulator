@@ -904,7 +904,7 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
     PyObject* next = PyIter_Next(iter);
     Py_ssize_t length;
     struct mmsghdr m[num];
-    unsigned char* b = m;
+    unsigned char* b = (unsigned char*)m;
     copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&m, (sizeof(struct mmsghdr) * num));
     int i;
     for(i = 0; i < sizeof(m); i++) {
