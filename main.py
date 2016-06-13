@@ -114,6 +114,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         # ###                                                  ####
         (78, True): gettimeofday_entry_handler,
         (13, True): time_entry_handler,
+        (27, True): syscall_return_success_handler,
         (5, True): open_entry_handler,
         (5, False): open_exit_handler,
         (85, True): readlink_entry_handler,
