@@ -332,3 +332,18 @@ def is_mmapd_before_close(fd):
             return True
     logging.debug('This file descriptor is not mmap2\'d before it is closed')
     return False
+
+
+def add_replay_fd(fd):
+    if fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        raise ReplayDeltaError('File descriptor ({}) alread exists in replay '
+                               'file descriptors list'.format(fd))
+    tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd)
+
+
+def remove_replay_fd(fd):
+    if fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        raise ReplayDeltaError('Tried to remove non-existant file descriptor '
+                               '({}) from replay file descriptor lists'
+                               .format(fd))
+    tracereplay.REPLAY_FILE_DESCRIPTORS.remove(fd)
