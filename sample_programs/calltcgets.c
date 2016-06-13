@@ -2,7 +2,7 @@
 #include <termios.h>
 int main() {
     struct termios t;
-    int result = ioctl(2, 0x5401, &t);
+    int result = ioctl(1, 0x5401, &t);
     printf("%x\n", t.c_iflag);
     printf("%x\n", t.c_oflag);
     printf("%x\n", t.c_cflag);
