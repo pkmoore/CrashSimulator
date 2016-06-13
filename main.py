@@ -146,6 +146,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (196, True): lstat64_entry_handler,
         (268, True): statfs64_entry_handler,
         (265, True): clock_gettime_entry_handler,
+        (41, True): dup_entry_handler,
+        (41, False): dup_exit_handler,
         (345, True): sendmmsg_entry_handler,
         (345, False): sendmmsg_exit_handler
         }

@@ -6,6 +6,29 @@ from time import strptime, mktime, time
 def dup_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup handler')
     validate_integer_argument(pid, syscall_object, 0)
+    oldfd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(pid, oldfd):
+        noop_current_syscall(pid)
+        returned_fd = int(syscall_object.ret[0])
+        add_replay_fd(returned_fd)
+        apply_return_conditions(pid, syscall_object)
+
+
+def dup_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering dup exit handler')
+    exec_fd = tracereplay.peek_register(pid, tracereplay.EAX)
+    trace_fd = int(syscall_object.ret[0])
+    check_fd = offset_file_descriptor(trace_fd)
+    logging.debug('Execution return value: %d', exec_fd)
+    logging.debug('Trace return value: %d', trace_fd)
+    logging.debug('Check fd: %d', check_fd)
+    if ret_val_from_execution != check_ret_val_from_trace:
+        raise Exception('Return value from execution ({}) differs from '
+                        'check return value from trace ({})'
+                        .format(ret_val_from_execution,
+                                check_ret_val_from_trace))
+    if ret_val_from_execution >= 0:
+        add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
 
 
 def close_entry_handler(syscall_id, syscall_object, pid):
