@@ -99,12 +99,11 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             c_lflags = int(c_lflags[c_lflags.rfind('=')+1:], 16)
             c_line = syscall_object.args[6].value
             c_line = int(c_line[c_line.rfind('=')+1:])
-            cc = syscall_object.args[7].value
-            cc = cc[cc.rfind('=')+1:].strip('"}')
-            cc = cc.replace('\\x', ' ').strip()
-            cc = bytearray.fromhex(cc)
-            cc_as_string = ''.join('{:02x}'.format(x) for x in cc)
-            cc = cc_as_string.decode('hex')
+            if not ('c_cc' in syscall_object.args[-1].value):
+                raise NotImplementedError('Unsupported TCGETS argument format')
+            cc = syscall_object.args[-1].value
+            cc = cc.split('=')[1].strip('"{}')
+            cc = cc.decode('string-escape')
             logging.debug('pid: %s', pid)
             logging.debug('Addr: %s', addr)
             logging.debug('cmd: %s', cmd)
@@ -113,7 +112,6 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('c_cflags: %x', c_cflags)
             logging.debug('c_lflags: %x', c_lflags)
             logging.debug('c_line: %s', c_line)
-            logging.debug('cc: %s', cc_as_string)
             logging.debug('len(cc): %s', len(cc))
             tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
                                                  c_cflags,
