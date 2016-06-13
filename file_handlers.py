@@ -371,10 +371,14 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
     else:
         logging.debug('Got successful fstat64 call')
-        st_dev1 = syscall_object.args[1].value
-        st_dev1 = st_dev1[st_dev1.rfind('(')+1:]
-        st_dev2 = syscall_object.args[2].value
-        st_dev2 = st_dev2.strip(')')
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'st_dev')
+        st_dev1 = arg
+        st_dev1 = int(st_dev1.split('(')[1])
+        # must increment idx by 2 in order to account for slicing out the
+        # initial file descriptor
+        st_dev2 = syscall_object.args[idx+2].value
+        st_dev2 = int(st_dev2.strip(')'))
         logging.debug('st_dev1: %s', st_dev1)
         logging.debug('st_dev2: %s', st_dev2)
         #HACK: horrible hack to deal with rdev. Fix this later
