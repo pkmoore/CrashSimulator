@@ -532,63 +532,158 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.args[0].value == '"/etc/resolv.conf"':
         logging.error('Workaround for stat64 problem')
         return
-    if 'st_rdev' in syscall_object.original_line:
-        raise NotImplementedError('stat64 handler can\'t deal with st_rdevs!!')
-    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    edx = tracereplay.peek_register(pid, tracereplay.EDX)
-    esi = tracereplay.peek_register(pid, tracereplay.ESI)
-    edi = tracereplay.peek_register(pid, tracereplay.EDI)
-    logging.debug('EBX: %x', ebx)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
-    logging.debug('EDX: %x', edx)
-    logging.debug('ESI: %x', esi)
-    logging.debug('EDI: %x', edi)
-    noop_current_syscall(pid)
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful stat64 call')
     else:
         logging.debug('Got successful stat64 call')
-        st_dev1 = syscall_object.args[1].value
-        st_dev1 = st_dev1[st_dev1.rfind('(')+1:]
-        st_dev2 = syscall_object.args[2].value
-        st_dev2 = st_dev2.strip(')')
+        # There should always be an st_dev
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'st_dev')[0]
+        st_dev1 = arg
+        st_dev1 = int(st_dev1.split('(')[1])
+        # must increment idx by 2 in order to account for slicing out the
+        # initial file descriptor
+        st_dev2 = syscall_object.args[idx+2].value
+        st_dev2 = int(st_dev2.strip(')'))
         logging.debug('st_dev1: %s', st_dev1)
         logging.debug('st_dev2: %s', st_dev2)
-        mid_args = list(syscall_object.args[3:11])
-        mid_args = [x.value for x in mid_args]
-        time_args = list(syscall_object.args[11:])
-        time_args = [x.value for x in time_args]
-        mid_args_dict = {x.split('=')[0]: x.split('=')[1] for x in mid_args}
-        mid_args_dict['st_mode'] = cleanup_st_mode(mid_args_dict['st_mode'])
-        mid_args_dict = {x: int(y) for x, y in mid_args_dict.iteritems()}
-        time_args_dict = {x.split('=')[0]: x.split('=')[1] for x in time_args}
-        time_args_dict = {x: int(mktime(strptime(y.strip('}'),
-                                                 '%Y/%m/%d-%H:%M:%S'))) \
-                         for x, y in time_args_dict.iteritems()}
-        logging.debug('Middle Args: %s', mid_args_dict)
-        logging.debug('Time Args: %s', time_args_dict)
+
+        # st_rdev is optional
+        st_rdev1 = 0
+        st_rdev2 = 0
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_rdev')
+        if len(r) > 0:
+            idx, arg = r[0]
+            logging.debug('We have a st_rdev argument')
+            st_rdev1 = arg
+            st_rdev1 = int(st_rdev1.split('(')[1])
+            st_rdev2 = syscall_object.args[idx+2].value
+            st_rdev2 = int(st_rdev2.strip(')'))
+            logging.debug('st_rdev1: %d', st_rdev1)
+            logging.debug('st_rdev2: %d', st_rdev2)
+
+        # st_ino
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_ino')
+        idx, arg = r[0]
+        st_ino = int(arg.split('=')[1])
+        logging.debug('st_ino: %d', st_ino)
+
+        # st_mode
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_mode')
+        idx, arg = r[0]
+        st_mode = int(cleanup_st_mode(arg.split('=')[1]))
+        logging.debug('st_mode: %d', st_mode)
+
+        # st_nlink
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_nlink')
+        idx, arg = r[0]
+        st_nlink = int(arg.split('=')[1])
+        logging.debug('st_nlink: %d', st_nlink)
+
+        # st_uid
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_uid')
+        idx, arg = r[0]
+        st_uid = int(arg.split('=')[1])
+        logging.debug('st_uid: %d', st_uid)
+
+        # st_gid
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_gid')
+        idx, arg = r[0]
+        st_gid = int(arg.split('=')[1])
+        logging.debug('st_gid: %d', st_gid)
+
+        # st_blocksize
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_blksize')
+        idx, arg = r[0]
+        st_blksize = int(arg.split('=')[1])
+        logging.debug('st_blksize: %d', st_blksize)
+
+        # st_blocks
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_blocks')
+        idx, arg = r[0]
+        st_blocks = int(arg.split('=')[1])
+        logging.debug('st_block: %d', st_blocks)
+
+        # st_size is optional
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_size')
+        if len(r) >= 1:
+            idx, arg = r[0]
+            st_size = int(arg.split('=')[1])
+            logging.debug('st_size: %d', st_size)
+        else:
+            st_size = 0
+            logging.debug('optional st_size not present')
+        # st_atime
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_atime')
+        idx, arg = r[0]
+        value = arg.split('=')[1]
+        if value == '0':
+            logging.debug('Got zero st_atime')
+            st_atime = 0
+        else:
+            logging.debug('Got normal st_atime')
+            st_atime = int(mktime(strptime(value, '%Y/%m/%d-%H:%M:%S')))
+        logging.debug('st_atime: %d', st_atime)
+
+        # st_mtime
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_mtime')
+        idx, arg = r[0]
+        value = arg.split('=')[1]
+        if value == '0':
+            logging.debug('Got zero st_mtime')
+            st_mtime = 0
+        else:
+            logging.debug('Got normal st_mtime')
+            st_mtime = int(mktime(strptime(value, '%Y/%m/%d-%H:%M:%S')))
+        logging.debug('st_mtime: %d', st_mtime)
+
+        # st_ctime
+        r = find_arg_matching_string(syscall_object.args[1:],
+                                     'st_ctime')
+        idx, arg = r[0]
+        value = arg.split('=')[1].strip('}')
+        if value == '0':
+            logging.debug('Got zero st_ctime')
+            st_ctime = 0
+        else:
+            logging.debug('Got normal st_ctime')
+            st_ctime = int(mktime(strptime(value, '%Y/%m/%d-%H:%M:%S')))
+        logging.debug('st_ctime: %d', st_ctime)
+
         logging.debug('Injecting values into structure')
-        if('resolv.conf' in syscall_object.args[0].value):
-            logging.debug('Faking st_mtime for stat on resolv.conf')
-            time_args_dict['st_mtime'] = int(time())
+        logging.debug('pid: %d', pid)
+        logging.debug('addr: %d', buf_addr)
         tracereplay.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
                                            int(st_dev2),
-                                           mid_args_dict['st_blocks'],
-                                           mid_args_dict['st_nlink'],
-                                           mid_args_dict['st_gid'],
-                                           mid_args_dict['st_blksize'],
-                                           0,
-                                           0,
-                                           mid_args_dict['st_size'],
-                                           mid_args_dict['st_mode'],
-                                           mid_args_dict['st_uid'],
-                                           mid_args_dict['st_ino'],
-                                           time_args_dict['st_ctime'],
-                                           time_args_dict['st_mtime'],
-                                           time_args_dict['st_atime'])
+                                           st_blocks,
+                                           st_nlink,
+                                           st_gid,
+                                           st_blksize,
+                                           int(st_rdev1),
+                                           int(st_rdev2),
+                                           st_size,
+                                           st_mode,
+                                           st_uid,
+                                           st_ino,
+                                           st_ctime,
+                                           st_mtime,
+                                           st_ctime)
+    noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
 
