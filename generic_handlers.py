@@ -1,6 +1,6 @@
 from tracereplay_python import *
-import os
 import logging
+
 
 # Like the subcall return success handler, this handler just no-ops out a call
 # and returns whatever it returned from the trace. Used by ioctl and stat64
@@ -9,8 +9,10 @@ def syscall_return_success_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
+
 def check_return_value_entry_handler(syscall_id, syscall_object, pid):
     pass
+
 
 def check_return_value_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering check_return_value exit handler')
@@ -22,5 +24,5 @@ def check_return_value_exit_handler(syscall_id, syscall_object, pid):
         ret_from_execution = ret_from_execution & 0xffffffff
     if ret_from_execution != ret_from_trace:
         raise Exception('Return value from execution ({}) differs from '
-                        'return value from trace ({})' \
+                        'return value from trace ({})'
                         .format(ret_from_execution, ret_from_trace))
