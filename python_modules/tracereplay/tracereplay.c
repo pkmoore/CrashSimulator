@@ -665,29 +665,161 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
 static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
                                                      PyObject* args) {
     pid_t child;
-    int fd;
-    fd_set* addr;
-    PyArg_ParseTuple(args, "iii", &child, &fd, &addr);
+    void* readfds_addr;
+    PyObject* readfds_list;
+    void* writefds_addr;
+    PyObject* writefds_list;
+    void* exceptfds_addr;
+    PyObject* exceptfds_list;
+
+    PyArg_ParseTuple(args, "iiOiOiO",
+                     &child,
+                     &readfds_addr,
+                     &readfds_list,
+                     &writefds_addr,
+                     &writefds_list,
+                     &exceptfds_addr,
+                     &exceptfds_list);
     if(DEBUG) {
-        printf("C: Select: PID: %d\n", child);
-        printf("C: Select: FD: %d\n", fd);
-        printf("C: Select: addr: %d\n", (int)addr);
+        printf("C: Select: child: %d\n", child);
+        printf("C: Select: readfds_addr: %p\n", readfds_addr);
+        printf("C: Select: write_addr: %p\n", writefds_addr);
+        printf("C: Select: exceptfds_addr: %p\n", exceptfds_addr);
     }
     fd_set tmp;
-    FD_ZERO(&tmp);
-    FD_SET(fd, &tmp);
-    if(DEBUG) {
-        printf("C: Select: Is fd %d set?: %s\n",
-               fd,
-               FD_ISSET(fd, &tmp) ? "true" : "false");
-        printf("C: Select: poking data\n");
+    PyObject* next;
+    size_t fd;
+    if(!PyList_Check(readfds_list)) {
+        PyErr_SetString(TraceReplayError,
+                        "readfds_list received in C code is not a list");
     }
-    errno = 0;
-    if((ptrace(PTRACE_POKEDATA, child, addr, tmp) == -1)) {
-        PyErr_SetString(TraceReplayError, "Failed to poke select data\n");
+    if(!PyList_Check(writefds_list)) {
+        PyErr_SetString(TraceReplayError,
+                        "writefds_list received in C code is not a list");
+    }
+    if(!PyList_Check(exceptfds_list)) {
+        PyErr_SetString(TraceReplayError,
+                        "except_list received in C code is not a list");
+    }
+    PyObject* iter;
+    if(readfds_addr != 0) {
+        if(!(iter = PyObject_GetIter(readfds_list))) {
+            PyErr_SetString(TraceReplayError,
+                            "Couldn't get iterator for list of readfds");
+        }
+        if(DEBUG) {
+            printf("C: Select: About to parse readfds\n");
+        }
+        next = PyIter_Next(iter);
+        copy_child_process_memory_into_buffer(child, readfds_addr,
+                                               (unsigned char*)&tmp, sizeof(tmp));
+        FD_ZERO(&tmp);
+        while(next) {
+            if(!PyInt_Check(next)) {
+                PyErr_SetString(TraceReplayError,
+                                "Encountered non-Int in list of readfds");
+            }
+            fd = PyInt_AsSsize_t(next);
+            if(DEBUG) {
+                printf("C: Socket: got readfd %d\n", fd);
+            }
+            FD_SET((int)fd, &tmp);
+            next = PyIter_Next(iter);
+        }
+        printf("%d\n", sizeof(tmp));
+        copy_buffer_into_child_process_memory(child, readfds_addr,
+                                            (unsigned char*)&tmp, sizeof(tmp));
+
+    }
+    if(writefds_addr != 0 ) {
+        if(!(iter = PyObject_GetIter(writefds_list))) {
+            PyErr_SetString(TraceReplayError,
+                            "Couldn't get iterator for list of writefds");
+        }
+        if(DEBUG) {
+            printf("C: Select: About to parse writefds\n");
+        }
+        next = PyIter_Next(iter);
+        copy_child_process_memory_into_buffer(child, writefds_addr,
+                                               (unsigned char*)&tmp, sizeof(tmp));
+
+        FD_ZERO(&tmp);
+        while(next) {
+            if(!PyInt_Check(next)) {
+                PyErr_SetString(TraceReplayError,
+                                "Encountered non-Int in list of writefds");
+            }
+            fd = PyInt_AsSsize_t(next);
+            if(DEBUG) {
+                printf("C: select: got writefd %d\n", fd);
+            }
+            FD_SET((int)fd, &tmp);
+            next = PyIter_Next(iter);
+        }
+        copy_buffer_into_child_process_memory(child, writefds_addr,
+                                            (unsigned char*)&tmp, sizeof(tmp));
+    }
+    if(exceptfds_addr != 0) {
+        if(!(iter = PyObject_GetIter(exceptfds_list))) {
+            PyErr_SetString(TraceReplayError,
+                            "Couldn't get iterator for list of exceptfds");
+        }
+        if(DEBUG) {
+            printf("C: Select: About to parse except\n");
+        }
+        next = PyIter_Next(iter);
+        copy_child_process_memory_into_buffer(child, exceptfds_addr,
+                                               (unsigned char*)&tmp, sizeof(tmp));
+        FD_ZERO(&tmp);
+        while(next) {
+            if(!PyInt_Check(next)) {
+                PyErr_SetString(TraceReplayError,
+                                "Encountered non-Int in list of exceptfds");
+            }
+            fd = PyInt_AsSsize_t(next);
+            if(DEBUG) {
+                printf("C: select: got exceptfd %d\n", fd);
+            }
+            FD_SET((int)fd, &tmp);
+            next = PyIter_Next(iter);
+        }
+        copy_buffer_into_child_process_memory(child, exceptfds_addr,
+                                            (unsigned char*)&tmp, sizeof(tmp));
     }
     Py_RETURN_NONE;
 }
+
+static PyObject* tracereplay_is_select_fd_set(PyObject* self, PyObject* args) {
+    pid_t child;
+    void* fdset_addr;
+    int fd;
+    if(!PyArg_ParseTuple(args, "iii", &child, &fdset_addr, &fd)) {
+        PyErr_SetString(TraceReplayError,
+                        "is_selet_fd_set arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: is_select_fd: child: %d\n", child);
+        printf("C: is_select_fd: fdset_addr: %p\n", fdset_addr);
+        printf("C: is_select_fd: fd: %d\n", fd);
+    }
+    fd_set tmp;
+    copy_child_process_memory_into_buffer(child,
+                                          fdset_addr,
+                                          (unsigned char*)&tmp,
+                                          sizeof(tmp));
+    int i;
+    if(DEBUG) {
+        printf("C: is_select_fd: ");
+        for(i = 0; i < sizeof(tmp); i++) {
+            printf("%02X ", *((unsigned char*)&tmp + i));
+        }
+    }
+    if(FD_ISSET(fd, &tmp)) {
+        Py_RETURN_TRUE;
+    }
+    Py_RETURN_FALSE;
+}
+        
 
 static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args) {
     int numeric_level;
@@ -1007,6 +1139,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate timeval structure"},
     {"populate_winsize_structure", tracereplay_populate_winsize_structure,
      METH_VARARGS, "populate winsize structure"},
+    {"is_select_fd_set", tracereplay_is_select_fd_set,
+     METH_VARARGS, "is select fd set"},
     {NULL, NULL, 0, NULL}
 };
 
