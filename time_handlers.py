@@ -70,3 +70,13 @@ def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
         tracereplay.populate_timespec_structure(pid, addr,
                                                 seconds, nanoseconds)
         apply_return_conditions(pid, syscall_object)
+
+
+def times_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering times entry handler')
+    if syscall_object.args[0].value != 'NULL':
+        raise NotImplementedError('Calls to times() with an out structure are '
+                                  'not supported')
+    logging.debug('Replaying system call')
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
