@@ -152,6 +152,32 @@ int copy_buffer_into_child_process_memory(pid_t child,
     return 0;
 }
 
+static PyObject* tracereplay_copy_address_range(PyObject* self,
+                                                PyObject* args) {
+    pid_t child;
+    unsigned int start;
+    unsigned int end;
+    unsigned char* buf;
+    if(!PyArg_ParseTuple(args, "III", &child, &start, &end)) {
+        PyErr_SetString(TraceReplayError,
+                        "copy_address_range arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: copy_address_range: child: %d\n", child);
+        printf("C: copy_address_range: start: %x\n", start);
+        printf("C: copy_address_range: end: %x\n", end);
+    }
+    size_t size = end - start;
+    if(DEBUG) {
+        printf("C: copy_address_range: size: %d\n", size);
+    }
+    buf = (unsigned char*)malloc(size);
+    copy_child_process_memory_into_buffer(child, start, buf, size);
+    PyObject* result = Py_BuildValue("s#", buf, size);
+    free(buf);
+    return result;
+}
+
 static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
                                                          PyObject* args) {
     pid_t child;
@@ -1141,6 +1167,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate winsize structure"},
     {"is_select_fd_set", tracereplay_is_select_fd_set,
      METH_VARARGS, "is select fd set"},
+    {"copy_address_range", tracereplay_copy_address_range,
+     METH_VARARGS, "copy address range"},
     {NULL, NULL, 0, NULL}
 };
 
