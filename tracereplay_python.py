@@ -3,6 +3,7 @@ import os
 import logging
 import binascii
 import itertools
+import time
 from struct import pack, unpack
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
@@ -359,3 +360,27 @@ def find_arg_matching_string(args, s):
         raise ReplayDeltaError('Found more than one arg for specified string '
                                '({}) ({})'.format(r, s))
     return r
+
+
+def get_stack_start_and_end(pid):
+        f = open('/proc/' + str(pid) + '/maps', 'r')
+        for line in f.readlines():
+            if '[stack]' in line:
+                addrs = line.split(' ')[0]
+                addrs = addrs.split('-')
+                start = int(addrs[0], 16)
+                end = int(addrs[1], 16)
+        return (start, end)
+
+
+def dump_stack(pid, syscall_id, entering):
+    start, end = get_stack_start_and_end(pid)
+    b = tracereplay.copy_address_range(pid, start, end)
+    f = open(str(tracereplay.handled_syscalls) + '-' +
+             SYSCALLS[syscall_id] + '-' +
+             ('entry' if entering else 'exit') + '-' +
+             str(int(time.time())) + '-' +
+             'REPLAY-' +
+             '.bin', 'wb')
+    f.write(b)
+    f.close()
