@@ -12,7 +12,7 @@ from os_dict import OS_CONST, STAT_CONST
 tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.system_calls = None
-tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1]
+tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1, 2]
 tracereplay.OS_FILE_DESCRIPTORS = []
 
 
@@ -38,8 +38,8 @@ def next_syscall():
 
 
 def offset_file_descriptor(fd):
-    # The -1 is to account for stdin
-    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 2)
+    # The -3 is to account for stdin, stdout, stderr
+    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 3)
 
 
 def peek_bytes(pid, address, num_bytes):
