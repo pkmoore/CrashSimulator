@@ -3,7 +3,7 @@
 #define _LARGEFILE_SOURCE
 #define _LARGEFILE64_SOURCE
 
-#include <Python.h>
+#include <python2.7/Python.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 #include <errno.h>
@@ -37,7 +37,7 @@ int copy_child_process_memory_into_buffer(pid_t child,
                                           size_t buf_length){
     unsigned char* buf_addr = buffer;
     size_t peeks = buf_length - (sizeof(int) - 1 );
-    int i;
+    unsigned int i;
     if(DEBUG) {
         printf("C: peek_buffer: number of peeks: %d\n", peeks);
     }
@@ -98,7 +98,7 @@ int copy_buffer_into_child_process_memory(pid_t child,
                                           const unsigned char* const buffer,
                                           size_t buf_length){
     size_t writes = buf_length - (sizeof(int) - 1 );
-    int i;
+    unsigned int i;
     if(DEBUG) {
         printf("C: copy_buffer: number of writes: %d\n", writes);
         printf("C: copy_buffer: buffer data: \n");
@@ -154,9 +154,11 @@ int copy_buffer_into_child_process_memory(pid_t child,
 
 static PyObject* tracereplay_copy_address_range(PyObject* self,
                                                 PyObject* args) {
+    // Unused paramater
+    self = self;
     pid_t child;
-    unsigned int start;
-    unsigned int end;
+    void* start;
+    void* end;
     unsigned char* buf;
     if(!PyArg_ParseTuple(args, "III", &child, &start, &end)) {
         PyErr_SetString(TraceReplayError,
@@ -164,8 +166,8 @@ static PyObject* tracereplay_copy_address_range(PyObject* self,
     }
     if(DEBUG) {
         printf("C: copy_address_range: child: %d\n", child);
-        printf("C: copy_address_range: start: %x\n", start);
-        printf("C: copy_address_range: end: %x\n", end);
+        printf("C: copy_address_range: start: %p\n", start);
+        printf("C: copy_address_range: end: %p\n", end);
     }
     size_t size = end - start;
     if(DEBUG) {
@@ -180,6 +182,8 @@ static PyObject* tracereplay_copy_address_range(PyObject* self,
 
 static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
                                                          PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     time_t seconds;
@@ -209,6 +213,8 @@ static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
 
 static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
                                                         PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     time_t seconds;
@@ -238,6 +244,8 @@ static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
 
 static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
                                                           PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     unsigned char* bytes;
@@ -261,6 +269,8 @@ static PyObject* tracereplay_copy_bytes_into_child_process(PyObject* self,
 
 static PyObject* tracereplay_populate_winsize_structure(PyObject* self,
                                                         PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     unsigned short ws_row;
@@ -306,6 +316,8 @@ static PyObject* tracereplay_populate_winsize_structure(PyObject* self,
 
 static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
                                                        PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     char* ip;
@@ -345,6 +357,8 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
 
 static PyObject* tracreplay_populate_statfs64_structure(PyObject* self,
                                                         PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     long f_type;
@@ -400,6 +414,8 @@ static PyObject* tracreplay_populate_statfs64_structure(PyObject* self,
 
 static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
 						      PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     tcflag_t c_iflag;
@@ -472,6 +488,8 @@ static PyObject* tracereplay_populate_tcgets_response(PyObject* self,
 
 static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
                                                        PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     rlim_t rlim_cur;
@@ -504,6 +522,8 @@ static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
 
 static PyObject* tracereplay_populate_uname_structure(PyObject* self,
                                                      PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     char* sysname;
@@ -540,6 +560,8 @@ static PyObject* tracereplay_populate_uname_structure(PyObject* self,
 
 static PyObject* tracereplay_populate_char_buffer(PyObject* self,
                                                   PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     unsigned char* data;
@@ -561,6 +583,8 @@ static PyObject* tracereplay_populate_char_buffer(PyObject* self,
 
 static PyObject* tracereplay_populate_int(PyObject* self,
                                           PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     int data;
@@ -579,6 +603,8 @@ static PyObject* tracereplay_populate_int(PyObject* self,
 
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     loff_t result;
@@ -597,6 +623,8 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
 
 static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
                                                     PyObject* args) {
+    // unused
+    self = self;
     struct stat64 s;
     pid_t child;
     void* addr;
@@ -690,6 +718,8 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
 
 static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
                                                      PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* readfds_addr;
     PyObject* readfds_list;
@@ -816,6 +846,8 @@ static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
 }
 
 static PyObject* tracereplay_is_select_fd_set(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* fdset_addr;
     int fd;
@@ -833,7 +865,7 @@ static PyObject* tracereplay_is_select_fd_set(PyObject* self, PyObject* args) {
                                           fdset_addr,
                                           (unsigned char*)&tmp,
                                           sizeof(tmp));
-    int i;
+    unsigned int i;
     if(DEBUG) {
         printf("C: is_select_fd: ");
         for(i = 0; i < sizeof(tmp); i++) {
@@ -848,6 +880,8 @@ static PyObject* tracereplay_is_select_fd_set(PyObject* self, PyObject* args) {
         
 
 static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args) {
+    //unused
+    self = self;
     int numeric_level;
     PyArg_ParseTuple(args, "i", &numeric_level);
     switch(numeric_level) {
@@ -860,6 +894,9 @@ static PyObject* tracereplay_enable_debug_output(PyObject* self, PyObject* args)
 }
 
 static PyObject* tracereplay_disable_debug_output(PyObject* self, PyObject* args) {
+    //unused
+    self = self;
+    args = args;
     DEBUG = false;
     INFO = false;
     Py_RETURN_NONE;
@@ -922,6 +959,8 @@ void init_constants(PyObject* m) {
 }
 
 static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     int reg;
     long int extracted_register;
@@ -937,6 +976,8 @@ static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_poke_register(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     int reg;
     long int value;
@@ -950,6 +991,8 @@ static PyObject* tracereplay_poke_register(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_cont(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     PyArg_ParseTuple(args, "i", &child);
     errno = 0;
@@ -960,6 +1003,9 @@ static PyObject* tracereplay_cont(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_traceme(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
+    args = args;
     errno = 0;
     if(ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
         perror("Traceme failed");
@@ -968,6 +1014,9 @@ static PyObject* tracereplay_traceme(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_wait(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
+    args = args;
     int status;
     if(wait(&status) == -1) {
         perror("Wait failed");
@@ -976,6 +1025,8 @@ static PyObject* tracereplay_wait(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_syscall(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     PyArg_ParseTuple(args, "i", &child);
     errno = 0;
@@ -986,6 +1037,8 @@ static PyObject* tracereplay_syscall(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_poke_address(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     int address;
     int data;
@@ -1003,6 +1056,8 @@ static PyObject* tracereplay_poke_address(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     int address;
     long int value;
@@ -1016,6 +1071,8 @@ static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
 }
 
 static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     short fd;
@@ -1054,6 +1111,8 @@ static PyObject* tracereplay_write_poll_result(PyObject* self, PyObject* args) {
 
 static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
                                                     PyObject* args) {
+    // unused
+    self = self;
     pid_t child;
     void* addr;
     size_t num;
@@ -1085,7 +1144,7 @@ static PyObject* tracereplay_write_sendmmsg_lengths(PyObject* self,
     struct mmsghdr m[num];
     unsigned char* b = (unsigned char*)m;
     copy_child_process_memory_into_buffer(child, addr, (unsigned char*)&m, (sizeof(struct mmsghdr) * num));
-    int i;
+    unsigned int i;
     for(i = 0; i < sizeof(m); i++) {
         printf("%02X ", b[i]);
     }
