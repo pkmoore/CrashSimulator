@@ -345,9 +345,8 @@ def open_exit_handler(syscall_id, syscall_object, pid):
         logging.debug('Errno return value: %d', errno_ret)
         check_ret_val_from_trace = errno_ret
     else:
-        # The -1 is to account for STDIN
         check_ret_val_from_trace = offset_file_descriptor(ret_val_from_trace)
-    logging.debug('Return value from exeuction: %d', ret_val_from_execution)
+    logging.debug('Return value from execution: %d', ret_val_from_execution)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
     logging.debug('Check return value from trace: %d',
                   check_ret_val_from_trace)
