@@ -1,45 +1,47 @@
-!   clock_gettime
-!   gettimeofday
-!   time
-!   getpeername
-!   getrusage
-!    813 open
-#     20 getsockname
-!      2 recvmsg
-!      3 getrlimit
-!      4 openat
-!      5 poll
-!      6 getdents64 #copy a structure, big structure. Going to be weird (~32k)
-#   275 fstat64
-#    114 write
-#    205 select
-#    222 close
-#    264 stat64
-#    413 read
-#     11 unlink
-#     12 ioctl #non-standard commands and behavior. Going to be weird.
-#     14 socket
-#     20 recv
-#     43 connect
-#     52 access
-#      1 getegid32 #simple returns
-#      1 geteuid32
-#      1 getgid32
-#      1 getsockopt
-#      1 getuid32
-#      1 sendmmsg
-#      1 sendto
-#      2 getcwd #copy a string
-#      2 listen
-#      2 recvfrom
-#      2 setsockopt
-#      2 shutdown
-#      2 statfs64
-#      3 bind
-#      3 readlink
-#      4 accept
-#      5 fcntl64
-#      6 _llseek #Copy one value
-#      7 lstat64
-#      8 send
-#      8 uname
+- [ ]    getrusage                                                                  
+- [ ]       3 getrlimit                                                             
+- [ ]       4 openat                                                                
+- [ ]       6 getdents64 #copy a structure, big structure. Going to be weird (~32k) 
+- [X]    clock_gettime                                                              
+- [X]   gettimeofday                                                                
+- [X]    time                                                                       
+- [X]    getpeername                                                                
+- [X]     813 open                                                                  
+- [X]      20 getsockname                                                           
+- [X]       2 recvmsg                                                               
+- [X]       5 poll                                                                  
+- [X]    275 fstat64                                                                
+- [X]     114 write                                                                 
+- [X]     205 select                                                                
+- [X]     222 close                                                                 
+- [X]     264 stat64                                                                
+- [X]     413 read                                                                  
+- [X]      11 unlink                                                                
+- [X]      12 ioctl
+- [X]      14 socket                                                                
+- [X]      20 recv                                                                  
+- [X]      43 connect                                                               
+- [X]      52 access                                                                
+- [X]       1 getegid32
+- [X]       1 geteuid32                                                             
+- [X]       1 getgid32                                                              
+- [X]       1 getsockopt                                                            
+- [X]       1 getuid32                                                              
+- [X]       1 sendmmsg                                                              
+- [X]       1 sendto                                                                
+- [X]       2 getcwd
+- [X]       2 listen                                                                
+- [X]       2 recvfrom                                                              
+- [X]       2 setsockopt                                                            
+- [X]       2 shutdown                                                              
+- [X]       2 statfs64                                                              
+- [X]       3 bind                                                                  
+- [X]       3 readlink                                                              
+- [X]       4 accept                                                                
+- [X]       5 fcntl64                                                               
+- [X]       6 _llseek #Copy one value                                               
+- [X]       7 lstat64                                                               
+- [X]       8 send                                                                  
+- [X] dup
+- [ ] dup2
+- [X] uname
