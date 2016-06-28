@@ -507,12 +507,14 @@ static PyObject* tracereplay_populate_rlimit_structure(PyObject* self,
     struct rlimit64 s;
     s.rlim_cur = rlim_cur;
     s.rlim_max = rlim_cur+100;
-    printf("C: sizeof(rlimit64) %d\n", sizeof(struct rlimit64));
-    printf("C: sizeof(rlimit) %d\n", sizeof(struct rlimit));
-    printf("C: sizeof(cur) %d\n", sizeof(s.rlim_cur));
-    printf("C: cur %llx\n", s.rlim_cur);
-    printf("C: sizeof(max) %d\n", sizeof(s.rlim_max));
-    printf("C: max %llx\n", s.rlim_max);
+    if(DEBUG) {
+        printf("C: sizeof(rlimit64) %d\n", sizeof(struct rlimit64));
+        printf("C: sizeof(rlimit) %d\n", sizeof(struct rlimit));
+        printf("C: sizeof(cur) %d\n", sizeof(s.rlim_cur));
+        printf("C: cur %llx\n", s.rlim_cur);
+        printf("C: sizeof(max) %d\n", sizeof(s.rlim_max));
+        printf("C: max %llx\n", s.rlim_max);
+    }
     copy_buffer_into_child_process_memory(child,
                                           addr,
                                           (unsigned char*)&s,
@@ -782,7 +784,6 @@ static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
             FD_SET((int)fd, &tmp);
             next = PyIter_Next(iter);
         }
-        printf("%d\n", sizeof(tmp));
         copy_buffer_into_child_process_memory(child, readfds_addr,
                                             (unsigned char*)&tmp, sizeof(tmp));
 
