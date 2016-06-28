@@ -730,3 +730,18 @@ def fstat64_entry_debug_printer(pid, orig_eax, syscall_object):
 def close_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to close: %s',
                   tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def dup_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to dup: %d',
+                  tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to fcntl: %d',
+                  tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to use file descriptor: %d',
+                  tracereplay.peek_register(pid, tracereplay.EBX))

@@ -226,9 +226,15 @@ if __name__ == '__main__':
             5: open_entry_debug_printer,
             6: close_entry_debug_printer,
             4: write_entry_debug_printer,
+            41: dup_entry_debug_printer,
             45: brk_entry_debug_printer,
+            54: ioctl_entry_debug_printer,
+            91: munmap_entry_debug_printer,
             102: socketcall_debug_printer,
-            197: fstat64_entry_debug_printer
+            192: mmap2_entry_debug_printer,
+            195: stat64_entry_debug_printer,
+            197: fstat64_entry_debug_printer,
+            221: fcntl64_entry_debug_printer
         }
         t = Trace.Trace(trace)
         tracereplay.system_calls = iter(t.syscalls)

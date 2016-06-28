@@ -127,3 +127,19 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def mmap2_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried to mmap2: %d',
+                  tracereplay.peek_register(pid, tracereplay.EDI))
+
+
+def munmap_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call tried munmap address: %x length: %d',
+                  tracereplay.peek_register(pid, tracereplay.EBX) & 0xFFFFFFFF,
+                  tracereplay.peek_register(pid, tracereplay.ECX))
+
+
+def ioctl_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call used file descriptor: %d',
+                  tracereplay.peek_register(pid, tracereplay.EBX))
