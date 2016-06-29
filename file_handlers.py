@@ -307,7 +307,7 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
 def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open entry handler')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
-    fn_from_execution = peek_string(pid, ebx).strip('\x00\x08\x08')
+    fn_from_execution = peek_string(pid, ebx)
     fn_from_trace = syscall_object.args[0].value.strip('"')
     logging.debug('Filename from trace: %s', fn_from_trace)
     logging.debug('Filename from execution: %s', fn_from_execution)

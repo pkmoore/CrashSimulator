@@ -62,7 +62,8 @@ def peek_string(pid, address):
         data = data + pack('<i', tracereplay.peek_address(pid, address))
         address = address + 4
         if '\0' in data:
-            data = data[:data.rfind('\0')]
+            while '\0' in data:
+                data = data[:data.rfind('\0')]
             return data
 
 
