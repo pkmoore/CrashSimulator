@@ -124,6 +124,25 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
 
 
+def prlimit64_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering prlimit64 entry handler')
+    validate_integer_argument(pid, syscall_object, 0)
+    if syscall_object.args[1].value != 'RLIMIT_NOFILE':
+        raise NotImplementedError('prlimit commands other than "RLIMIT_NOFILE '
+                                  'are not supported')
+    rlim_cur = int(syscall_object.args[3].value.split('=')[1])
+    logging.debug('rlim_cur: %d', rlim_cur)
+    rlim_max = syscall_object.args[4].value.split('=')[1]
+    rlim_max = rlim_max.split('*')
+    rlim_max = int(rlim_max[0]) * int(rlim_max[1].strip('}'))
+    logging.debug('rlim_max: %d', rlim_max)
+    addr = tracereplay.peek_register(pid, tracereplay.ESI)
+    logging.debug('addr: %x', addr & 0xFFFFFFFF)
+    noop_current_syscall(pid)
+    tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
+    apply_return_conditions(pid, syscall_object)
+
+
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   tracereplay.peek_register(pid, tracereplay.EBX))
