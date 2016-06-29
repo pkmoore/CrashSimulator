@@ -17,7 +17,7 @@ int main() {
 
     s = socket(AF_INET, SOCK_STREAM, 0);
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(6666);
+    addr.sin_port = htons(8888);
     inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
     if(bind(s, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         perror("Error:");

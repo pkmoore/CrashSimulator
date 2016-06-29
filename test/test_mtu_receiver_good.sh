@@ -7,7 +7,7 @@ cd ../sample_programs > /dev/null;
 killall mtu_receiver_good;
 strace -f -s 9999 -vvvvv -o mtu_receiver_good.strace ./mtu_receiver_good &
 sleep 5s;
-echo "asdfawefasdf1234123412341234" | nc localhost 6666
+echo "asdfawefasdf1234123412341234" | nc localhost 8888
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
          -c sample_programs/mtu_receiver_good \
