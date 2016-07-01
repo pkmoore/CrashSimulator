@@ -1,4 +1,7 @@
-all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale
+all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock
+
+nonblock: nonblock.c
+	gcc -ggdb -o nonblock nonblock.c
 
 callsetlocale: callsetlocale.c
 	gcc -ggdb -o callsetlocale callsetlocale.c
