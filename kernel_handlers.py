@@ -127,20 +127,38 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
 def prlimit64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering prlimit64 entry handler')
     validate_integer_argument(pid, syscall_object, 0)
-    if syscall_object.args[1].value != 'RLIMIT_NOFILE':
-        raise NotImplementedError('prlimit commands other than "RLIMIT_NOFILE '
-                                  'are not supported')
-    rlim_cur = int(syscall_object.args[3].value.split('=')[1])
-    logging.debug('rlim_cur: %d', rlim_cur)
-    rlim_max = syscall_object.args[4].value.split('=')[1]
-    rlim_max = rlim_max.split('*')
-    rlim_max = int(rlim_max[0]) * int(rlim_max[1].strip('}'))
-    logging.debug('rlim_max: %d', rlim_max)
-    addr = tracereplay.peek_register(pid, tracereplay.ESI)
-    logging.debug('addr: %x', addr & 0xFFFFFFFF)
-    noop_current_syscall(pid)
-    tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
-    apply_return_conditions(pid, syscall_object)
+    have_new_limit = False
+    have_old_limit = False
+    if syscall_object.args[2].value != 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value == 'NULL':
+            logging.debug('We have a new limit')
+            have_new_limit = True
+    elif syscall_object.args[2] == 'NULL' and syscall_object.args[3] != 'NULL' and syscall_object.args[4] != 'NULL':
+            logging.debug('We have an old limit')
+            have_old_limit = True
+    if have_new_limit and not have_old_limit:
+        if syscall_object.args[1].value != 'RLIMIT_CORE':
+            raise NotImplementedError('prlimit commands with a new limit only '
+                                      'support RLIMIT_CORE')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    elif not have_new_limit and have_old_limit:
+        if syscall_object.args[1].value != 'RLIMIT_NOFILE':
+            raise NotImplementedError('prlimit commands other than '
+                                      'RLIMIT_NOFILE are not supported')
+        rlim_cur = int(syscall_object.args[3].value.split('=')[1])
+        logging.debug('rlim_cur: %d', rlim_cur)
+        rlim_max = syscall_object.args[4].value.split('=')[1]
+        rlim_max = rlim_max.split('*')
+        rlim_max = int(rlim_max[0]) * int(rlim_max[1].strip('}'))
+        logging.debug('rlim_max: %d', rlim_max)
+        addr = tracereplay.peek_register(pid, tracereplay.ESI)
+        logging.debug('addr: %x', addr & 0xFFFFFFFF)
+        noop_current_syscall(pid)
+        tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        raise NotImplementedError('prlimit64 calls with both a new and old '
+                                  'limit are not supported')
 
 
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
