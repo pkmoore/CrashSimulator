@@ -124,6 +124,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (183, True): getcwd_entry_handler,
         (140, True): llseek_entry_handler,
         (140, False): llseek_exit_handler,
+        (42, True): pipe_entry_handler,
         (43, True): times_entry_handler,
         (10, True): syscall_return_success_handler,
         (33, True): syscall_return_success_handler,

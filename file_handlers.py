@@ -3,6 +3,25 @@ import logging
 from time import strptime, mktime, time
 
 
+# This function will need some work when the file descriptor rework goes
+# through.
+def pipe_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering pipe entry handler')
+    read_end_from_trace = int(syscall_object.args[0].value)
+    write_end_from_trace = int(syscall_object.args[1].value.strip(']'))
+    logging.debug('Read end from trace: %d', read_end_from_trace)
+    logging.debug('Write end from trace: %d', write_end_from_trace)
+    array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    add_replay_fd(read_end_from_trace)
+    add_replay_fd(write_end_from_trace)
+    noop_current_syscall(pid)
+    tracereplay.populate_pipefd_array(pid,
+                                      array_addr,
+                                      read_end_from_trace,
+                                      write_end_from_trace)
+    apply_return_conditions(pid, syscall_object)
+
+
 def dup_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup handler')
     validate_integer_argument(pid, syscall_object, 0)

@@ -152,6 +152,32 @@ int copy_buffer_into_child_process_memory(pid_t child,
     return 0;
 }
 
+static PyObject* tracereplay_populate_pipefd_array(PyObject* self,
+                                                   PyObject* args) {
+    pid_t child;
+    void* addr;
+    unsigned int read_end;
+    unsigned int write_end;
+    if(!PyArg_ParseTuple(args, "IIII", &child, &addr, &read_end, &write_end)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_pipefd_array arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: popiulate_pipefd_array: child %d\n", child);
+        printf("C: popiulate_pipefd_array: addr %p\n", addr);
+        printf("C: popiulate_pipefd_array: read_end: %d\n", read_end);
+        printf("C: popiulate_pipefd_array: write_end %d\n", write_end);
+    }
+    int r[2];
+    r[0] = read_end;
+    r[1] = write_end;
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&r,
+                                          (sizeof(int) * 2));
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_copy_address_range(PyObject* self,
                                                 PyObject* args) {
     // Unused paramater
@@ -1234,6 +1260,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "is select fd set"},
     {"copy_address_range", tracereplay_copy_address_range,
      METH_VARARGS, "copy address range"},
+    {"populate_pipefd_array", tracereplay_populate_pipefd_array,
+     METH_VARARGS, "populate pipefd array"},
     {NULL, NULL, 0, NULL}
 };
 
