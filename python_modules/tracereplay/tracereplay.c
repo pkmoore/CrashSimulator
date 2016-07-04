@@ -957,6 +957,11 @@ void init_constants(PyObject* m) {
     if(PyModule_AddIntConstant(m, "CLOCK_MONOTONIC", CLOCK_MONOTONIC) == -1) {
         return;
     }
+    if(PyModule_AddIntConstant(m,
+                               "CLOCK_PROCESS_CPUTIME_ID",
+                               CLOCK_PROCESS_CPUTIME_ID) == -1) {
+        return;
+    }
 }
 
 static PyObject* tracereplay_peek_register(PyObject* self, PyObject* args) {

@@ -52,14 +52,16 @@ def clock_gettime_entry_handler(syscall_id, syscall_object, pid):
                                                               tracereplay.EBX)
         # The first arg from execution must be CLOCK_MONOTONIC
         # The first arg from the trace must be CLOCK_MONOTONIC
-        if syscall_object.args[0].value[0] != "CLOCK_MONOTONIC":
-            raise NotImplementedError('Clock type ({}) from trace is not '
-                                      'CLOCK_MONOTONIC'
-                                      .format(clock_type_from_trace))
-        if clock_type_from_execution != tracereplay.CLOCK_MONOTONIC:
-            raise NotImplementedError('Clock type ({}) from execution is not '
-                                      'CLOCK_MONOTONIC'
-                                      .format(clock_type_from_execution))
+        if clock_type_from_trace == 'CLOCK_MONOTONIC':
+            if clock_type_from_execution != tracereplay.CLOCK_MONOTONIC:
+                raise ReplayDeltaError('Clock type ({}) from execution '
+                                       'differs from trace'
+                                       .format(clock_type_from_execution))
+        if clock_type_from_trace == 'CLOCK_PROCESS_CPUTIME_ID':
+            if clock_type_from_execution != tracereplay.CLOCK_PROCESS_CPUTIME_ID:
+                raise ReplayDeltaError('Clock type ({}) from execution '
+                                       'differs from trace'
+                                       .format(clock_type_from_execution))
         seconds = int(syscall_object.args[1].value.strip('{}'))
         nanoseconds = int(syscall_object.args[2].value.strip('{}'))
         addr = tracereplay.peek_register(pid, tracereplay.ECX)
