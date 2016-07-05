@@ -17,7 +17,6 @@ def writev_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('We will replay this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
-
     else:
         logging.debug('Not replaying this system call')
 
