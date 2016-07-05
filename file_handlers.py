@@ -24,7 +24,7 @@ def pipe_entry_handler(syscall_id, syscall_object, pid):
 
 def dup_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup handler')
-    validate_integer_argument(pid, syscall_object, 0)
+    validate_integer_argument(pid, syscall_object, 0, 0)
     oldfd = int(syscall_object.args[0].value)
     if should_replay_based_on_fd(pid, oldfd):
         noop_current_syscall(pid)

@@ -126,7 +126,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
 
 def prlimit64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering prlimit64 entry handler')
-    validate_integer_argument(pid, syscall_object, 0)
+    validate_integer_argument(pid, syscall_object, 0, 0)
     have_new_limit = False
     have_old_limit = False
     if syscall_object.args[2].value != 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value == 'NULL':

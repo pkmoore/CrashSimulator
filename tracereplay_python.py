@@ -203,8 +203,15 @@ class ReplayDeltaError(Exception):
     pass
 
 
-def validate_integer_argument(pid, syscall_object, arg_pos, params=None):
-    logging.debug('Validating integer argument (position: %d)', arg_pos)
+def validate_integer_argument(pid,
+                              syscall_object,
+                              trace_arg,
+                              exec_arg,
+                              params=None):
+    logging.debug('Validating integer argument (trace position: %d '
+                  'execution position: %d)',
+                  trace_arg,
+                  exec_arg)
     # EAX is the system call number
     POS_TO_REG = {0: tracereplay.EBX,
                   1: tracereplay.ECX,
@@ -212,19 +219,22 @@ def validate_integer_argument(pid, syscall_object, arg_pos, params=None):
                   3: tracereplay.ESI,
                   4: tracereplay.EDI}
     if not params:
-        arg = tracereplay.peek_register(pid, POS_TO_REG[arg_pos])
+        arg = tracereplay.peek_register(pid, POS_TO_REG[exec_arg])
     else:
-        arg = params[arg_pos]
-    arg_from_trace = int(syscall_object.args[arg_pos].value)
+        arg = params[exec_arg]
+    arg_from_trace = int(syscall_object.args[trace_arg].value)
     logging.debug('Argument from execution: %d', arg)
     logging.debug('Argument from trace: %d', arg_from_trace)
     # Check to make sure everything is the same
     # Decide if this is a system call we want to replay
     if arg_from_trace != arg:
-        raise ReplayDeltaError('Argument value at position {} from '
-                               'execution ({})differs argument value '
-                               'from trace ({})'
-                               .format(arg_pos, arg, arg_from_trace))
+        raise ReplayDeltaError('Argument value at trace position: {}, '
+                               'execution position: {} from execution  ({}) '
+                               'differs argument value from trace ({})'
+                               .format(trace_arg,
+                                       exec_arg,
+                                       arg,
+                                       arg_from_trace))
 
 
 def add_os_fd_mapping(os_fd, trace_fd):

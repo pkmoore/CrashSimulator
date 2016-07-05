@@ -34,8 +34,8 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     # We don't check params[1] because it is the address of an empty buffer
     # We don't check params[3] because it is a flags field
     # Check to make everything is the same
-    validate_integer_argument(pid, syscall_object, 0, params)
-    validate_integer_argument(pid, syscall_object, 2, params)
+    validate_integer_argument(pid, syscall_object, 0, 0, params)
+    validate_integer_argument(pid, syscall_object, 2, 2, params)
     # Decide if we want to replay this system call
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
