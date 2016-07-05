@@ -3,6 +3,29 @@ import logging
 from time import strptime, mktime, time
 
 
+def writev_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering writev entry handler')
+    # Validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # Validate iovec count
+    validate_integer_argument(pid,
+                              syscall_object,
+                              len(syscall_object.args)-1,
+                              2)
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(pid, fd):
+        logging.debug('We will replay this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+    else:
+        logging.debug('Not replaying this system call')
+
+
+def writev_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering writev_exit_handler (does nothing)')
+
+
 # This function will need some work when the file descriptor rework goes
 # through.
 def pipe_entry_handler(syscall_id, syscall_object, pid):
