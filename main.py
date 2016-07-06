@@ -117,6 +117,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (27, True): syscall_return_success_handler,
         (5, True): open_entry_handler,
         (5, False): open_exit_handler,
+        (39, True): mkdir_entry_handler,
         (85, True): readlink_entry_handler,
         (146, True): writev_entry_handler,
         (146, False): writev_exit_handler,

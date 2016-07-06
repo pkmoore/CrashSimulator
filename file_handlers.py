@@ -3,6 +3,12 @@ import logging
 from time import strptime, mktime, time
 
 
+def mkdir_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering mkdir entry handler')
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
+
+
 def writev_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering writev entry handler')
     # Validate file descriptor
