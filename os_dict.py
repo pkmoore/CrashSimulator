@@ -1,7 +1,10 @@
 OS_CONST = {
-    'O_RDWR': 2,
-    'SOL_SOCKET' : 1,
-    'SO_ERROR' : 4
+    # asm-generic/fcntl.h
+    'O_RDWR': 00000002,
+    'SOL_SOCKET': 1,
+    'SO_ERROR': 4,
+    # asm-generic/fcntl.h
+    'O_APPEND': 00002000
 }
 
 SOCK_CONST = {

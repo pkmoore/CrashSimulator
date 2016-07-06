@@ -134,22 +134,42 @@ def write_buffer(pid, address, value, buffer_length):
 
 
 def cleanup_return_value(val):
-    try:
-        ret_val = int(val)
-    except ValueError:
-        logging.debug('Couldn\'t parse ret_val as base 10 integer')
+    if type(val) == type(list()):
+        ret_val = list_of_flags_to_int(val)
+    else:
         try:
-            ret_val = int(val, base=16)
+            ret_val = int(val)
         except ValueError:
-            logging.debug('Couldn\'t parse ret_val as base 16 either')
+            logging.debug('Couldn\'t parse ret_val as base 10 integer')
             try:
-                logging.debug('Trying to look up ret_val')
-                ret_val = OS_CONST[val]
-            except KeyError:
-                logging.debug('Couldn\'t look up value from OS_CONST dict')
-                raise ValueError('Couldn\'t get integer form of return value!')
-    logging.debug('Cleaned up value %s', ret_val)
+                ret_val = int(val, base=16)
+            except ValueError:
+                logging.debug('Couldn\'t parse ret_val as base 16 either')
+                try:
+                    logging.debug('Trying to look up ret_val')
+                    ret_val = OS_CONST[val]
+                except KeyError:
+                    logging.debug('Couldn\'t look up value from OS_CONST dict')
+                    raise ValueError('Couldn\'t get integer form of return '
+                                     'value!')
+        logging.debug('Cleaned up value %s', ret_val)
     return ret_val
+
+
+def list_of_flags_to_int(lof):
+    logging.debug('Parsing list of flags into an int')
+    int_val = 0
+    for i in lof:
+        try:
+            logging.debug('looking up value')
+            tmp = OS_CONST[i]
+        except KeyError:
+            raise ValueError('Couldn\'t look up value ({}) from OS_CONST dict'
+                             .format(i))
+        logging.debug('Found value: %d', tmp)
+        int_val = int_val | tmp
+    logging.debug('Resultant int: %d', int_val)
+    return int_val
 
 
 # Applies the return conditions from the specified syscall object to the
