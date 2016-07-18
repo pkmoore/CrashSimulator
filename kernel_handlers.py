@@ -132,7 +132,7 @@ def prlimit64_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.args[2].value != 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value == 'NULL':
             logging.debug('We have a new limit')
             have_new_limit = True
-    elif syscall_object.args[2] == 'NULL' and syscall_object.args[3] != 'NULL' and syscall_object.args[4] != 'NULL':
+    elif syscall_object.args[2].value == 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value != 'NULL':
             logging.debug('We have an old limit')
             have_old_limit = True
     if have_new_limit and not have_old_limit:
