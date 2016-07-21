@@ -1,5 +1,6 @@
 from tracereplay_python import *
 import logging
+from os_dict import FCNTL64_INT_TO_CMD
 from time import strptime, mktime, time
 
 
@@ -787,6 +788,11 @@ def dup_entry_debug_printer(pid, orig_eax, syscall_object):
 def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to fcntl: %d',
                   tracereplay.peek_register(pid, tracereplay.EBX))
+    logging.debug('fcntl command: %s',
+                  FCNTL64_INT_TO_CMD[
+                      tracereplay.peek_register(pid, tracereplay.ECX)])
+    logging.debug('Param 3: %d',
+                  tracereplay.peek_register(pid, tracereplay.EDX))
 
 
 def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
