@@ -90,6 +90,10 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
             tracereplay.poke_address(pid, addr, num_bytes)
+        elif 'FIONBIO' in cmd:
+            out_val = int(syscall_object.args[2].value.strip('[]'))
+            out_addr = tracereplay.peek_register(pid, tracereplay.EDX)
+            tracereplay.poke_address(pid, out_addr, out_val)
         elif 'TCGETS' in cmd:
             c_iflags = syscall_object.args[2].value
             c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
