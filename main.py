@@ -237,6 +237,7 @@ if __name__ == '__main__':
             54: ioctl_entry_debug_printer,
             91: munmap_entry_debug_printer,
             102: socketcall_debug_printer,
+            174: rt_sigaction_entry_debug_printer,
             192: mmap2_entry_debug_printer,
             195: stat64_entry_debug_printer,
             197: fstat64_entry_debug_printer,
