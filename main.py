@@ -277,7 +277,8 @@ if __name__ == '__main__':
                 try:
                     debug_printers[orig_eax](pid, orig_eax, syscall_object)
                 except KeyError:
-                    logging.warning('This system call has no debug printer')
+                    logging.warning('This system call ({}) has no debug '
+                                    'printer'.format(orig_eax))
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
             logging.info('# of System Calls Handled: %d',
