@@ -16,3 +16,4 @@ callgetaddrinfo
 callsetlocale
 nonblock
 charactertest
+callselect_noaction
