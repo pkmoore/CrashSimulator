@@ -121,3 +121,22 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
                                 'structures')
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
+
+
+def select_entry_debug_printer(pid, orig_eax, syscall_object):
+    readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    writefds_addr = tracereplay.peek_register(pid, tracereplay.EDX)
+    exceptfds_addr = tracereplay.peek_register(pid, tracereplay.EDI)
+    logging.debug("nfds: %d", tracereplay.peek_register(pid, tracereplay.EBX))
+    logging.debug("readfds_addr: %x", readfds_addr & 0xffffffff)
+    logging.debug("writefds_addr: %x", writefds_addr & 0xffffffff)
+    logging.debug("exceptfds_addr: %x", exceptfds_addr & 0xffffffff)
+    if readfds_addr != 0:
+        logging.debug("readfds: %s",
+                      tracereplay.get_select_fds(pid, readfds_addr))
+    if writefds_addr != 0:
+        logging.debug("writefds: %s",
+                      tracereplay.get_select_fds(pid, writefds_addr))
+    if exceptfds_addr != 0:
+        logging.debug("exceptfds_addr: %s",
+                      tracereplay.get_select_fds(pid, exceptfds_addr))
