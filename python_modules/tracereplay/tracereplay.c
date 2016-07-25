@@ -744,6 +744,39 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_get_select_fds(PyObject* self,
+                                            PyObject* args) {
+    // unused
+    self = self;
+    pid_t child;
+    void* addr;
+
+    if(!PyArg_ParseTuple(args, "ii", &child, &addr)) {
+        PyErr_SetString(TraceReplayError,
+                        "C: get_select_fds: arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: get_select_fds: child: %d\n", child);
+        printf("C: get_select_fds: addr: %p\n", addr);
+    }
+    PyObject* list = PyList_New(0);
+    int i;
+    fd_set t;
+    copy_child_process_memory_into_buffer(child,
+                                          addr,
+                                          (unsigned char*)&t,
+                                          sizeof(fd_set));
+    for(i = 0; i < FD_SETSIZE; i++) {
+        if(FD_ISSET(i, &t)) {
+            if(DEBUG) {
+                printf("C: get_select_fds: fd %d is set\n", i);
+            }
+            PyList_Append(list, PyInt_FromLong(i));
+        }
+    }
+    return list;
+}
+
 static PyObject* tracereplay_populate_select_bitmaps(PyObject* self,
                                                      PyObject* args) {
     // unused
@@ -1262,6 +1295,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "copy address range"},
     {"populate_pipefd_array", tracereplay_populate_pipefd_array,
      METH_VARARGS, "populate pipefd array"},
+    {"get_select_fds", tracereplay_get_select_fds,
+     METH_VARARGS, "get select fds"},
     {NULL, NULL, 0, NULL}
 };
 
