@@ -9,7 +9,7 @@ int main() {
     FD_SET(0, &r);
     FD_SET(1, &w);
     FD_SET(2, &w); 
-    int res = select(4, &r, &w, NULL, 
+    int res = select(4, &r, &w, NULL, NULL);
                     
     printf("Worked!\n");
     return 0;

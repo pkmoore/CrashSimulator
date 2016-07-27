@@ -17,3 +17,4 @@ callsetlocale
 nonblock
 charactertest
 callselect_noaction
+read_known_hosts

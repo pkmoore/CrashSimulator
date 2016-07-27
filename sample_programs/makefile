@@ -1,4 +1,7 @@
-all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction
+all: opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts
+
+read_known_hosts: read_known_hosts.c
+	gcc -ggdb -o read_known_hosts read_known_hosts.c
 
 callselect_noaction: callselect_noaction.c
 	gcc -ggdb -o callselect_noaction callselect_noaction.c
