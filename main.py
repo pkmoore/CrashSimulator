@@ -36,7 +36,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         ('listen', True): subcall_return_success_handler,
         ('recv', True): recv_subcall_entry_handler,
         ('recvfrom', True): recvfrom_subcall_entry_handler,
-        ('setsockopt', True): subcall_return_success_handler,
+        ('setsockopt', True): setsockopt_entry_handler,
         ('send', True): subcall_return_success_handler,
         ('connect', True): subcall_return_success_handler,
         ('getsockopt', True): getsockopt_entry_handler,

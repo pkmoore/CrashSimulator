@@ -151,6 +151,39 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Not replaying this system call')
 
 
+def setsockopt_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering setsockopt handler')
+    # Pull out what we can compare
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 5)
+    fd = params[0]
+    fd_from_trace = int(syscall_object.args[0].value)
+    optval_addr = params[3]
+    # We don't check param[3] because it is an address of an empty buffer
+    # We don't check param[4] because it is an address of an empty length
+    # Check to make sure everything is the same
+    if fd != int(fd_from_trace):
+        raise ReplayDeltaError('File descriptor from execution ({}) '
+                               'does not match file descriptor from trace ({})'
+                               .format(fd, fd_from_trace))
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        logging.info('Replaying this system call')
+        optval_len = int(syscall_object.args[4].value)
+        if optval_len != 4:
+            raise NotImplementedException('setsockopt() not implemented for '
+                                          'optval sizes other than 4')
+        optval = int(syscall_object.args[3].value.strip('[]'))
+        logging.debug('Optval: %s', optval)
+        logging.debug('Optval Length: %s', optval_len)
+        logging.debug('Optval addr: %x', optval_addr % 0xffffffff)
+        noop_current_syscall(pid)
+        logging.debug('Writing values')
+        tracereplay.populate_int(pid, optval_addr, optval)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.info('Not replaying this system call')
+
+
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockopt handler')
     # Pull out what we can compare
