@@ -99,7 +99,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
-            logging.debug('Got unsuccessful close call')
+            logging.debug('Got successful close call')
             fd = syscall_object.args[0].value
             try:
                 tracereplay.REPLAY_FILE_DESCRIPTORS.remove(fd)
