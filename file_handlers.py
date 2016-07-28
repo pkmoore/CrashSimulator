@@ -196,14 +196,24 @@ def read_exit_handler(syscall_id, syscall_object, pid):
 # are tracking. Otherwise it simply does any required debug-printing and lets
 # it execute
 def write_entry_handler(syscall_id, syscall_object, pid):
-    fd = tracereplay.peek_register(pid, tracereplay.EBX)
-    fd_from_trace = syscall_object.args[0].value
-    msg_addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    msg_len = tracereplay.peek_register(pid, tracereplay.EDX)
-    logging.debug('Child attempted to write to FD: %s', fd)
-    logging.debug('Child\'s message stored at: %s', msg_addr)
-    logging.debug('Child\'s message length: %s', msg_len)
-    if fd != 1 and fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    validate_integer_argument(pid, syscall_object, 2, 2)
+    bytes_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    bytes_len = tracereplay.peek_register(pid, tracereplay.EDX)
+    bytes_from_trace = syscall_object.args[1].value.lstrip('"').rstrip('"')
+    bytes_from_execution = tracereplay.copy_address_range(pid,
+                                                          bytes_addr,
+                                                          bytes_addr + bytes_len)
+    bytes_from_trace = bytes_from_trace.decode('string-escape')
+    logging.debug(bytes_from_trace.encode('hex'))
+    logging.debug(bytes_from_execution.encode('hex'))
+
+
+    if bytes_from_trace != bytes_from_execution:
+        raise ReplayDeltaError('Bytes from trace don\'t match bytes from '
+                               'execution!')
+    fd = int(syscall_object.args[0].value)
+    if fd != 1 and fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('We care about this file descriptor. No-oping...')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
