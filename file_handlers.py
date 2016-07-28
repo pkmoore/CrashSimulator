@@ -83,7 +83,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering close entry handler')
     # Pull out everything we can check
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
-    fd_from_trace = syscall_object.args[0].value
+    fd_from_trace = int(syscall_object.args[0].value)
     check_fd_from_trace = offset_file_descriptor(fd_from_trace)
     logging.debug('File descriptor from execution: %d', fd)
     logging.debug('File descriptor from trace: %d', fd_from_trace)
@@ -107,20 +107,21 @@ def close_entry_handler(syscall_id, syscall_object, pid):
                 pass
         apply_return_conditions(pid, syscall_object)
     else:
-        logging.info('Not replaying this system call')
-        # fd != 1 is a horrible hack to deal with programs that close stdout
-        if offset_file_descriptor(fd_from_trace) != fd and fd != 1:
-            raise ReplayDeltaError('File descriptor from execution ({}) '
-                                   'differs from file descriptor from '
-                                   'trace ({})'
-                                   .format(fd, fd_from_trace))
-        # This is a hack. We have to try to remove the mapping here because we
-        # know the file descriptor from both the os and the trace.
-        # Unfortunately, we don't know if the call was successful or not for
-        # the execution until the call exits. All we can do is look at the
-        # system call object and base our action on it.
-        if fd >= 0 and syscall_object.ret[0] != -1:
-            remove_os_fd_mapping(fd, fd_from_trace)
+        if fd != -1:
+            logging.info('Not replaying this system call')
+            # fd != 1 is a horrible hack to deal with programs that close stdout
+            if offset_file_descriptor(fd_from_trace) != fd and fd != 1:
+                raise ReplayDeltaError('File descriptor from execution ({}) '
+                                    'differs from file descriptor from '
+                                    'trace ({})'
+                                    .format(fd, fd_from_trace))
+            # This is a hack. We have to try to remove the mapping here because we
+            # know the file descriptor from both the os and the trace.
+            # Unfortunately, we don't know if the call was successful or not for
+            # the execution until the call exits. All we can do is look at the
+            # system call object and base our action on it.
+            if fd >= 0 and syscall_object.ret[0] != -1:
+                remove_os_fd_mapping(fd, fd_from_trace)
 
 
 def close_exit_handler(syscall_id, syscall_object, pid):
