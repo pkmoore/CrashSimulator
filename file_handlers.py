@@ -178,7 +178,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         buf = tracereplay.copy_address_range(pid,
                                              buffer_address,
                                              buffer_address + ret_val)
-        if buf.decode('string-escape') != data:
+        if buf != data:
             raise ReplayDeltaError('Data copied by read() handler doesn\'t '
                                    'match after copy')
         apply_return_conditions(pid, syscall_object)
