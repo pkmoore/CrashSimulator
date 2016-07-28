@@ -148,9 +148,10 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
     if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
-        if fd != int(fd_from_trace):
-            raise Exception('File descriptor from execution differs from file '
-                            'descriptor from trace')
+        # file descriptor
+        validate_integer_argument(pid, syscall_object, 0, 0)
+        # bytes to read
+        validate_integer_argument(pid, syscall_object, 2, 2)
         buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
         buffer_size_from_execution = tracereplay.peek_register(pid,
                                                                tracereplay.EDX)
@@ -160,11 +161,12 @@ def read_entry_handler(syscall_id, syscall_object, pid):
                       buffer_size_from_execution)
         logging.debug('Buffer size from trace: %d', buffer_size_from_trace)
         ret_val = int(syscall_object.ret[0])
-        if buffer_size_from_execution != buffer_size_from_trace:
-            raise ReplayDeltaError('Buffer size from execution does not match '
-                                   'buffer size from trace')
         noop_current_syscall(pid)
-        data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+        data = syscall_object.args[1].value
+        if data.startswith('"'):
+            data = data[1:]
+        if data.endswith('"'):
+            data = data[:-1]
         data = data.decode('string_escape')
         if len(data) != ret_val:
             raise ReplayDeltaError('Decoded bytes length does not equal '
@@ -172,6 +174,12 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         tracereplay.populate_char_buffer(pid,
                                          buffer_address,
                                          data)
+        buf = tracereplay.copy_address_range(pid,
+                                             buffer_address,
+                                             buffer_address + ret_val)
+        if buf.decode('string-escape') != data:
+            raise ReplayDeltaError('Data copied by read() handler doesn\'t '
+                                   'match after copy')
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
