@@ -75,7 +75,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     validate_syscall(orig_eax, syscall_object)
     ignore_list = [
-        20,   # sys_getpid
         125,  # sys_mprotect
         243,  # sys_set_thread_area
         174,  # sys_rt_sigaction
@@ -112,6 +111,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (125, False): check_return_value_exit_handler,
 
         # ###                                                  ####
+        (20, True): syscall_return_success_handler,
         (15, True): syscall_return_success_handler,
         (78, True): gettimeofday_entry_handler,
         (13, True): time_entry_handler,
