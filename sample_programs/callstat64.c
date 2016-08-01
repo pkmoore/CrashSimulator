@@ -11,7 +11,6 @@
 int main() {
     struct stat64 s;
     char buffer[30];
-    printf("Address of s: %p\n", &s);
     printf("Sizeof stat64: %d\n", sizeof(struct stat64));
     printf("sizeof int: %d\n", sizeof(int));
     stat64("./test.txt", &s);
