@@ -6,7 +6,7 @@ OUTPUT=$(python main.py \
        -c sample_programs/charactertest \
        -t sample_programs/charactertest.strace);
 RET=$?;
-echo $OUTPUT | grep -q "()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]";
+echo $OUTPUT | grep -q "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 FOUND=$?;
 echo $RET;
 echo $FOUND;
