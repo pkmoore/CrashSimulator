@@ -164,10 +164,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         ret_val = int(syscall_object.ret[0])
         noop_current_syscall(pid)
         data = syscall_object.args[1].value
-        if data.startswith('"'):
-            data = data[1:]
-        if data.endswith('"'):
-            data = data[:-1]
+        data = cleanup_quotes(data)
         data = data.decode('string_escape')
         if len(data) != ret_val:
             raise ReplayDeltaError('Decoded bytes length does not equal '
@@ -201,7 +198,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 2, 2)
     bytes_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     bytes_len = tracereplay.peek_register(pid, tracereplay.EDX)
-    bytes_from_trace = syscall_object.args[1].value.lstrip('"').rstrip('"')
+    bytes_from_trace = cleanup_quotes(syscall_object.args[1].value)
     bytes_from_execution = tracereplay.copy_address_range(pid,
                                                           bytes_addr,
                                                           bytes_addr + bytes_len)
@@ -818,3 +815,11 @@ def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
 def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use file descriptor: %d',
                   tracereplay.peek_register(pid, tracereplay.EBX))
+
+
+def cleanup_quotes(quo):
+    if quo.startswith('"'):
+        quo = quo[1:]
+    if quo.endswith('"'):
+        quo = quo[:-1]
+    return quo
