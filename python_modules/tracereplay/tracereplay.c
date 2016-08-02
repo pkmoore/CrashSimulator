@@ -1128,9 +1128,10 @@ static PyObject* tracereplay_peek_address(PyObject* self, PyObject* args) {
     long int value;
     PyArg_ParseTuple(args, "ii", &child, &address);
     errno = 0;
-    if((value = ptrace(PTRACE_PEEKDATA, child, address, NULL)) == -1) {
+    value = ptrace(PTRACE_PEEKDATA, child, address, NULL);
+    if(errno != 0) {
         perror("Peek into userspace failed");
-        return NULL;
+        PyErr_SetString(TraceReplayError, "peek_address peek failed");
     }
     return Py_BuildValue("i", value);
 }
