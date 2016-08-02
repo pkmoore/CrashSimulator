@@ -156,17 +156,14 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
     # Pull out what we can compare
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 5)
-    fd = params[0]
     fd_from_trace = int(syscall_object.args[0].value)
     optval_addr = params[3]
     # We don't check param[3] because it is an address of an empty buffer
     # We don't check param[4] because it is an address of an empty length
     # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})'
-                               .format(fd, fd_from_trace))
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS \
+       or int(syscall_object.ret[0]) == -1:
         logging.info('Replaying this system call')
         optval_len = int(syscall_object.args[4].value)
         if optval_len != 4:
