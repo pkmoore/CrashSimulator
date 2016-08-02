@@ -1,4 +1,6 @@
 from tracereplay_python import *
+from syscall_dict import SOCKET_SUBCALLS
+from os_dict import SHUTDOWN_INT_TO_CMD, SHUTDOWN_CMD_TO_INT
 import logging
 
 
@@ -345,11 +347,34 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
 
 
 def socketcall_debug_printer(pid, orig_eax, syscall_object):
-    logging.debug('Warning this handler only does things with send')
-    if tracereplay.peek_register(pid, tracereplay.EBX) == 9:
-        p = tracereplay.peek_register(pid, tracereplay.ECX)
-        params = extract_socketcall_parameters(pid, p, 4)
-        addr = params[1]
-        size = params[2]
-        logging.debug('This call tried to send: %s',
-                      peek_bytes(pid, addr, size).encode('string-escape'))
+    subcall_debug_printers = {
+        9: send_debug_printer,
+        13: shutdown_debug_printer
+    }
+    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
+    logging.debug('Got subcall {} {}'.format(subcall_id,
+                                             SOCKET_SUBCALLS[subcall_id]))
+    try:
+        subcall_debug_printers[subcall_id](pid, syscall_object)
+    except KeyError as e:
+        logging.warning('This subcall ({}) has no debug printer'
+                        .format(subcall_id))
+        raise e
+
+
+def send_debug_printer(pid, syscall_object):
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 4)
+    addr = params[1]
+    size = params[2]
+    data = tracereplay.copy_address_range(pid, addr, addr + size)
+    logging.debug('This call tried to send: %s', data.encode('string-escape'))
+
+
+def shutdown_debug_printer(pid, syscall_object):
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 2)
+    fd = params[0]
+    cmd = params[1]
+    logging.debug('This call tried to shutdown: %d', fd)
+    logging.debug('Command: %d: %s', cmd, SHUTDOWN_INT_TO_CMD[params[1]])
