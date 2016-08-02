@@ -1,6 +1,7 @@
 from tracereplay_python import *
 import logging
 from os_dict import FCNTL64_INT_TO_CMD
+from os_dict import PERM_INT_TO_PERM
 from time import strptime, mktime, time
 
 
@@ -817,8 +818,17 @@ def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
 
 def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
     path_addr = tracereplay.peek_register(pid, tracereplay.EBX)
-    logging.debug('This call tried to use file descriptor: %s',
+    logging.debug('This call tried to use path: %s',
                   peek_string(pid, path_addr))
+
+
+def access_entry_debug_printer(pid, orig_eax, syscall_object):
+    path_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    mode = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('This call tried to use path: %s',
+                  peek_string(pid, path_addr))
+    logging.debug('Mode: %s',
+                  PERM_INT_TO_PERM[mode])
 
 
 def cleanup_quotes(quo):

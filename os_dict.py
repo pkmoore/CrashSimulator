@@ -172,3 +172,12 @@ SIGPROCMASK_INT_TO_CMD = {
 }
 
 SIGPROC_CMD_TO_INT = {y: x for x, y in SIGPROCMASK_INT_TO_CMD.iteritems()}
+
+PERM_INT_TO_PERM = {
+    4: 'R_OK',
+    2: 'W_OK',
+    1: 'X_OK',
+    0: 'F_OK'
+}
+
+PERM_PERM_TO_INT = {y: x for x, y in PERM_INT_TO_PERM.iteritems()}
