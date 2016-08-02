@@ -1,6 +1,8 @@
 from tracereplay_python import *
 from os_dict import SIGNAL_INT_TO_SIG
 from os_dict import IOCTLS_INT_TO_IOCTL
+from os_dict import SIGPROCMASK_INT_TO_CMD
+
 import logging
 
 
@@ -195,3 +197,10 @@ def rt_sigaction_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call use signum: %s',
                   SIGNAL_INT_TO_SIG[
                       tracereplay.peek_register(pid, tracereplay.EBX)])
+
+
+def rt_sigprocmask_entry_debug_printer(pid, orig_eax, syscall_object):
+    logging.debug('This call used command: %s',
+                  SIGPROCMASK_INT_TO_CMD[
+                      tracereplay.peek_register(pid, tracereplay.EBX)])
+

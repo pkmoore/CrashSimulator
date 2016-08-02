@@ -239,6 +239,7 @@ if __name__ == '__main__':
             102: socketcall_debug_printer,
             142: select_entry_debug_printer,
             174: rt_sigaction_entry_debug_printer,
+            175: rt_sigprocmask_entry_debug_printer,
             192: mmap2_entry_debug_printer,
             195: stat64_entry_debug_printer,
             197: fstat64_entry_debug_printer,

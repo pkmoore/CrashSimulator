@@ -164,3 +164,11 @@ SHUTDOWN_INT_TO_CMD = {
 }
 
 SHUTDOWN_CMD_TO_INT = {y: x for x, y in SHUTDOWN_INT_TO_CMD.iteritems()}
+
+SIGPROCMASK_INT_TO_CMD = {
+    0: 'SIG_BLOCK',
+    1: 'SIG_UNBLOCK',
+    2: 'SIG_SETMASK'
+}
+
+SIGPROC_CMD_TO_INT = {y: x for x, y in SIGPROCMASK_INT_TO_CMD.iteritems()}
