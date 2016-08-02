@@ -23,6 +23,9 @@ def check_return_value_exit_handler(syscall_id, syscall_object, pid):
     if ret_from_execution < 0:
         ret_from_execution = ret_from_execution & 0xffffffff
     if ret_from_execution != ret_from_trace:
-        raise Exception('Return value from execution ({}) differs from '
-                        'return value from trace ({})'
-                        .format(ret_from_execution, ret_from_trace))
+        raise Exception('Return value from execution ({}, {:02x}) differs '
+                        'from return value from trace ({}, {:02x})'
+                        .format(ret_from_execution,
+                                ret_from_execution,
+                                ret_from_trace,
+                                ret_from_trace))
