@@ -156,3 +156,11 @@ IOCTLS_IOCTL_TO_INT = {
 }
 
 IOCTLS_INT_TO_IOCTL = {y: x for x, y in IOCTLS_IOCTL_TO_INT.iteritems()}
+
+SHUTDOWN_INT_TO_CMD = {
+    0: 'SHUT_RD',
+    1: 'SHUT_WR',
+    2: 'SHUT_RDWR'
+}
+
+SHUTDOWN_CMD_TO_INT = {y: x for x, y in SHUTDOWN_INT_TO_CMD.iteritems()}
