@@ -781,10 +781,13 @@ def open_entry_debug_printer(pid, orig_eax, syscall_object):
 
 
 def write_entry_debug_printer(pid, orig_eax, syscall_object):
-    logging.debug('This call tried to write: %s',
-                  peek_string(pid,
-                              tracereplay.peek_register(pid,
-                                                        tracereplay.ECX)))
+    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    data_count = tracereplay.peek_register(pid, tracereplay.EDX)
+    data = tracereplay.copy_address_range(pid, addr, addr + data_count)
+    logging.debug('This call tried to write: %s', data.encode('string-escape'))
+    logging.debug('Length: %d', data_count)
+    logging.debug('File descriptor: %d', fd)
 
 
 def fstat64_entry_debug_printer(pid, orig_eax, syscall_object):
@@ -813,8 +816,9 @@ def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
 
 
 def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
-    logging.debug('This call tried to use file descriptor: %d',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+    path_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    logging.debug('This call tried to use file descriptor: %s',
+                  peek_string(pid, path_addr))
 
 
 def cleanup_quotes(quo):
