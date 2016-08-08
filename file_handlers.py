@@ -831,6 +831,10 @@ def access_entry_debug_printer(pid, orig_eax, syscall_object):
                   PERM_INT_TO_PERM[mode])
 
 
+def read_entry_debug_printer(pid, orig_eax, syscall_object):
+    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    logging.debug('Tried to read from fd: %d', fd)
+
 def cleanup_quotes(quo):
     if quo.startswith('"'):
         quo = quo[1:]

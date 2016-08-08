@@ -75,6 +75,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     validate_syscall(orig_eax, syscall_object)
     ignore_list = [
+        162,  # sys_nanosleep
         125,  # sys_mprotect
         243,  # sys_set_thread_area
         174,  # sys_rt_sigaction
@@ -231,6 +232,7 @@ if __name__ == '__main__':
         debug_printers = {
             5: open_entry_debug_printer,
             6: close_entry_debug_printer,
+            3: read_entry_debug_printer,
             4: write_entry_debug_printer,
             13: time_entry_debug_printer,
             33: access_entry_debug_printer,
