@@ -203,4 +203,3 @@ def rt_sigprocmask_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call used command: %s',
                   SIGPROCMASK_INT_TO_CMD[
                       tracereplay.peek_register(pid, tracereplay.EBX)])
-
