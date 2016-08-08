@@ -1,6 +1,9 @@
 from tracereplay_python import *
 from syscall_dict import SOCKET_SUBCALLS
 from os_dict import SHUTDOWN_INT_TO_CMD, SHUTDOWN_CMD_TO_INT
+from os_dict import ADDRFAM_INT_TO_FAM
+from os_dict import SOCKTYPE_INT_TO_TYPE
+from os_dict import PROTOFAM_INT_TO_FAM
 import logging
 
 
@@ -348,6 +351,7 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
 
 def socketcall_debug_printer(pid, orig_eax, syscall_object):
     subcall_debug_printers = {
+        1: socket_debug_printer,
         9: send_debug_printer,
         13: shutdown_debug_printer
     }
@@ -378,3 +382,11 @@ def shutdown_debug_printer(pid, syscall_object):
     cmd = params[1]
     logging.debug('This call tried to shutdown: %d', fd)
     logging.debug('Command: %d: %s', cmd, SHUTDOWN_INT_TO_CMD[params[1]])
+
+
+def socket_debug_printer(pid, syscall_object):
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 3)
+    logging.debug('Domain: %s', ADDRFAM_INT_TO_FAM[params[0]])
+    logging.debug('Type: %s', SOCKTYPE_INT_TO_TYPE[params[1]])
+    logging.debug('Protocol: %s', PROTOFAM_INT_TO_FAM[params[2]])
