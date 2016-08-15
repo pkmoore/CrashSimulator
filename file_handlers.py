@@ -189,8 +189,9 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         data = cleanup_quotes(data)
         data = data.decode('string_escape')
         if len(data) != ret_val:
-            raise ReplayDeltaError('Decoded bytes length does not equal '
-                                   'return value from trace')
+            raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
+                                   'return value from trace ({})'
+                                   .format(len(data), ret_val))
         tracereplay.populate_char_buffer(pid,
                                          buffer_address,
                                          data)
@@ -855,6 +856,7 @@ def access_entry_debug_printer(pid, orig_eax, syscall_object):
 def read_entry_debug_printer(pid, orig_eax, syscall_object):
     fd = tracereplay.peek_register(pid, tracereplay.EBX)
     logging.debug('Tried to read from fd: %d', fd)
+
 
 def cleanup_quotes(quo):
     if quo.startswith('"'):
