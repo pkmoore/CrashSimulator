@@ -20,6 +20,27 @@ def writev_entry_handler(syscall_id, syscall_object, pid):
                               syscall_object,
                               len(syscall_object.args)-1,
                               2)
+    vectors = int(syscall_object.args[-1].value)
+    args = syscall_object.args[1:-1]
+    logging.debug(args)
+    datas = [args[x].value for x in range(0, len(args), 2)]
+    datas[0] = datas[0].lstrip('[{')
+    datas = [x.lstrip('{') for x in datas]
+    datas = [x.lstrip('"').rstrip('"') for x in datas]
+    datas = [x.decode('string-escape').encode('hex') for x in datas]
+    lengths = [args[x].value for x in range(1, len(args), 2)]
+    lengths[0] = lengths[0][0]
+    lengths = [int(x.rstrip('}]')) for x in lengths]
+    logging.debug('Vectors: %d', vectors)
+    logging.debug('Datas: %s', datas)
+    logging.debug('Lengths: %s', lengths)
+    addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    logging.debug('Addr: %d', addr)
+    vector_addresses = []
+    for i in range(vectors):
+        vector_addresses.append(tracereplay.peek_address(pid, addr + (i * 8)))
+    # We may need to copy buffers over manually at some point.
+    # Working for now.
     fd = int(syscall_object.args[0].value)
     if should_replay_based_on_fd(pid, fd):
         logging.debug('We will replay this system call')
