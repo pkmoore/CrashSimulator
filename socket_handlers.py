@@ -225,6 +225,30 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Not replaying this system call')
 
 
+def connect_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering connect entry handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, ecx, 3)
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
+    validate_integer_argument(pid, syscall_object, 2, 2, params=params)
+    trace_fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(trace_fd):
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def connect_exit_handler(syscall_id, syscall_object, pid):
+    ret_val_from_trace = syscall_object.ret[0]
+    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    if ret_val_from_execution != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differs '
+                               'from return value from trace ({})'
+                               .format(ret_val_from_execution,
+                                       ret_val_from_trace))
+
+
 def socket_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering socket exit handler')
     fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
