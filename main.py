@@ -28,27 +28,27 @@ import Trace
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
-        ('socket', True): socket_subcall_entry_handler,
-        ('socket', False): socket_exit_handler,
-        ('accept', True): accept_subcall_entry_handler,
-        ('bind', True): bind_entry_handler,
-        ('bind', False): bind_exit_handler,
-        ('listen', True): subcall_return_success_handler,
-        ('recv', True): recv_subcall_entry_handler,
-        ('recvfrom', True): recvfrom_subcall_entry_handler,
-        ('setsockopt', True): setsockopt_entry_handler,
-        ('send', True): subcall_return_success_handler,
-        ('connect', True): subcall_return_success_handler,
-        ('getsockopt', True): getsockopt_entry_handler,
-        ('sendmmsg', True): sendmmsg_entry_handler,
-        ('sendto', True): sendto_entry_handler,
-        ('sendto', False): sendto_exit_handler,
-        ('shutdown', True): shutdown_subcall_entry_handler,
-        ('recvmsg', True): recvmsg_entry_handler,
-        ('recvmsg', False): recvmsg_exit_handler,
-        ('getsockname', True): getsockname_entry_handler,
-        ('getsockname', False): getsockname_exit_handler,
-        ('getpeername', True): getpeername_entry_handler
+        # ('socket', True): socket_subcall_entry_handler,
+        # ('socket', False): socket_exit_handler,
+        # ('accept', True): accept_subcall_entry_handler,
+        # ('bind', True): bind_entry_handler,
+        # ('bind', False): bind_exit_handler,
+        # ('listen', True): subcall_return_success_handler,
+        # ('recv', True): recv_subcall_entry_handler,
+        # ('recvfrom', True): recvfrom_subcall_entry_handler,
+        # ('setsockopt', True): setsockopt_entry_handler,
+        # ('send', True): subcall_return_success_handler,
+        # ('connect', True): subcall_return_success_handler,
+        # ('getsockopt', True): getsockopt_entry_handler,
+        # ('sendmmsg', True): sendmmsg_entry_handler,
+        # ('sendto', True): sendto_entry_handler,
+        # ('sendto', False): sendto_exit_handler,
+        # ('shutdown', True): shutdown_subcall_entry_handler,
+        # ('recvmsg', True): recvmsg_entry_handler,
+        # ('recvmsg', False): recvmsg_exit_handler,
+        # ('getsockname', True): getsockname_entry_handler,
+        # ('getsockname', False): getsockname_exit_handler,
+        # ('getpeername', True): getpeername_entry_handler
         }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
     validate_subcall(subcall_id, syscall_object)
@@ -90,74 +90,73 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         ]
     handlers = {
         # ### These calls just get their return values checked ####
-        (9, True): check_return_value_entry_handler,
-        (9, False): check_return_value_exit_handler,
-
-        (192, True): check_return_value_entry_handler,
-        (192, False): check_return_value_exit_handler,
-
-        (195, True): check_return_value_entry_handler,
-        (195, False): check_return_value_exit_handler,
-
+#        (9, True): check_return_value_entry_handler,
+#        (9, False): check_return_value_exit_handler,
+#
+#
+#        (195, True): check_return_value_entry_handler,
+#        (195, False): check_return_value_exit_handler,
+#
         (45, True): check_return_value_entry_handler,
         (45, False): check_return_value_exit_handler,
-
-        (91, True): check_return_value_entry_handler,
-        (91, False): check_return_value_exit_handler,
-
-        (33, True): check_return_value_entry_handler,
-        (33, False): check_return_value_exit_handler,
-
-        (125, True): check_return_value_entry_handler,
-        (125, False): check_return_value_exit_handler,
-
-        # ###                                                  ####
-        (20, True): syscall_return_success_handler,
-        (15, True): syscall_return_success_handler,
-        (78, True): gettimeofday_entry_handler,
-        (13, True): time_entry_handler,
-        (27, True): syscall_return_success_handler,
+#
+#        (91, True): check_return_value_entry_handler,
+#        (91, False): check_return_value_exit_handler,
+#
+#        (125, True): check_return_value_entry_handler,
+#        (125, False): check_return_value_exit_handler,
+#
+#        # ###                                                  ####
+        # mmap2 calls are never replayed. Sometimes we must fix a file
+        # descriptor  in position 4.
+        (192, True): mmap2_entry_handler,
+        (192, False): check_return_value_exit_handler,
+#        (20, True): syscall_return_success_handler,
+#        (15, True): syscall_return_success_handler,
+#        (78, True): gettimeofday_entry_handler,
+#        (13, True): time_entry_handler,
+#        (27, True): syscall_return_success_handler,
         (5, True): open_entry_handler,
         (5, False): open_exit_handler,
-        (39, True): mkdir_entry_handler,
+#        (39, True): mkdir_entry_handler,
         (85, True): readlink_entry_handler,
-        (146, True): writev_entry_handler,
-        (146, False): writev_exit_handler,
+#        (146, True): writev_entry_handler,
+#        (146, False): writev_exit_handler,
         (197, True): fstat64_entry_handler,
         (197, False): fstat64_exit_handler,
         (122, True): uname_entry_handler,
-        (183, True): getcwd_entry_handler,
-        (140, True): llseek_entry_handler,
-        (140, False): llseek_exit_handler,
-        (42, True): pipe_entry_handler,
-        (43, True): times_entry_handler,
-        (10, True): syscall_return_success_handler,
+#        (183, True): getcwd_entry_handler,
+#        (140, True): llseek_entry_handler,
+#        (140, False): llseek_exit_handler,
+#        (42, True): pipe_entry_handler,
+#        (43, True): times_entry_handler,
+#        (10, True): syscall_return_success_handler,
         (33, True): syscall_return_success_handler,
-        (199, True): syscall_return_success_handler,
-        (200, True): syscall_return_success_handler,
-        (201, True): syscall_return_success_handler,
-        (202, True): syscall_return_success_handler,
+#        (199, True): syscall_return_success_handler,
+#        (200, True): syscall_return_success_handler,
+#        (201, True): syscall_return_success_handler,
+#        (202, True): syscall_return_success_handler,
         (4, True): write_entry_handler,
         (4, False): write_exit_handler,
         (3, True): read_entry_handler,
         (3, False): read_exit_handler,
-        (6, True): close_entry_handler,
-        (6, False): close_exit_handler,
-        (168, True): poll_entry_handler,
-        (54, True): ioctl_entry_handler,
-        (195, True): stat64_entry_handler,
-        (195, False): stat64_exit_handler,
-        (142, True): select_entry_handler,
-        (82, True): select_entry_handler,
-        (221, True): fcntl64_entry_handler,
-        (196, True): lstat64_entry_handler,
-        (268, True): statfs64_entry_handler,
-        (265, True): clock_gettime_entry_handler,
-        (41, True): dup_entry_handler,
-        (41, False): dup_exit_handler,
-        (340, True): prlimit64_entry_handler,
-        (345, True): sendmmsg_entry_handler,
-        (345, False): sendmmsg_exit_handler
+#        (6, True): close_entry_handler,
+#        (6, False): close_exit_handler,
+#        (168, True): poll_entry_handler,
+#        (54, True): ioctl_entry_handler,
+#        (195, True): stat64_entry_handler,
+#        (195, False): stat64_exit_handler,
+#        (142, True): select_entry_handler,
+#        (82, True): select_entry_handler,
+#        (221, True): fcntl64_entry_handler,
+#        (196, True): lstat64_entry_handler,
+#        (268, True): statfs64_entry_handler,
+#        (265, True): clock_gettime_entry_handler,
+#        (41, True): dup_entry_handler,
+#        (41, False): dup_exit_handler,
+#        (340, True): prlimit64_entry_handler,
+#        (345, True): sendmmsg_entry_handler,
+#        (345, False): sendmmsg_exit_handler
         }
     if syscall_id not in ignore_list:
         try:
