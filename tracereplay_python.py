@@ -268,18 +268,19 @@ def add_os_fd_mapping(os_fd, trace_fd):
     tracereplay.OS_FILE_DESCRIPTORS.append(new)
 
 
-def remove_os_fd_mapping(os_fd, trace_fd):
+def remove_os_fd_mapping(trace_fd):
     logging.debug('Mappings: {}'.format(tracereplay.OS_FILE_DESCRIPTORS))
-    remove = {'os_fd': os_fd, 'trace_fd': trace_fd}
-    logging.debug('Removing mapping: {}'.format(remove))
-    found = False
+    logging.debug('Removing mapping for tracefd: {}'.format(trace_fd))
+    found = 0
     index = None
     for i, item in enumerate(tracereplay.OS_FILE_DESCRIPTORS):
-        if item['os_fd'] == os_fd and item['trace_fd'] == trace_fd:
-            found = True
+        if item['trace_fd'] == trace_fd:
+            found = found + 1
             index = i
-    if not found:
+    if found == 0:
         raise ReplayDeltaError('Tried to remove non-existant mapping')
+    if found > 1:
+        raise ReplayDeltaError('A trace_fd mapped to multiple os_fds')
     tracereplay.OS_FILE_DESCRIPTORS.pop(index)
 
 
