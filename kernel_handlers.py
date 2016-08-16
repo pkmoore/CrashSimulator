@@ -57,10 +57,11 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     trace_fd = int(syscall_object.args[0].value)
     if not should_replay_based_on_fd(pid, trace_fd):
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
     logging.debug('Replaying this system call')
     edx = tracereplay.peek_register(pid, tracereplay.EDX)
-    logging.debug('edx: %x', edx)
+    logging.debug('edx: %x', edx & 0xffffffff)
     addr = edx
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
@@ -91,7 +92,8 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         elif 'FIONREAD' in cmd:
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
-            tracereplay.poke_address(pid, addr, num_bytes)
+            tracereplay.populate_int(pid, addr, num_bytes)
+
         elif 'FIONBIO' in cmd:
             out_val = int(syscall_object.args[2].value.strip('[]'))
             out_addr = tracereplay.peek_register(pid, tracereplay.EDX)
