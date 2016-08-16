@@ -42,7 +42,7 @@ def writev_entry_handler(syscall_id, syscall_object, pid):
     # We may need to copy buffers over manually at some point.
     # Working for now.
     fd = int(syscall_object.args[0].value)
-    if should_replay_based_on_fd(pid, fd):
+    if should_replay_based_on_fd(fd):
         logging.debug('We will replay this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -77,7 +77,7 @@ def dup_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
     oldfd = int(syscall_object.args[0].value)
-    if should_replay_based_on_fd(pid, oldfd):
+    if should_replay_based_on_fd(oldfd):
         noop_current_syscall(pid)
         returned_fd = int(syscall_object.ret[0])
         add_replay_fd(returned_fd)
@@ -208,7 +208,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     #    raise ReplayDeltaError('Bytes from trace don\'t match bytes from '
     #                           'execution!')
     fd = int(syscall_object.args[0].value)
-    if should_replay_based_on_fd(pid, 0):
+    if should_replay_based_on_fd(fd):
         print('Write: \n {} \n to to file descriptor: {}'
               .format(bytes_from_execution.encode('string-escape'),
                       fd))
@@ -235,7 +235,7 @@ def write_exit_handler(syscall_id, syscall_object, pid):
 
 def llseek_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering llseek entry handler')
-    if should_replay_based_on_fd(pid, int(syscall_object.args[0].value)):
+    if should_replay_based_on_fd(int(syscall_object.args[0].value)):
         logging.debug('Call using replayed file descriptor. Replaying this '
                       'system call')
         noop_current_syscall(pid)
@@ -423,7 +423,7 @@ def open_exit_handler(syscall_id, syscall_object, pid):
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fstat64 handler')
-    if not should_replay_based_on_fd(pid, int(syscall_object.args[0].value)):
+    if not should_replay_based_on_fd(int(syscall_object.args[0].value)):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)

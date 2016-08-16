@@ -55,7 +55,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
 def ioctl_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering ioctl handler')
     trace_fd = int(syscall_object.args[0].value)
-    if not should_replay_based_on_fd(pid, trace_fd):
+    if not should_replay_based_on_fd(trace_fd):
         logging.debug('Not replaying this system call')
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
