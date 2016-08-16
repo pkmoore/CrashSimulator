@@ -236,6 +236,7 @@ def socket_exit_handler(syscall_id, syscall_object, pid):
                                .format(fd, fd_from_trace))
     if fd_from_execution >= 0:
         add_os_fd_mapping(fd_from_execution, fd_from_trace)
+    tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)
 
 
 # TODO: There is a lot more checking to be done here
@@ -264,12 +265,9 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
        trace_is_PF_LOCAL or \
        execution_is_PF_LOCAL:
         noop_current_syscall(pid)
-        fd = syscall_object.ret
+        fd = int(syscall_object.ret[0])
         logging.debug('File Descriptor from trace: %s', fd)
-        if fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
-            tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd[0])
-        else:
-            raise Exception('File descriptor from trace is already tracked')
+        add_replay_fd(fd)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Ignoring non-PF_INET call to socket')

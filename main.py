@@ -28,8 +28,8 @@ import Trace
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
-        # ('socket', True): socket_subcall_entry_handler,
-        # ('socket', False): socket_exit_handler,
+         ('socket', True): socket_subcall_entry_handler,
+         ('socket', False): socket_exit_handler,
         # ('accept', True): accept_subcall_entry_handler,
         # ('bind', True): bind_entry_handler,
         # ('bind', False): bind_exit_handler,
