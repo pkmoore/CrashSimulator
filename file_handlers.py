@@ -204,6 +204,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 # This thing must be here to handle exits for read calls that we let pass. This
@@ -228,17 +229,19 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     bytes_from_trace = bytes_from_trace.decode('string-escape')
     logging.debug(bytes_from_trace.encode('hex'))
     logging.debug(bytes_from_execution.encode('hex'))
-    if bytes_from_trace != bytes_from_execution:
-        raise ReplayDeltaError('Bytes from trace don\'t match bytes from '
-                               'execution!')
+    # if bytes_from_trace != bytes_from_execution:
+    #    raise ReplayDeltaError('Bytes from trace don\'t match bytes from '
+    #                           'execution!')
     fd = int(syscall_object.args[0].value)
-    if fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
-        logging.debug('We care about this file descriptor. No-oping...')
+    if should_replay_based_on_fd(pid, 0):
         print('Write: \n {} \n to to file descriptor: {}'
               .format(bytes_from_execution.encode('string-escape'),
                       fd))
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Ignoring write to un-replayed file descriptor')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 # Once again, this only has to be here until the new "open" machinery
@@ -450,6 +453,7 @@ def open_exit_handler(syscall_id, syscall_object, pid):
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fstat64 handler')
     if not should_replay_based_on_fd(pid, int(syscall_object.args[0].value)):
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))

@@ -298,6 +298,24 @@ def fd_pair_for_trace_fd(trace_fd):
         return res[0]
 
 
+def swap_trace_fd_to_execution_fd(pid, pos, syscall_object):
+    POS_TO_REG = {
+        0: tracereplay.EBX,
+        1: tracereplay.ECX,
+        2: tracereplay.EDX,
+        3: tracereplay.ESI,
+        4: tracereplay.EDI,
+    }
+    logging.debug('Cleaning up file descriptor at position: {}'
+                  .format(pos))
+    trace_fd = int(syscall_object.args[pos].value)
+    looked_up_fd = fd_pair_for_trace_fd(trace_fd)['os_fd']
+    execution_fd = tracereplay.peek_register(pid, POS_TO_REG[pos])
+    logging.debug('Replacing old value (trace fd): {} with new value: {}'
+                  .format(execution_fd, looked_up_fd))
+    tracereplay.poke_register(pid, POS_TO_REG[pos], looked_up_fd)
+
+
 def should_replay_based_on_fd(pid, trace_fd):
     logging.debug('Should we replay?')
     d = fd_pair_for_trace_fd(trace_fd)

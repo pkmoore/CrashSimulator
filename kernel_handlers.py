@@ -169,6 +169,16 @@ def prlimit64_entry_handler(syscall_id, syscall_object, pid):
                                   'limit are not supported')
 
 
+def mmap2_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering mmap2 entry handler')
+    validate_integer_argument(pid, syscall_object, 4, 4)
+    trace_fd = int(syscall_object.args[4].value)
+    if trace_fd != -1:
+        swap_trace_fd_to_execution_fd(pid, 4, syscall_object)
+    else:
+        logging.debug('ignoring anonymous mmap2 call')
+
+
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   tracereplay.peek_register(pid, tracereplay.EBX))
