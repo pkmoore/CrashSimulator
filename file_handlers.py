@@ -414,12 +414,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
         else:
             logging.debug('File descriptor is not mmap\'d before it is closed '
                           'so we will replay it')
-            if fd_from_trace not in tracereplay.REPLAY_FILE_DESCRIPTORS:
-                tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd_from_trace)
-            else:
-                raise ReplayDeltaError('Tried to already existing file '
-                                       'descriptor to replay file descriptors '
-                                       'list')
+            add_replay_fd(fd_from_trace)
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
@@ -448,6 +443,7 @@ def open_exit_handler(syscall_id, syscall_object, pid):
                                 check_ret_val_from_trace))
     if ret_val_from_execution >= 0:
         add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
+    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
 
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
