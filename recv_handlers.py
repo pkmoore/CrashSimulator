@@ -37,11 +37,9 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, 0, params)
     validate_integer_argument(pid, syscall_object, 2, 2, params)
     # Decide if we want to replay this system call
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
-            raise Exception('Tried to recv from non-existant file descriptor')
         buffer_address = params[1]
         data = syscall_object.args[1].value.lstrip('"').rstrip('"')
         data = data.decode('string_escape')
@@ -50,6 +48,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
                                          data)
         apply_return_conditions(pid, syscall_object)
     else:
+        swap_trace_fd_to_execution_fd(fd_from_trace)
         logging.info('Not replaying this system call')
 
 
