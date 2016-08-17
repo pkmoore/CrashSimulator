@@ -41,7 +41,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('send', False): send_exit_handler,
          ('connect', True): connect_entry_handler,
          ('connect', False): connect_exit_handler,
-        # ('getsockopt', True): getsockopt_entry_handler,
+         ('getsockopt', True): getsockopt_entry_handler,
         # ('sendmmsg', True): sendmmsg_entry_handler,
         # ('sendto', True): sendto_entry_handler,
         # ('sendto', False): sendto_exit_handler,

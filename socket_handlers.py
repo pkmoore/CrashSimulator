@@ -194,21 +194,14 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     # Pull out what we can compare
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 5)
-    fd = params[0]
     fd_from_trace = int(syscall_object.args[0].value)
     optval_addr = params[3]
     optval_len_addr = params[4]
-    # We don't check param[3] because it is an address of an empty buffer
-    # We don't check param[4] because it is an address of an empty length
-    # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})'
-                               .format(fd, fd_from_trace))
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
     # This if is sufficient for now for the implemented options
     if params[1] != 1 or params[2] != 4:
         raise NotImplementedError('Unimplemented getsockopt level or optname')
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         optval_len = int(syscall_object.args[4].value.strip('[]'))
         if optval_len != 4:
@@ -226,6 +219,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def connect_entry_handler(syscall_id, syscall_object, pid):
