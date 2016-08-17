@@ -25,6 +25,23 @@ def bind_exit_handler(syscall_id, syscall_object, pid):
     pass
 
 
+def listen_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering listen entry handler')
+    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    params = extract_socketcall_parameters(pid, p, 1)
+    fd_from_trace = int(syscall_object.args[0].value)
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
+    if should_replay_based_on_fd(fd_from_trace):
+        logging.debug('Replaying this system call')
+        subcall_return_success_handler(syscall_id, syscall_object, pid)
+    else:
+        logging.debug('Not replaying this call')
+
+
+def listen_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
+
 def getpeername_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getpeername handler')
     # Pull out the info that we can check
@@ -296,18 +313,10 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
     params = extract_socketcall_parameters(pid, ecx, 3)
     sockaddr_addr = params[1]
     sockaddr_len_addr = params[2]
-    # Pull out everything we can check
-    fd = params[0]
     fd_from_trace = syscall_object.args[0].value
-    # We don't check param[1] because it is the address of a buffer
-    # We don't check param[2] because it is the address of a length
-    # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd, fd_from_trace))
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
     # Decide if this is a system call we want to replay
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if should_replay_based_on_fd(fd_from_trace):
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.args[1].value != 'NULL':
@@ -341,6 +350,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def accept_exit_handler(syscall_id, syscall_object, pid):
@@ -352,8 +362,9 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
                                'differs from file descriptor from '
                                'trace ({})'
                                .format(fd, fd_from_trace))
-        if fd_from_execution >= 0:
-            add_os_fd_mapping(fd_from_execution, fd_from_trace)
+    if fd_from_execution >= 0:
+        add_os_fd_mapping(fd_from_execution, fd_from_trace)
+    tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)
 
 
 def socketcall_debug_printer(pid, orig_eax, syscall_object):
