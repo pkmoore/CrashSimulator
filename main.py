@@ -150,7 +150,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (195, False): stat64_exit_handler,
         (142, True): select_entry_handler,
         (82, True): select_entry_handler,
-#        (221, True): fcntl64_entry_handler,
+        (221, True): fcntl64_entry_handler,
 #        (196, True): lstat64_entry_handler,
 #        (268, True): statfs64_entry_handler,
 #        (265, True): clock_gettime_entry_handler,

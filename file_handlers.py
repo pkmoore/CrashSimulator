@@ -762,13 +762,19 @@ def cleanup_st_mode(m):
 
 def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fcntl64 entry handler')
-    operation = syscall_object.args[1].value[0].strip('[]\'')
-    noop_current_syscall(pid)
-    if operation == 'F_GETFL' or operation == 'F_SETFL':
-        apply_return_conditions(pid, syscall_object)
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    trace_fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(trace_fd):
+        operation = syscall_object.args[1].value[0].strip('[]\'')
+        noop_current_syscall(pid)
+        if operation == 'F_GETFL' or operation == 'F_SETFL':
+            apply_return_conditions(pid, syscall_object)
+        else:
+            raise NotImplementedError('Unimplemented fcntl64 operation {}'
+                                      .format(operation))
     else:
-        raise NotImplementedError('Unimplemented fcntl64 operation {}'
-                                  .format(operation))
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def open_entry_debug_printer(pid, orig_eax, syscall_object):
