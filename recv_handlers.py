@@ -48,7 +48,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
                                          data)
         apply_return_conditions(pid, syscall_object)
     else:
-        swap_trace_fd_to_execution_fd(fd_from_trace)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
         logging.info('Not replaying this system call')
 
 

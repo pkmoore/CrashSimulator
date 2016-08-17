@@ -11,19 +11,14 @@ def bind_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering bind entry handler')
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 1)
-    fd_from_execution = int(params[0])
     fd_from_trace = int(syscall_object.args[0].value)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    if fd_from_execution != fd_from_trace:
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})'
-                               .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
+    if should_replay_based_on_fd(fd_from_trace):
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid)
     else:
         logging.debug('Not replaying this call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def bind_exit_handler(syscall_id, syscall_object, pid):
@@ -150,7 +145,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def setsockopt_entry_handler(syscall_id, syscall_object, pid):
@@ -183,7 +178,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
@@ -216,7 +211,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def connect_entry_handler(syscall_id, syscall_object, pid):
@@ -230,7 +225,7 @@ def connect_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def connect_exit_handler(syscall_id, syscall_object, pid):
@@ -254,7 +249,7 @@ def send_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def send_exit_handler(syscall_id, syscall_object, pid):
