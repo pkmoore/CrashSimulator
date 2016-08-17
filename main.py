@@ -156,7 +156,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (265, True): clock_gettime_entry_handler,
 #        (41, True): dup_entry_handler,
 #        (41, False): dup_exit_handler,
-#        (340, True): prlimit64_entry_handler,
+        (340, True): prlimit64_entry_handler,
 #        (345, True): sendmmsg_entry_handler,
 #        (345, False): sendmmsg_exit_handler
         }
