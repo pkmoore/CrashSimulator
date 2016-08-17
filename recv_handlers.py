@@ -7,19 +7,14 @@ def recvmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering recvmsg entry handler')
     p = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, p, 1)
-    fd_from_execution = int(params[0])
     fd_from_trace = int(syscall_object.args[0].value)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    if fd_from_execution != fd_from_trace:
-        raise Exception('File descriptor from execution ({}) does not match '
-                        'file descriptor from trace ({})'
-                        .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0, params)
+    if should_replay_based_on_fd(fd_from_trace):
         raise NotImplementedError('recvmsg entry handler not '
                                   'implemented for tracked sockets')
     else:
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def recvmsg_exit_handler(syscall_id, syscall_object, pid):
