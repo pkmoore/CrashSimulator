@@ -101,8 +101,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (45, True): check_return_value_entry_handler,
         (45, False): check_return_value_exit_handler,
 #
-#        (91, True): check_return_value_entry_handler,
-#        (91, False): check_return_value_exit_handler,
+        (91, True): check_return_value_entry_handler,
+        (91, False): check_return_value_exit_handler,
 #
 #        (125, True): check_return_value_entry_handler,
 #        (125, False): check_return_value_exit_handler,
@@ -112,7 +112,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         # descriptor  in position 4.
         (192, True): mmap2_entry_handler,
         (192, False): check_return_value_exit_handler,
-#        (20, True): syscall_return_success_handler,
+        (20, True): syscall_return_success_handler,
 #        (15, True): syscall_return_success_handler,
 #        (78, True): gettimeofday_entry_handler,
 #        (13, True): time_entry_handler,
