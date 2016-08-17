@@ -139,21 +139,18 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     # Pull out the info we can check
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 2)
-    fd = params[0]
     fd_from_trace = syscall_object.args[0].value
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
     # TODO: We need to check the 'how' parameter here
     # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})'
-                               .format(fd, fd_from_trace))
     # Decide if we want to replay this system call
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def setsockopt_entry_handler(syscall_id, syscall_object, pid):
