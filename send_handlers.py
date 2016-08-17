@@ -5,20 +5,16 @@ import logging
 def sendto_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendto entry handler')
     p = tracereplay.peek_register(pid, tracereplay.ECX)
-    params = extract_socketcall_parameters(pid, p, 1)
-    fd_from_execution = int(params[0])
+    params = extract_socketcall_parameters(pid, p, 3)
     fd_from_trace = int(syscall_object.args[0].value)
-    logging.debug('File descriptor from execution: %d', fd_from_execution)
-    logging.debug('File descriptor from trace: %d', fd_from_trace)
-    if fd_from_execution != fd_from_trace:
-        raise ReplayDeltaError('File descriptor from execution ({}) '
-                               'does not match file descriptor from trace ({})'
-                               .format(fd_from_execution, fd_from_trace))
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
+    validate_integer_argument(pid, syscall_object, 2, 2, params=params)
+    if should_replay_based_on_fd(fd_from_trace):
         logging.debug('Replaying this system call')
         subcall_return_success_handler(syscall_id, syscall_object, pid)
     else:
         logging.debug('Not replaying this call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
 
 
 def sendto_exit_handler(syscall_id, syscall_object, pid):
