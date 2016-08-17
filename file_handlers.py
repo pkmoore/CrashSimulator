@@ -48,6 +48,7 @@ def writev_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def writev_exit_handler(syscall_id, syscall_object, pid):
