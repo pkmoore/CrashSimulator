@@ -7,6 +7,17 @@ import re
 # A lot of the parsing in this function needs to be moved into the
 # posix-omni-parser codebase. there really needs to be an "ARRAY OF FILE
 # DESCRIPTORS" parsing class.
+
+# Right now, all calls to select will be replayed. We do this because this
+# covers all of the real-world examples encountered thus far (i.e. we have not
+# seen a select call that operated entirely on "real" file descriptors. If
+# even one file descriptor is replayed we must replay the select call.
+
+# The only issue that might pop up is a case where the file descriptor returned
+# as "ready" maps to a real file descriptor that is not "ready" for a
+# non-blocking call. In this case, the real call (that we allow through) would
+# return EWOULDBLOCK or something like that which would result in a replay
+# delta.
 def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering select entry handler')
     while syscall_object.ret[0] == '?':
@@ -48,7 +59,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
             out_substr = out_substr.group(0)
             out_fds = out_substr.split(' ')[1:]
             writefds = [int(x.strip('[]')) for x in out_fds]
-        if'exc' in ret_line:
+        if 'exc' in ret_line:
             raise NotImplementedError('outfds and exceptfds not supported')
     else:
         logging.debug('Select call timed out')
