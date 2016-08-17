@@ -144,7 +144,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (3, False): read_exit_handler,
         (6, True): close_entry_handler,
         (6, False): close_exit_handler,
-#        (168, True): poll_entry_handler,
+        (168, True): poll_entry_handler,
         (54, True): ioctl_entry_handler,
         (195, True): stat64_entry_handler,
         (195, False): stat64_exit_handler,

@@ -83,6 +83,9 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
 
 
+# Similarly to the select() handler, all calls to poll() are replayed.
+# For the same reasons...
+
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
     array_address = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -97,10 +100,11 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
         ret_struct = ret_struct[ret_struct.find(' '):]
         revent = ret_struct[ret_struct.find('=') + 1: ret_struct.find('}')]
         if syscall_object.ret[0] != 1:
-            raise NotImplementedError('Cannot handle poll calls that return more '
-                                    'than one pollfd structure')
+            raise NotImplementedError('Cannot handle poll calls that return '
+                                      'more than one pollfd structure')
         if revent not in ['POLLIN', 'POLLOUT']:
-            raise NotImplementedError('Encountered unimplemented revent in poll')
+            raise NotImplementedError('Encountered unimplemented revent in '
+                                      'poll')
         logging.debug('Returned file descriptor: %d', fd)
         logging.debug('Returned event: %s', revent)
         logging.debug('Pollfd array address: %s', array_address)
@@ -115,21 +119,21 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
             obj_fd = syscall_object.args[0].value[index].value[0]
             if obj_fd == fd:
                 tracereplay.write_poll_result(pid,
-                                            array_address,
-                                            fd,
-                                            r)
+                                              array_address,
+                                              fd,
+                                              r)
                 found_returned_fd = True
             else:
                 # For applications that re-use the pollfd array, we must clear
                 # the revents field in case they don't do it themselves.
                 tracereplay.write_poll_result(pid,
-                                            array_address,
-                                            obj_fd,
-                                            0)
+                                              array_address,
+                                              obj_fd,
+                                              0)
         if not found_returned_fd:
-            raise ReplayDeltaError('File descriptor from trace return value was '
-                                'not found in trace polled file descriptor '
-                                'structures')
+            raise ReplayDeltaError('File descriptor from trace return value '
+                                   'was not found in trace polled file '
+                                   'descriptor structures')
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
