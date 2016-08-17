@@ -299,7 +299,7 @@ def fd_pair_for_trace_fd(trace_fd):
         return res[0]
 
 
-def swap_trace_fd_to_execution_fd(pid, pos, syscall_object):
+def swap_trace_fd_to_execution_fd(pid, pos, syscall_object, params_addr=None):
     POS_TO_REG = {
         0: tracereplay.EBX,
         1: tracereplay.ECX,
@@ -311,10 +311,34 @@ def swap_trace_fd_to_execution_fd(pid, pos, syscall_object):
                   .format(pos))
     trace_fd = int(syscall_object.args[pos].value)
     looked_up_fd = fd_pair_for_trace_fd(trace_fd)['os_fd']
-    execution_fd = tracereplay.peek_register(pid, POS_TO_REG[pos])
+    if params_addr:
+        params = extract_socketcall_parameters(pid, params_addr, pos+1)
+        execution_fd = params[pos]
+    else:
+        execution_fd = tracereplay.peek_register(pid, POS_TO_REG[pos])
     logging.debug('Replacing old value (trace fd): {} with new value: {}'
                   .format(execution_fd, looked_up_fd))
-    tracereplay.poke_register(pid, POS_TO_REG[pos], looked_up_fd)
+    if params_addr:
+        update_socketcall_paramater(pid, params_addr, pos, looked_up_fd)
+    else:
+        tracereplay.poke_register(pid, POS_TO_REG[pos], looked_up_fd)
+
+
+def update_socketcall_paramater(pid, params_addr, pos, value):
+    logging.debug('We are going to update a socketcall_parameter')
+    LONG_SIZE = 4
+    addr = params_addr + (pos * LONG_SIZE)
+    logging.debug('Params addr: %x', params_addr)
+    logging.debug('Specific parameter addr: %x', addr)
+    value = int(value)
+    logging.debug('Value: %d', value)
+    tracereplay.poke_address(pid, addr, value)
+    logging.debug('Re-extracting socketcall parameters')
+    p = extract_socketcall_parameters(pid, params_addr, pos + 1)
+    if p[pos] != value:
+        raise ReplayDeltaError('Populated socketcall parameter value: ({}) '
+                               'was not updated to correct value: ({})'
+                               .format(p[pos], value))
 
 
 def should_replay_based_on_fd(trace_fd):
