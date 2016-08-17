@@ -31,8 +31,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('socket', True): socket_subcall_entry_handler,
          ('socket', False): socket_exit_handler,
         # ('accept', True): accept_subcall_entry_handler,
-        # ('bind', True): bind_entry_handler,
-        # ('bind', False): bind_exit_handler,
+         ('bind', True): bind_entry_handler,
+         ('bind', False): bind_exit_handler,
         # ('listen', True): subcall_return_success_handler,
          ('recv', True): recv_subcall_entry_handler,
         # ('recvfrom', True): recvfrom_subcall_entry_handler,
@@ -48,8 +48,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('shutdown', True): shutdown_subcall_entry_handler,
         # ('recvmsg', True): recvmsg_entry_handler,
         # ('recvmsg', False): recvmsg_exit_handler,
-        # ('getsockname', True): getsockname_entry_handler,
-        # ('getsockname', False): getsockname_exit_handler,
+         ('getsockname', True): getsockname_entry_handler,
+         ('getsockname', False): getsockname_exit_handler,
         # ('getpeername', True): getpeername_entry_handler
         }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)

@@ -80,18 +80,13 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
     # Pull out the info that we can check
     ecx = tracereplay.peek_register(pid, tracereplay.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
-    fd = params[0]
     # We don't compare params[1] because it is the address of an empty buffer
     # We don't compare params[2] because it is the address of an out parameter
     # Get values from trace for comparison
     fd_from_trace = syscall_object.args[0].value
-    # Check to make sure everything is the same
-    if fd != int(fd_from_trace):
-        raise ReplayDeltaError('File descriptor from execution ({}) does '
-                               'not match file descriptor from trace ({})'
-                               .format(fd, fd_from_trace))
+    validate_integer_argument(pid, syscall_object, 0, 0, params=params)
     # Decide if this is a file descriptor we want to deal with
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -123,6 +118,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=ecx)
 
 
 def getsockname_exit_handler(syscall_id, syscall_object, pid):
