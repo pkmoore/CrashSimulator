@@ -54,12 +54,14 @@ def writev_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering writev_exit_handler (does nothing)')
 
 
-# This function will need some work when the file descriptor rework goes
-# through.
 def pipe_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering pipe entry handler')
     read_end_from_trace = int(syscall_object.args[0].value)
     write_end_from_trace = int(syscall_object.args[1].value.strip(']'))
+    if is_mmapd_before_close(read_end_from_trace) \
+       or is_mmapd_before_close(write_end_from_trace):
+        raise NotImplementedError('mmap() on file descriptors allocated by '
+                                  'pipe() is unsupported')
     logging.debug('Read end from trace: %d', read_end_from_trace)
     logging.debug('Write end from trace: %d', write_end_from_trace)
     array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -82,6 +84,9 @@ def dup_entry_handler(syscall_id, syscall_object, pid):
         returned_fd = int(syscall_object.ret[0])
         add_replay_fd(returned_fd)
         apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def dup_exit_handler(syscall_id, syscall_object, pid):
@@ -99,6 +104,7 @@ def dup_exit_handler(syscall_id, syscall_object, pid):
                                 check_ret_val_from_trace))
     if ret_val_from_execution >= 0:
         add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
+    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
 
 
 def close_entry_handler(syscall_id, syscall_object, pid):
