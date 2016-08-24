@@ -452,3 +452,11 @@ def dump_stack(pid, syscall_id, entering):
              '.bin', 'wb')
     f.write(b)
     f.close()
+
+
+def cleanup_quotes(quo):
+    if quo.startswith('"'):
+        quo = quo[1:]
+    if quo.endswith('"'):
+        quo = quo[:-1]
+    return quo
