@@ -48,17 +48,9 @@ def sendto_exit_handler(syscall_id, syscall_object, pid):
 
 def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering sendmmsg entry handler')
-    sockfd_from_execution = tracereplay.peek_register(pid, tracereplay.EBX)
     sockfd_from_trace = syscall_object.args[0].value
-    logging.debug('Socket file descriptor from execution %s',
-                  sockfd_from_execution)
-    logging.debug('Socket file descriptor from trace %s', sockfd_from_trace)
-    if sockfd_from_trace != sockfd_from_execution:
-        raise Exception('File descriptor from execution ({}) '
-                        'differs from file descriptor from trace ({})'
-                        .format(sockfd_from_execution,
-                                sockfd_from_trace))
-    if sockfd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    if should_replay_based_on_fd(sockfd_from_trace):
         logging.debug('Replaying this sytem call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -84,6 +76,7 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def sendmmsg_exit_handler(syscall_id, syscall_object, pid):

@@ -37,7 +37,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('listen', True): listen_entry_handler,
          ('listen', False): listen_exit_handler,
          ('recv', True): recv_subcall_entry_handler,
-        # ('recvfrom', True): recvfrom_subcall_entry_handler,
+         ('recvfrom', True): recvfrom_subcall_entry_handler,
          ('setsockopt', True): setsockopt_entry_handler,
          ('send', True): send_entry_handler,
          ('send', False): send_exit_handler,
@@ -159,8 +159,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
         (340, True): prlimit64_entry_handler,
-#        (345, True): sendmmsg_entry_handler,
-#        (345, False): sendmmsg_exit_handler
+        (345, True): sendmmsg_entry_handler,
+        (345, False): sendmmsg_exit_handler
         }
     if syscall_id not in ignore_list:
         try:
