@@ -14,3 +14,6 @@ python_modules/parse-syscall-definitions/
 \#*\#
 pylintrc
 .snips
+CrashSimulator.iml
+.idea
+
