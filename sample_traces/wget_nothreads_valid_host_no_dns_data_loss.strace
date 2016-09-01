@@ -1,0 +1,392 @@
+24273 execve("../wget-1.16.1/src/wget", ["../wget-1.16.1/src/wget", "-qO", "-", "http://www.google.com"], ["LANG=en_US.UTF-8", "LC_CTYPE=en_US.UTF-8", "USER=preston", "LOGNAME=preston", "HOME=/home/preston", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games", "MAIL=/var/mail/preston", "SHELL=/usr/bin/zsh", "SSH_CLIENT=172.16.48.1 60118 22", "SSH_CONNECTION=172.16.48.1 60118 172.16.48.140 22", "SSH_TTY=/dev/pts/13", "TERM=xterm-256color", "XDG_SESSION_COOKIE=497f848f94f4485badd97209c59c1e68-1466450773.234442-1040569432", "XDG_SESSION_ID=311", "XDG_RUNTIME_DIR=/run/user/1000", "SHLVL=1", "PWD=/home/preston/NYU/CrashSimulator", "OLDPWD=/home/preston/NYU", "ZSH=/home/preston/.oh-my-zsh", "PAGER=less", "LESS=-R", "LSCOLORS=Gxfxcxdxbxegedabagacad", "_=/usr/bin/strace"]) = 0
+24273 brk(0)                            = 0x80ba000
+24273 uname({sysname="Linux", nodename="dev.local", release="3.19.0-49-generic", version="#55-Ubuntu SMP Fri Jan 22 02:09:44 UTC 2016", machine="i686", domainname="(none)"}) = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fda000
+24273 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+24273 open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1087913, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=176, st_size=90060, st_atime=2016/06/19-23:48:45, st_mtime=2016/06/16-19:26:40, st_ctime=2016/06/16-19:26:40}) = 0
+24273 mmap2(NULL, 90060, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7fc4000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libpcre.so.3", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0`\17\0\0004\0\0\0$\1\7\0\0\0\0\0004\0 \0\7\0(\0\32\0\31\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\34\374\6\0\34\374\6\0\5\0\0\0\0\20\0\0\1\0\0\0\254\375\6\0\254\r\7\0\254\r\7\0t\2\0\0\214\3\0\0\6\0\0\0\0\20\0\0\2\0\0\0H\376\6\0H\16\7\0H\16\7\0\0\1\0\0\0\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345td\200%\6\0\200%\6\0\200%\6\0\304\4\0\0\304\4\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\254\375\6\0\254\r\7\0\254\r\7\0T\2\0\0T\2\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0=v\333\36\3537H\204[\272\266\313!\207\301\2S\247!\266%\0\0\0\33\0\0\0\10\0\0\0\10\0\0\0\2\0\t\200\302\245\30 (\0\0\1\304\320\201\32\0\202XH\32 E\17\200\10\2\1\242>\234\2\33\0\0\0\35\0\0\0\0\0\0\0\0\0\0\0\37\0\0\0 \0\0\0\0\0\0\0!\0\0\0\0\0\0\0\"\0\0\0\0\0\0\0$\0\0\0%\0\0\0'\0\0\0\0\0\0\0\0\0\0\0)\0\0\0+\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0/\0\0\0001\0\0\0002\0\0\0004\0\0\0007\0\0\0\0\0\0\0\0\0\0\0008\0\0\0:\0\0\0<\0\0\0\0\0\0\0=\0\0\0\0\0\0\0>\0\0\0?\0\0\0&\206t\200", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1051876, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=904, st_size=460084, st_atime=2016/06/19-23:48:45, st_mtime=2015/07/23-13:22:02, st_ctime=2015/09/26-02:03:02}) = 0
+24273 mmap2(NULL, 463160, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f52000
+24273 mmap2(0xb7fc2000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6f000) = 0xb7fc2000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libuuid.so.1", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0p\17\0\0004\0\0\0\374A\0\0\0\0\0\0004\0 \0\10\0(\0\36\0\35\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0x7\0\0x7\0\0\5\0\0\0\0\20\0\0\1\0\0\0\304>\0\0\304N\0\0\304N\0\0\364\1\0\0\4\2\0\0\6\0\0\0\0\20\0\0\2\0\0\0\334>\0\0\334N\0\0\334N\0\0\0\1\0\0\0\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0004\1\0\0004\1\0\0004\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\304>\0\0\304N\0\0\304N\0\0\4\0\0\0006\0\0\0\4\0\0\0\4\0\0\0P\345td\\,\0\0\\,\0\0\\,\0\0\374\0\0\0\374\0\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\304>\0\0\304N\0\0\304N\0\0<\1\0\0<\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\n\1N\303\346\3314\213f\336\36\263%\340\262Ofo\3208\21\0\0\0.\0\0\0\4\0\0\0\7\0\0\0TN\317$\4\10\10\2A\0\24 \27\fQ\6.\0\0\0000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0001\0\0\0002\0\0\0004\0\0\0007\0\0\0\0\0\0\0008\0\0\0009\0\0\0:\0\0\0;\0\0\0>\0\0\0?\0\0\0@\0\0\0\234)\27\252\207k\345[\21\210t&q\201\201\346\212+\361+]\n\362\253\242e\370(d\210\352\246a\0\246\207\205KI\210\353\305\361\253\271\t\262\267\365\334tp\32\3\345\222R*1\33\227\325\335)\203\224@P", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1055399, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=40, st_size=18092, st_atime=2016/06/20-04:10:16, st_mtime=2015/08/05-01:25:15, st_ctime=2015/09/26-02:03:01}) = 0
+24273 mmap2(NULL, 20680, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f4c000
+24273 mmap2(0xb7f50000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3000) = 0xb7f50000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libz.so.1", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0p\26\0\0004\0\0\0\320\241\1\0\0\0\0\0004\0 \0\7\0(\0\34\0\33\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\304\217\1\0\304\217\1\0\5\0\0\0\0\20\0\0\1\0\0\0\20\236\1\0\20\236\1\0\20\236\1\0\210\2\0\0\214\2\0\0\6\0\0\0\0\20\0\0\2\0\0\0\350\236\1\0\350\236\1\0\350\236\1\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345tdD`\1\0D`\1\0D`\1\0t\3\0\0t\3\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\20\236\1\0\20\236\1\0\20\236\1\0\360\1\0\0\360\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0FL\336\224\331\n\261\327A\3\35J\303\371\267\210\246\246\3\263C\0\0\0\27\0\0\0\20\0\0\0\t\0\0\0\10\3l\24\f\3\0\24!\0\vI\232\2\236\20\234\t\4LQ\4\0\200<\0B\242\220\27\213\3\2kp\363E\302\20B\0l\0\0\250\241\220\237@\224\21E%g\306\241P\0\16\20\6\200 \20\27\0\0\0\32\0\0\0\33\0\0\0\35\0\0\0!\0\0\0\"\0\0\0$\0\0\0%\0\0\0\0\0\0\0&\0\0\0'\0\0\0*\0\0\0-\0\0\0.\0\0\0\0\0\0\0000\0\0\0\0\0\0\0001\0\0\0003\0\0\0004\0\0\0006\0\0\0008\0\0\0\0\0\0\0009\0\0\0:\0\0\0;\0\0\0\0\0\0\0<\0\0\0\0\0\0\0>\0\0\0", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1052047, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=216, st_size=108080, st_atime=2016/06/20-04:10:16, st_mtime=2014/10/27-09:20:40, st_ctime=2015/09/26-01:26:32}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7f4b000
+24273 mmap2(NULL, 106652, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f30000
+24273 mmap2(0xb7f49000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x19000) = 0xb7f49000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220\210\1\0004\0\0\0\300\211\33\0\0\0\0\0004\0 \0\n\0(\0E\0D\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0@\1\0\0@\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\245\241\26\0\245\241\26\0\245\241\26\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\2303\33\0\2303\33\0\5\0\0\0\0\20\0\0\1\0\0\0\\?\33\0\\O\33\0\\O\33\0\2700\0\0\200_\0\0\6\0\0\0\0\20\0\0\2\0\0\0\244]\33\0\244m\33\0\244m\33\0\360\0\0\0\360\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0t\1\0\0t\1\0\0t\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\\?\33\0\\O\33\0\\O\33\0\10\0\0\0L\0\0\0\4\0\0\0\4\0\0\0P\345td\270\241\26\0\270\241\26\0\270\241\26\0\244`\0\0\244`\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\\?\33\0\\O\33\0\\O\33\0\244 \0\0\244 \0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0%\335B\217\264\303P\301m\376\342\4\221\361\240d\204\242\277\243\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\363\3\0\0\n\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0268\0&\204\200\216\4\10B$", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1051883, st_mode=S_IFREG|0755, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=3536, st_size=1807496, st_atime=2016/06/19-23:48:45, st_mtime=2015/03/26-07:01:21, st_ctime=2015/09/26-01:26:32}) = 0
+24273 mmap2(NULL, 1814236, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7d75000
+24273 mmap2(0xb7f29000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b3000) = 0xb7f29000
+24273 mmap2(0xb7f2e000, 7900, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7f2e000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220O\0\0004\0\0\0\24\21\2\0\0\0\0\0004\0 \0\7\0(\0(\0%\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0X\204\1\0X\204\1\0\5\0\0\0\0\20\0\0\1\0\0\0\200\215\1\0\200\235\1\0\200\235\1\0\370\3\0\0L%\0\0\6\0\0\0\0\20\0\0\2\0\0\0\230\216\1\0\230\236\1\0\230\236\1\0\30\1\0\0\30\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0P\345td`-\1\0`-\1\0`-\1\0\34\t\0\0\34\t\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\200\215\1\0\200\235\1\0\200\235\1\0\200\2\0\0\200\2\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0M\5\223vK\35\332Hm\214\322\315\311\346\272\341\r\300\326\306\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\4\2\0\0Z\0\0\0@\0\0\0\v\0\0\0\31!\2\221\1\n\20\"@H \331\3\0I4\200\0\0@\0 \200\200\221Q`\300@\22\213\0020D\0\0\20\1\0\n\0\1\r\0\204\n\360\1X\260\r\240\200\10 $\204\20B\242)m\10G\234V\20\0\224 \204$H\0X(\1\222\34\301B\240\220\22\10\f \2\30dA\245c\4@\n\32\3\0\0)\t(\314D\204\210\314\22\10\241\0\4\0\10\0\300Q\0\2009\4C\300\2248@\20\31\20\0\265\0 \0\200`\0\20 \0\vA\22!-\0P\10\211\22G", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1052007, st_mode=S_IFREG|0755, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=272, st_size=137044, st_atime=2016/06/19-23:48:45, st_mtime=2015/03/26-07:01:24, st_ctime=2015/09/26-01:26:32}) = 0
+24273 mmap2(NULL, 115404, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7d58000
+24273 mmap2(0xb7d71000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x18000) = 0xb7d71000
+24273 mmap2(0xb7d73000, 4812, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7d73000
+24273 close(3)                          = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7d57000
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7d56000
+24273 set_thread_area({entry_number:-1 -> 6, base_addr:0xb7d56740, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+24273 mprotect(0xb7f29000, 12288, PROT_READ) = 0
+24273 mprotect(0xb7d71000, 4096, PROT_READ) = 0
+24273 mprotect(0xb7f49000, 4096, PROT_READ) = 0
+24273 mprotect(0xb7f50000, 4096, PROT_READ) = 0
+24273 mprotect(0xb7fc2000, 4096, PROT_READ) = 0
+24273 mprotect(0x80b0000, 4096, PROT_READ) = 0
+24273 mprotect(0xb7ffe000, 4096, PROT_READ) = 0
+24273 munmap(0xb7fc4000, 90060)         = 0
+24273 set_tid_address(0xb7d567a8)       = 24273
+24273 set_robust_list(0xb7d567b0, 12)   = 0
+24273 rt_sigaction(SIGRTMIN, {0xb7d5ca10, [], SA_RESTORER|SA_SIGINFO, 0xb7d67b90}, NULL, 8) = 0
+24273 rt_sigaction(SIGRT_1, {0xb7d5ca90, [], SA_RESTORER|SA_RESTART|SA_SIGINFO, 0xb7d67b90}, NULL, 8) = 0
+24273 rt_sigprocmask(SIG_UNBLOCK, [RTMIN RT_1], NULL, 8) = 0
+24273 getrlimit(RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=RLIM_INFINITY}) = 0
+24273 uname({sysname="Linux", nodename="dev.local", release="3.19.0-49-generic", version="#55-Ubuntu SMP Fri Jan 22 02:09:44 UTC 2016", machine="i686", domainname="(none)"}) = 0
+24273 fstat64(1, {st_dev=makedev(0, 13), st_ino=16, st_mode=S_IFCHR|0620, st_nlink=1, st_uid=1000, st_gid=5, st_blksize=1024, st_blocks=0, st_rdev=makedev(136, 13), st_atime=2016/06/20-20:10:42, st_mtime=2016/06/20-20:10:42, st_ctime=2016/06/20-19:26:13}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd9000
+24273 write(1, "../wget-1.16.1/src/wget\n", 24) = 24
+24273 write(1, "-qO\n", 4)              = 4
+24273 write(1, "-\n", 2)                = 2
+24273 write(1, "http://www.google.com\n", 22) = 22
+24273 write(1, "In main\n", 8)          = 8
+24273 brk(0)                            = 0x80ba000
+24273 brk(0x80db000)                    = 0x80db000
+24273 clock_getres(CLOCK_MONOTONIC, {0, 1}) = 0
+24273 clock_getres(CLOCK_MONOTONIC, {0, 1}) = 0
+24273 clock_gettime(CLOCK_MONOTONIC, {665062, 583178535}) = 0
+24273 clock_gettime(CLOCK_MONOTONIC, {665062, 583196591}) = 0
+24273 write(1, "Before i18n initialize\n", 23) = 23
+24273 open("/usr/lib/locale/locale-archive", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=661168, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=5704, st_size=2919792, st_atime=2016/06/19-23:48:45, st_mtime=2015/09/26-01:34:29, st_ctime=2015/09/26-01:34:29}) = 0
+24273 mmap2(NULL, 2097152, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7b56000
+24273 mmap2(NULL, 4096, PROT_READ, MAP_PRIVATE, 3, 0x2c5000) = 0xb7fd8000
+24273 close(3)                          = 0
+24273 write(1, "After i18n initialize\n", 22) = 22
+24273 write(1, "before constructing argument string\n", 36) = 36
+24273 write(1, "before first getopt_long loop\n", 30) = 30
+24273 stat64("/usr/local/etc/wgetrc", 0xbffff99c) = -1 ENOENT (No such file or directory)
+24273 stat64("/home/preston/.wgetrc", 0xbffff95c) = -1 ENOENT (No such file or directory)
+24273 write(1, "before secont getopt_long loop\n", 31) = 31
+24273 write(1, "argc: 4\n", 8)          = 8
+24273 write(1, "optind: 3\n", 10)       = 10
+24273 write(1, "before ENABLE_DEBUG\n", 20) = 20
+24273 write(1, "Before opt.warc_filename\n", 25) = 25
+24273 write(1, "Before !nurl &&...\n", 19) = 19
+24273 write(1, "nurl: 1\n", 8)          = 8
+24273 write(1, "opt.input_filename 0\n", 21) = 21
+24273 write(1, "Before regex switch\n", 20) = 20
+24273 write(1, "After opt body_data\n", 20) = 20
+24273 write(1, "before opt.ask_passwd\n", 22) = 22
+24273 write(1, "After option parsing\n", 21) = 21
+24273 ioctl(2, SNDCTL_TMR_TIMEBASE or SNDRV_TIMER_IOCTL_NEXT_DEVICE or TCGETS, {c_iflags=0x2d00, c_oflags=0x5, c_cflags=0xbf, c_lflags=0xca3b, c_line=0, c_cc="\x03\x1c\x7f\x15\x04\x00\x01\x00\x11\x13\x1a\xff\x12\x0f\x17\x16\xff\x00\x00"}) = 0
+24273 write(1, "before opt.output_document\n", 27) = 27
+24273 rt_sigaction(SIGHUP, {SIG_IGN, [HUP], SA_RESTORER|SA_RESTART, 0xb7da10f8}, {SIG_DFL, [], 0}, 8) = 0
+24273 rt_sigaction(SIGHUP, {0x806d064, [HUP], SA_RESTORER|SA_RESTART, 0xb7da10f8}, {SIG_IGN, [HUP], SA_RESTORER|SA_RESTART, 0xb7da10f8}, 8) = 0
+24273 rt_sigaction(SIGUSR1, {0x806d064, [USR1], SA_RESTORER|SA_RESTART, 0xb7da10f8}, {SIG_DFL, [], 0}, 8) = 0
+24273 rt_sigaction(SIGPIPE, {SIG_IGN, [PIPE], SA_RESTORER|SA_RESTART, 0xb7da10f8}, {SIG_DFL, [], 0}, 8) = 0
+24273 rt_sigaction(SIGWINCH, {0x80724e4, [WINCH], SA_RESTORER|SA_RESTART, 0xb7da10f8}, {SIG_DFL, [], 0}, 8) = 0
+24273 write(1, "before urls argument list loop\n", 31) = 31
+24273 write(1, "Inside url argument list loop\n", 30) = 30
+24273 write(1, "Before set_uri_encoding\n", 24) = 24
+24273 write(1, "After url_parse\n", 16) = 16
+24273 write(1, "Inside !url_parsed else\n", 24) = 24
+24273 write(1, "Before retrieve_url\n", 20) = 20
+24273 write(1, "Inside retrieve url\n", 20) = 20
+24273 write(1, "After if(proxy)\n", 16) = 16
+24273 write(1, "Inside SCHEME_HTTP, before http_loop\n", 37) = 37
+24273 write(1, "Inside http_loop\n", 17) = 17
+24273 stat64("-", 0xbffff66c)           = -1 ENOENT (No such file or directory)
+24273 write(1, "Before the loop\n", 16) = 16
+24273 write(1, "before current time string\n", 27) = 27
+24273 time(NULL)                        = 1466453442
+24273 open("/etc/localtime", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+24273 write(1, "Before opt.verbose\n", 19) = 19
+24273 write(1, "Before gethttp\n", 15)  = 15
+24273 write(1, "Inside gethttp\n", 15)  = 15
+24273 write(1, "before request_set_header\n", 26) = 26
+24273 stat64("/home/preston/.netrc", 0xbffff24c) = -1 ENOENT (No such file or directory)
+24273 write(1, "Before opt.method\n", 18) = 18
+24273 write(1, "Before if(proxy)\n", 17) = 17
+24273 write(1, "Before inhibit_keep_alive\n", 26) = 26
+24273 write(1, "Inside else\n", 12)     = 12
+24273 write(1, "Inside persistent_available_p\n", 30) = 30
+24273 write(1, "After persistent if\n", 20) = 20
+24273 write(1, "Inside sock < 0 if\n", 19) = 19
+24273 write(1, "inside connect_to_host\n", 23) = 23
+24273 write(1, "Inside lookup host\n", 19) = 19
+24273 open("/usr/share/locale/locale.alias", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1048736, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=2570, st_atime=2016/06/20-04:10:22, st_mtime=2010/08/05-15:57:14, st_ctime=2015/09/26-01:26:30}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd7000
+24273 read(3, "# Locale name alias data base.\n# Copyright (C) 1996-2001,2003,2007 Free Software Foundation, Inc.\n#\n# This program is free software; you can redistribute it and/or modify\n# it under the terms of the GNU General Public License as published by\n# the Free Software Foundation; either version 2, or (at your option)\n# any later version.\n#\n# This program is distributed in the hope that it will be useful,\n# but WITHOUT ANY WARRANTY; without even the implied warranty of\n# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n# GNU General Public License for more details.\n#\n# You should have received a copy of the GNU General Public License\n# along with this program; if not, write to the Free Software\n# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.\n\n# The format of this file is the same as for the corresponding file of\n# the X Window System, which normally can be found in\n#\t/usr/lib/X11/locale/locale.alias\n# A single line contains two fields: an alias and a substitution value.\n# All entries are case independent.\n\n# Note: This file is obsolete and is kept around for the time being for\n# backward compatibility.  Nobody should rely on the names defined here.\n# Locales should always be specified by their full name.\n\nbokmal\t\tnb_NO.ISO-8859-1\nbokm\345l\t\tnb_NO.ISO-8859-1\ncatalan\t\tca_ES.ISO-8859-1\ncroatian\thr_HR.ISO-8859-2\nczech\t\tcs_CZ.ISO-8859-2\ndanish          da_DK.ISO-8859-1\ndansk\t\tda_DK.ISO-8859-1\ndeutsch\t\tde_DE.ISO-8859-1\ndutch\t\tnl_NL.ISO-8859-1\neesti\t\tet_EE.ISO-8859-1\nestonian\tet_EE.ISO-8859-1\nfinnish         fi_FI.ISO-8859-1\nfran\347ais\tfr_FR.ISO-8859-1\nfrench\t\tfr_FR.ISO-8859-1\ngalego\t\tgl_ES.ISO-8859-1\ngalician\tgl_ES.ISO-8859-1\ngerman\t\tde_DE.ISO-8859-1\ngreek           el_GR.ISO-8859-7\nhebrew          he_IL.ISO-8859-8\nhrvatski\thr_HR.ISO-8859-2\nhungarian       hu_HU.ISO-8859-2\nicelandic       is_IS.ISO-8859-1\nitalian         it_IT.ISO-8859-1\njapanese\tja_JP.eucJP\njapanese.euc\tja_JP.eucJP\nja_JP\t\tja_JP.eucJP\nja_JP.ujis\tja_JP.eucJP\njapanese.sjis\tja_JP.SJIS\nkorean\t\tko_KR.eucKR\nkorean.euc \tko_KR.eucKR\nko_KR\t\tko_KR.eucKR\nlithuanian      lt_LT.ISO-8859-13\nno_NO\t\tnb_NO.ISO-8859-1\nno_NO.ISO-8859-1 nb_NO.ISO-8859-1\nnorwegian       nb_NO.ISO-8859-1\nnynorsk\t\tnn_NO.ISO-8859-1\npolish          pl_PL.ISO-8859-2\nportuguese      pt_PT.ISO-8859-1\nromanian        ro_RO.ISO-8859-2\nrussian         ru_RU.ISO-8859-5\nslovak          sk_SK.ISO-8859-2\nslovene         sl_SI.ISO-8859-2\nslovenian       sl_SI.ISO-8859-2\nspanish         es_ES.ISO-8859-1\nswedish         sv_SE.ISO-8859-1\nthai\t\tth_TH.TIS-620\nturkish         tr_TR.ISO-8859-9\n", 4096) = 2570
+24273 read(3, "", 4096)                 = 0
+24273 close(3)                          = 0
+24273 munmap(0xb7fd7000, 4096)          = 0
+24273 open("/usr/local/share/locale/en_US.UTF-8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/local/share/locale/en_US.utf8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/local/share/locale/en_US/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/local/share/locale/en.UTF-8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/local/share/locale/en.utf8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/local/share/locale/en/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en_US.UTF-8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en_US.utf8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en_US/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en.UTF-8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en.utf8/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 open("/usr/share/locale-langpack/en/LC_MESSAGES/wget.mo", O_RDONLY) = -1 ENOENT (No such file or directory)
+24273 write(1, "Before getaddrinfo_with_timeout\n", 32) = 32
+24273 write(1, "Before run with timeout\n", 24) = 24
+24273 write(1, "In gai callback\n", 16) = 16
+24273 write(1, "ctx->node: www.google.com\n", 26) = 26
+24273 write(1, "ctx->service: (null)\n", 21) = 21
+24273 write(1, "ctx->hints: 0xbffff23c\n", 23) = 23
+24273 open("mem.bin", O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 3
+24273 fstat64(3, {st_dev=makedev(0, 40), st_ino=56551, st_mode=S_IFREG|0644, st_nlink=1, st_uid=501, st_gid=20, st_blksize=1024, st_blocks=0, st_size=0, st_atime=2016/06/20-20:10:42, st_mtime=2016/06/20-20:10:42, st_ctime=2016/06/20-20:10:42}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd7000
+24273 write(3, "\220\357\377\277\320\2\363\267\3\0\0\0\241L\376\267\260\270\v\10)\352\331\267\0\0\0\0\320\270\364\267\7\0\0\0\0\0\0\0\301\222\4\10\26\352v\376\324\216\327\267t$\330\267\224\370\327\267\362\332\344\267\210\247\345\267H\276\v\10\0\4\0\0\0\300\362\267\3\0\0\0UV\335\267\247)\336\267\0\300\362\267\0t\375\267mV\335\267H\276\v\10\0p\375\267\0t\375\267\1\0\0\0(\0\0\0\0\0\0\0\0\0\0\0\347\334\0\0\244\201\0\0\1\0\0\0\365\1\0\0\24\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\4\0\0\0\0\0\0\0\0\0\0\302MhW\0\0\0\0\302MhW\0\0\0\0\302MhW\0\0\0\0\347\334\0\0\0\0\0\0\360\372\377\267 \360\377\277\331U\335\267\0\300\362\267H\276\v\10\377\377\377\377\0\0\0\0V*\336\267H\276\v\10#\366\t\10\224\370\327\267\270\262\364\267\37\366\t\10#\366\t\10H\276\v\10\330\35\336\267H\276\v\10\0p\375\267\0\0\0\0\1\0\0\0`\36\336\267\0\0\0\0\333*\336\267\0\300\362\267\1\0\0\0H\276\v\10\1\0\0\0\377\17\336\267Hq\375\267t\360\377\277\1\0\0\0\20\271\364\267\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0H\276\v\10Z`\335\267\253\17\336\267\0\300\362\267H\276\v\10\1\0\0\0\350\360\377\277Ok\335\267H\276\v\10\264\360\377\277\1\0\0\0\22\\\335\267[\241\376\267@\227\v\10\0\0\0\0@g\325\267(\361\377\277\220\7\377\267\273j\335\267@\227\v\10\0\0\0\0\20\0\0\0(\361\377\277\365\311\5\10\360\360\377\277\1\0\0\0\1\0\0\0H\276\v\10\200\316\362\267@g\325\267h\361\377\277\344\1\0\0\250\361\377\277H\276\v\10(\361\377\277(\357\377\277g&\336\267@\227\v\10", 512) = 512
+24273 close(3)                          = 0
+24273 munmap(0xb7fd7000, 4096)          = 0
+24273 socket(PF_LOCAL, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 3
+24273 connect(3, {sa_family=AF_LOCAL, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+24273 close(3)                          = 0
+24273 socket(PF_LOCAL, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 3
+24273 connect(3, {sa_family=AF_LOCAL, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
+24273 close(3)                          = 0
+24273 open("/etc/nsswitch.conf", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1101477, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=458, st_atime=2016/06/20-19:53:29, st_mtime=2016/06/20-19:53:29, st_ctime=2016/06/20-19:53:29}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd7000
+24273 read(3, "# /etc/nsswitch.conf\n#\n# Example configuration of GNU Name Service Switch functionality.\n# If you have the `glibc-doc-reference' and `info' packages installed, try:\n# `info libc \"Name Service Switch\"' for information about this file.\n\npasswd:         compat\ngroup:          compat\nshadow:         compat\nhosts:          files\nnetworks:       files\n\nprotocols:      files\nservices:       files\nethers:         files\nrpc:            files\n\nnetgroup:       nis\n", 4096) = 458
+24273 read(3, "", 4096)                 = 0
+24273 close(3)                          = 0
+24273 munmap(0xb7fd7000, 4096)          = 0
+24273 open("/etc/host.conf", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1101476, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=87, st_atime=2016/06/20-19:53:35, st_mtime=2016/06/20-19:53:25, st_ctime=2016/06/20-19:53:25}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd7000
+24273 read(3, "# The \"order\" line is only used by old versions of the C library.\norder hosts\nmulti on\n", 4096) = 87
+24273 read(3, "", 4096)                 = 0
+24273 close(3)                          = 0
+24273 munmap(0xb7fd7000, 4096)          = 0
+24273 futex(0xb7f2f304, FUTEX_WAKE_PRIVATE, 2147483647) = 0
+24273 open("/etc/resolv.conf", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(0, 17), st_ino=121689, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=199, st_atime=2016/06/19-23:48:45, st_mtime=2016/05/27-18:12:34, st_ctime=2016/05/27-18:12:34}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd7000
+24273 read(3, "# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)\n#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN\noptions debug\nnameserver 127.0.1.1\nsearch local\n", 4096) = 199
+24273 read(3, "", 4096)                 = 0
+24273 close(3)                          = 0
+24273 munmap(0xb7fd7000, 4096)          = 0
+24273 open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1087913, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=176, st_size=90060, st_atime=2016/06/19-23:48:45, st_mtime=2016/06/16-19:26:40, st_ctime=2016/06/16-19:26:40}) = 0
+24273 mmap2(NULL, 90060, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7b40000
+24273 close(3)                          = 0
+24273 access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+24273 open("/lib/i386-linux-gnu/libnss_files.so.2", O_RDONLY|O_CLOEXEC) = 3
+24273 read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220\32\0\0004\0\0\0$\302\0\0\0\0\0\0004\0 \0\7\0(\0\35\0\34\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\364\272\0\0\364\272\0\0\5\0\0\0\0\20\0\0\1\0\0\0\304\276\0\0\304\316\0\0\304\316\0\0@\2\0\0\20\5\0\0\6\0\0\0\0\20\0\0\2\0\0\0\320\276\0\0\320\316\0\0\320\316\0\0\10\1\0\0\10\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0P\345tdP\215\0\0P\215\0\0P\215\0\0\364\2\0\0\364\2\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\304\276\0\0\304\316\0\0\304\316\0\0<\1\0\0<\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0y\1\2123B\245L\257\253U$\206 m\231k:\257\351\313\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0k\0\0\0/\0\0\0\20\0\0\0\t\0\0\0\"F\340\24\260\241\245\1\31\10\3000\203\6\212\10\0\200\322@]\1(\nx\10 \"\220\200\30,\7\3\205\24)!\22<\0\24\0\31\0\0\2\2\210@\0\200@0\210\201@@\200\0\302\0\6\300/\0\0\0000\0\0\0\0\0\0\0001\0\0\0002\0\0\0003\0\0\0004\0\0\0005\0\0\0\0\0\0\0006\0\0\0\0\0\0\0007\0\0\0009\0\0\0:\0\0\0\0\0\0\0<\0\0\0\0\0\0\0>\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 512) = 512
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1051966, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=104, st_size=50860, st_atime=2016/06/19-23:48:45, st_mtime=2015/03/26-07:01:21, st_ctime=2015/09/26-01:26:32}) = 0
+24273 mmap2(NULL, 54228, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7fca000
+24273 mmap2(0xb7fd6000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0xb000) = 0xb7fd6000
+24273 close(3)                          = 0
+24273 mprotect(0xb7fd6000, 4096, PROT_READ) = 0
+24273 munmap(0xb7b40000, 90060)         = 0
+24273 open("/etc/hosts", O_RDONLY|O_CLOEXEC) = 3
+24273 fstat64(3, {st_dev=makedev(8, 1), st_ino=1051106, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=342, st_atime=2016/06/20-04:10:16, st_mtime=2016/05/10-19:01:32, st_ctime=2016/05/10-19:01:32}) = 0
+24273 mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fc9000
+24273 read(3, "127.0.0.1\tdev.local localhost\n127.0.1.1\tdev\n216.58.219.196\twww.google.com\n43.227.116.140\twww.toast.com\n157.166.226.26\tcnn.com\n90.130.70.73\tspeedtest.tele2.net\n# The following lines are desirable for IPv6 capable hosts\n::1     ip6-localhost ip6-loopback\nfe00::0 ip6-localnet\nff00::0 ip6-mcastprefix\nff02::1 ip6-allnodes\nff02::2 ip6-allrouters\n", 4096) = 342
+24273 read(3, "", 4096)                 = 0
+24273 close(3)                          = 0
+24273 munmap(0xb7fc9000, 4096)          = 0
+24273 write(1, "After gai\n", 10)       = 10
+24273 write(1, "After run with timeout", 22) = 22
+24273 write(1, "After getaddrinfo_with_timeout\n", 31) = 31
+24273 write(1, "After lookup_host", 17) = 17
+24273 write(1, "before address_list_get_bounds\n", 31) = 31
+24273 write(1, "after address_list_get_bounds\n", 30) = 30
+24273 socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 3
+24273 connect(3, {sa_family=AF_INET, sin_port=htons(80), sin_addr=inet_addr("216.58.219.196")}, 16) = 0
+24273 write(1, "after connect_to_host\n", 22) = 22
+24273 write(1, "Before if(warc_enabled)\n", 24) = 24
+24273 select(4, NULL, [3], NULL, {900, 0}) = 1 (out [3], left {899, 999996})
+24273 write(3, "GET / HTTP/1.1\r\nUser-Agent: Wget/1.16.1 (linux-gnu)\r\nAccept: */*\r\nAccept-Encoding: identity\r\nHost: www.google.com\r\nConnection: Keep-Alive\r\n\r\n", 141) = 141
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 952571})
+24273 recv(3, "HTTP/1.1 200 OK\r\nDate: Mon, 20 Jun 2016 20:10:42 GMT\r\nExpires: -1\r\nCache-Control: private, max-age=0\r\nContent-Type: text/html; charset=ISO-8859-1\r\nP3P: CP=\"This is not a P3P policy! See https://www.google.com/support/accounts/answer/151657?hl=en for more info.\"\r\nServer: gws\r\nX-XSS-Protection: 1; mode=block\r\nX-Frame-Options: SAMEORIGIN\r\nSet-Cookie: NID=80=PvYYY5t1dCrDrRerEgcJ_ejMW0y5QieXQBVYZDOgky18q3TbVLrTz5Z8KeeJ_VXZp6W_4ET4YwVE-qifJOglGHzgS4_ABa6An_9qAo9EEIaJTzbN5RKB-ljvR2VGCCV7Y0XodJvc5r82zw; expires=Tu", 511, MSG_PEEK) = 511
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "HTTP/1.1 200 OK\r\nDate: Mon, 20 Jun 2016 20:10:42 GMT\r\nExpires: -1\r\nCache-Control: private, max-age=0\r\nContent-Type: text/html; charset=ISO-8859-1\r\nP3P: CP=\"This is not a P3P policy! See https://www.google.com/support/accounts/answer/151657?hl=en for more info.\"\r\nServer: gws\r\nX-XSS-Protection: 1; mode=block\r\nX-Frame-Options: SAMEORIGIN\r\nSet-Cookie: NID=80=PvYYY5t1dCrDrRerEgcJ_ejMW0y5QieXQBVYZDOgky18q3TbVLrTz5Z8KeeJ_VXZp6W_4ET4YwVE-qifJOglGHzgS4_ABa6An_9qAo9EEIaJTzbN5RKB-ljvR2VGCCV7Y0XodJvc5r82zw; expires=Tu", 511) = 511
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999996})
+24273 +++Modified this recv() call+++
+24273 recv(3, "", 512, MSG_PEEK) = 0
+
+
+
+
+
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "", 0) = 0
+24273 write(1, "Before chunked_transfer_encoding = false\n", 41) = 41
+24273 write(1, "Before if(opt.cookies)\n", 23) = 23
+24273 write(1, "Inside if(opt.cookies)\n", 23) = 23
+24273 write(1, "Before for loop\n", 16) = 16
+24273 write(1, "Inside for loop\n", 16) = 16
+24273 write(1, "Inside cookie_handle_set_cookie\n", 32) = 32
+24273 time(NULL)                        = 1466453442
+24273 write(1, "Before parse_set_cookie\n", 24) = 24
+24273 write(1, "Inside parse_set_cookie\n", 24) = 24
+24273 write(1, "Before while loop\n", 18) = 18
+24273 write(1, "Inside while loop\n", 18) = 18
+24273 write(1, "Inside else if (TOKEN_IS (name, expires)\n", 41) = 41
+24273 write(1, "Before BOUNDED_TO_ALLOCA\n", 25) = 25
+24273 write(1, "After BOUNDED_TO_ALLOCA\n", 24) = 24
+24273 write(1, "Inside http_atotm\n", 18) = 18
+24273 write(1, "Before setlocale(LC_TIME, NULL)\n", 32) = 32
+24273 write(1, "Before setlocale(LC_TIME, C)\n", 29) = 29
+24273 write(1, "Before for loop\n", 16) = 16
+24273 write(1, "Inside for loop\n", 16) = 16
+24273 write(1, "Before check_end\n", 17) = 17
+24273 write(1, "Inside for loop\n", 16) = 16
+24273 write(1, "Before check_end\n", 17) = 17
+24273 write(1, "Inside for loop\n", 16) = 16
+24273 write(1, "Before check_end\n", 17) = 17
+24273 write(1, "Inside for loop\n", 16) = 16
+24273 write(1, "Before check_end\n", 17) = 17
+24273 write(1, "After for loop\n", 15)  = 15
+24273 write(1, "Inside if (savedlocale[0])\n", 27) = 27
+24273 write(1, "en_US.UTF-8\n", 12)     = 12
+24273 write(1, "After setlocale( LC_TIME, savedlocale)\n", 39) = 39
+24273 write(1, "About to return to http_atotm\n", 30) = 30
+24273 write(1, "After expires = http_atom\n", 26) = 26
+24273 write(1, "About to leave else if (TOKEN_IS (name, expires)\n", 49) = 49
+
+
+24273 +++Added this write call from below+++
+24273 write(1, "About to return cookie\n", 23) = 23
+24273 write(1, "Before if(!cookie->domain)\n", 27) = 27
+24273 write(1, "Before if(!cookie->path)\n", 25) = 25
+24273 write(1, "End of for loop iteration\n", 26) = 26
+24273 write(1, "Before register persistent\n", 27) = 27
+24273 write(1, "After register persistent!\n", 27) = 27
+24273 write(1, "After unauthorized\n", 19) = 19
+24273 write(1, "After gateway timeout\n", 22) = 22
+24273 write(1, "After !hs->local_file\n", 22) = 22
+
+24273 stat64("-", 0xbffff14c)           = -1 ENOENT (No such file or directory)
+24273 write(1, "After timestamping\n", 19) = 19
+24273 write(1, "After if(type)\n", 15)  = 15
+24273 write(1, "After resp_header_copy\n", 23) = 23
+24273 write(1, "After no content\n", 17) = 17
+24273 write(1, "After redirected\n", 17) = 17
+24273 write(1, "After extension stuff\n", 22) = 22
+24273 write(1, "After more content stuff\n", 25) = 25
+24273 write(1, "After verbose\n", 14)   = 14
+24273 write(1, "After try to finish\n", 20) = 20
+24273 write(1, "After a bunch of opening stuff\n", 31) = 31
+24273 open("/usr/local/lib/charset.alias", O_RDONLY|O_LARGEFILE) = -1 ENOENT (No such file or directory)
+24273 write(1, "before read_response_body\n", 26) = 26
+24273 write(1, "read_response_body\n", 19) = 19
+24273 write(1, "After warc filename\n", 20) = 20
+24273 write(1, "Before fd_read_body\n", 20) = 20
+24273 write(1, "Inside fd_read_body\n", 20) = 20
+24273 write(1, "before if(opt.limit_rate)\n", 26) = 26
+24273 write(1, "before if(progress...\n", 22) = 22
+24273 clock_gettime(CLOCK_MONOTONIC, {665062, 666244136}) = 0
+24273 write(1, "before while loop\n", 18) = 18
+24273 write(1, "Inside while loop\n", 18) = 18
+24273 write(1, "Before process_interactive\n", 27) = 27
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999997})
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "", 8192)            = 0
+24273 write(1, "After fd_read_body\n", 19) = 19
+24273 write(1, "After read_response_body\n", 25) = 25
+24273 write(1, "About to return \n", 17) = 17
+24273 write(1, "After gethttp\n", 14)   = 14
+24273 time(NULL)                        = 1466453442
+24273 open("/etc/localtime", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+24273 write(1, "After schemes\n", 14)   = 14
+24273 write(1, "After retrieve_url", 18) = 18
+24273 write(1, "after url argument list loop\n", 29) = 29
+24273 write(1, "before recursive spider\n", 24) = 24
+24273 close(1)                          = 0
+24273 munmap(0xb7fd9000, 4096)          = 0
+24273 exit_group(0)                     = ?
+24273 +++ exited with 0 +++
+
+
+24273 recv(3, "", 127, MSG_PEEK) = 0
+24273 write(1, "about to sock_read", 18) = 18
+24273 write(1, "before strtol\n", 14)   = 14
+24273 write(1, "after strtol\n", 13)    = 13
+24273 write(1, "", 0)           = 0
+24273 write(1, "\n", 1)                 = 1
+24273 write(1, "After xfree, before second remaining_chunk_size\n", 48) = 48
+24273 write(1, "after second remaining_chunk_size == 0\n", 39) = 39
+24273 write(1, "Before process_interactive\n", 27) = 27
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999997})
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "<!doctype html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en\"><head><meta content=\"Search the world's information, including webpages, images, videos and more. Google has many special features to help you find exactly what you're looking for.\" name=\"description\"><meta content=\"noodp\" name=\"robots\"><meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\"><meta content=\"/images/branding/googleg/1x/googleg_standard_color_128dp.png\" itemprop=\"image\"><title>Google</title><script>(function(){window.google={kEI:'wk1oV-GrJ4LVevTDjpAB',kEXPI:'1350756,3700282,3700389,4026240,4029815,4031109,4032677,4036509,4036527,4038012,4039268,4043492,4045841,4048347,4052304,4055233,4057739,4059767,4060014,4061155,4061923,4062333,4062972,4063131,4063154,4063879,4063929,4064133,4064904,4064931,4065120,4065406,4065675,4065787,4065793,4066102,4066654,4066657,4066965,4066973,4067274,4067383,4067518,4067701,4067924,4068002,4068022,4068196,4068217,4068550,4068850,4068864,4069145,4069149,4069284,4069404,4069648,4069834,4069839,4069840,4069961,4070139,8300096,8300272,8502095,8502349,8503585,8504350,8505158,8505164,8505166,8505516,8505585,10200083,10201287,10201927',authuser:0,kscs:'c9c918f0_24'};google.kHL='en';})();(function(){google.lc=[];google.li=0;google.getEI=function(a){for(var b;a&&(!a.getAttribute||!(b=a.getAttribute(\"eid\")));)a=a.parentNode;return b||google.kEI};google.getLEI=function(a){for(var b=null;a&&(!a.getAttribute||!(b=a.getAttribute(\"leid\")));)a=a.parentNode;return b};google.https=function(){return\"https:\"==window.location.protocol};google.ml=function(){return null};google.wl=function(a,b){try{google.ml(Error(a),!1,b)}catch(c){}};google.time=function(){return(new Date).getTime()};google.log=function(a,b,c,e,g){a=google.logUrl(a,b,c,e,g);if(\"\"!=a){b=new Image;var d=google.lc,f=google.li;d[f]=b;b.onerror=b.onload=b.onabort=function(){delete d[f]};window.google&&window.google.vel&&window.google.vel.lu&&window.google.vel.lu(a);b.src=a;google.li=f+1}};google.logUrl=function(a,b,c,e,g){var d=\"\",f=google.ls||\"\";if(!c&&-1==b.search(\"&ei=\")){var h=google.getEI(e),d=\"&ei=\"+h;-1==b.search(\"&lei=\")&&((e=google.getLEI(e))?d+=\"&lei=\"+e:h!=google.kEI&&(d+=\"&lei=\"+google.kEI))}a=c||\"/\"+(g||\"gen_204\")+\"?atyp=i&ct=\"+a+\"&cad=\"+b+d+f+\"&zx=\"+google.time();/^http:/i.test(a)&&google.https()&&(google.ml(Error(\"a\"),!1,{src:a,glmm:1}),a=\"\");return a};google.y={};google.x=function(a,b){google.y[a.id]=[a,b];return!1};google.load=function(a,b,c){google.x({id:a+k++},function(){google.load(a,b,c)})};var k=0;})();var _gjwl=location;function _gjuc(){var a=_gjwl.href.indexOf(\"#\");if(0<=a&&(a=_gjwl.href.substring(a),0<a.indexOf(\"&q=\")||0<=a.indexOf(\"#q=\"))&&(a=a.substring(1),-1==a.indexOf(\"#\"))){for(var d=0;d<a.length;){var b=d;\"&\"==a.charAt(b)&&++b;var c=a.indexOf(\"&\",b);-1==c&&(c=a.length);b=a.substring(b,c);if(0==b.indexOf(\"fp=\"))a=a.substring(0,d)+a.substring(c,a.length),c=d;else if(\"cad=h\"==b)return 0;d=c}_gjwl.href=\"/search?\"+a+\"&cad=h\";return 1}return 0}\nfunction _gjh(){!_gjuc()&&window.google&&google.x&&google.x({id:\"GJH\"},function(){google.nav&&google.nav.gjh&&google.nav.gjh()})};window._gjh&&_gjh();</script><style>#gbar,#guser{font-size:13px;padding-top:1px !important;}#gbar{height:22px}#guser{padding-bottom:7px !important;text-align:right}.gbh,.gbd{border-top:1px solid #c9d7f1;font-size:1px}.gbh{height:0;position:absolute;top:24px;width:100%}@media all{.gb1{height:22px;margin-right:.5em;vertical-align:top}#gbar{float:left}}a.gb1,a.gb4{text-decoration:underline !important}a.gb1,a.gb4{color:#00c !important}.gbi .gb4{color:#dd8e27 !important}.gbf .gb4{color:#900 !important}\n</style><style>body,td,a,p,.h{font-family:arial,sans-serif}body{margin:0;overflow-y:scroll}#gog{padding:3px 8px 0}td{line-height:.8em}.gac_m td{line-height:17px}form{margin-bottom:20px}.h{color:#36c}.q{color:#00c}.ts td{padding:0}.ts{border-collapse:collapse}em{font-weight:bold;font-style:normal}.lst{height:25px;width:496px}.gsfi,.lst{font:18px arial,sans-serif}.gsfs{font:17px arial,sans-serif}.ds{display:inline-box;display:inline-block;margin:3px 0 4px;margin-left:4px}input{font-family:inherit}a.gb1,a.gb2,a.gb3,a.gb4{color:#11c !important}body{background:#fff;color:black}a{color:#11c;text-decoration:none}a:hover,a:active{text-decoration:underline}.fl a{color:#36c}a:visited{color:#551a8b}a.gb1,a.gb4{text-decoration:underline}a.gb3:hover{text-decoration:none}#ghead a.gb2:hover{color:#fff !important}.sblc{padding-top:5px}.sblc a{display:block;margin:2px 0;margin-left:13px;font-size:11px}.lsbb{background:#eee;border:solid 1px;border-color:#ccc #999 #999 #ccc;height:30px}.lsbb{display:block}.ftl,#fll a{display:inline-block;margin:0 12px}.lsb{background:url(/images/nav_logo229.png) 0 -261px repeat-x;border:none;color:#000;cursor:pointer;height:30px;margin:0;outline:0;font:15px arial,sans-serif;vertical-align:top}.lsb:active{background:#ccc}.lst:focus{outline:none}</style><script></script><link href=\"/images/branding/product/ico/googleg_lodp.ico\" rel=\"shortcut icon\"></head><body bgcolor=\"#fff\"><script>(function(){var src='/images/nav_logo229.png';var iesg=false;document.body.onload = function(){window.n && window.n();if (document.images){new Image().src=src;}\nif (!iesg){document.f&&document.f.q.focus();document.gbqf&&document.gbqf.q.focus();}\n}\n})();</script><div id=\"mngb\">    <div id=gbar><nobr><b class=gb1>Search</b> <a class=gb1 href=\"http://www.google.com/imghp?hl=en&tab=wi\">Images</a> <a class=gb1 href=\"http://maps.google.com/maps?hl=en&tab=wl\">Maps</a> <a class=gb1 href=\"https://play.google.com/?hl=en&tab=w8\">Play</a> <a class=gb1 href=\"http://www.youtube.com/?tab=w1\">YouTube</a> <a class=gb1 href=\"http://news.google.com/nwshp?hl=en&tab=wn\">News</a> <a class=gb1 href=\"https://mail.google.com/mail/?tab=wm\">Gmail</a> <a class=gb1 href=\"https://drive.google.com/?tab=wo\">Drive</a> <a class=gb1 style=\"text-decoration:none\" href=\"https://www.google.com/intl/en/options/\"><u>More</u> &raquo;</a></nobr></div><div id=guser width=100%><nobr><span id=gbn class=gbi></span><span id=gbf class=gbf></span><span id=gbe></span><a href=\"http://www.google.com/history/optout?hl=en\" class=gb4>Web History</a> | <a  href=\"/preferences?hl=en\" class=gb4>Settings</a> | <a target=_top id=gb_70 href=\"https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=http://www.google.com/\" class=gb4>Sign in</a></nobr></div><div class=gbh style=left:0></div><div class=gbh style=right:0></div>    </div><center><br clear=\"all\" id=\"lgpd\"><div id=\"lga\"><img alt=\"Google\" height=\"92\" src=\"/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png\" style=\"padding:28px 0 14px\" width=\"272\" id=\"hplogo\" onload=\"window.lol&&lol()\"><br><br></div><form action=\"/search\" name=\"f\"><table cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\"><td width=\"25%\">&nbsp;</td><td align=\"center\" nowrap=\"\"><input name=\"ie\" value=\"ISO-8859-1\" type=\"hidden\"><input value=\"en\" name=\"hl\" type=\"hidden\"><input name=\"source\" type=\"hidden\" value=\"hp\"><input name=\"biw\" type=\"hidden\"><input name=\"bih\" type=\"hidden\"><div class=\"ds\" style=\"height:32px;margin:4px 0\"><input style=\"color:#000;margin:0;padding:5px 8px 0 6px;vertical-align:top\" autocomplete=\"off\" class=\"lst\" value=\"\" title=\"Google Search\" maxlength=\"2048\" name=\"q\" size=\"57\"></div><br style=\"line-height:0\"><span class=\"ds\"><span class=\"lsbb\"><input class=\"lsb\" value=\"Google Search\" name=\"btnG\" type=\"submit\"></span></span><span class=\"ds\"><span class=\"lsbb\"><input class=\"lsb\" value=\"I'm Feeling Lucky\" name=\"btnI\" onclick=\"if(this.form.q.value)this.checked=1; else top.location='/doodles/'\" type=\"submit\"></span></span></td><td class=\"fl sblc\" align=\"left\" nowrap=\"\" width=\"25%\"><a href=\"/advanced_search?hl=en&amp;authuser=0\">Advanced search</a><a href=\"/language_tools?hl=en&amp;authuser=0\">Language tools</a></td></tr></table><input id=\"gbv\" name=\"gbv\" type=\"hidden\" value=\"1\"></form><div id=\"gac_scont\"></div><div style=\"font-size:83%;min-height:3.5em\"><br><div id=\"prm\"><style>.szppmdbYutt__middle-slot-promo{font-size:small;margin-bottom:32px}.szppmdbYutt__middle-slot-promo a._uFi{display:inline-block;text-decoration:none}.szppmdbYutt__middle-slot-promo img{border:none;margin-r", 8192) = 8192
+24273 clock_gettime(CLOCK_MONOTONIC, {665062, 667969499}) = 0
+24273 write(1, "<!doctype html><html itemscope=\"\" itemtype=\"http://schema.org/WebPage\" lang=\"en\"><head><meta content=\"Search the world's information, including webpages, images, videos and more. Google has many special features to help you find exactly what you're looking for.\" name=\"description\"><meta content=\"noodp\" name=\"robots\"><meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\"><meta content=\"/images/branding/googleg/1x/googleg_standard_color_128dp.png\" itemprop=\"image\"><title>Google</title><script>(function(){window.google={kEI:'wk1oV-GrJ4LVevTDjpAB',kEXPI:'1350756,3700282,3700389,4026240,4029815,4031109,4032677,4036509,4036527,4038012,4039268,4043492,4045841,4048347,4052304,4055233,4057739,4059767,4060014,4061155,4061923,4062333,4062972,4063131,4063154,4063879,4063929,4064133,4064904,4064931,4065120,4065406,4065675,4065787,4065793,4066102,4066654,4066657,4066965,4066973,4067274,4067383,4067518,4067701,4067924,4068002,4068022,4068196,4068217,4068550,4068850,4068864,4069145,4069149,4069284,4069404,4069648", 1024) = 1024
+24273 write(1, ",4069834,4069839,4069840,4069961,4070139,8300096,8300272,8502095,8502349,8503585,8504350,8505158,8505164,8505166,8505516,8505585,10200083,10201287,10201927',authuser:0,kscs:'c9c918f0_24'};google.kHL='en';})();(function(){google.lc=[];google.li=0;google.getEI=function(a){for(var b;a&&(!a.getAttribute||!(b=a.getAttribute(\"eid\")));)a=a.parentNode;return b||google.kEI};google.getLEI=function(a){for(var b=null;a&&(!a.getAttribute||!(b=a.getAttribute(\"leid\")));)a=a.parentNode;return b};google.https=function(){return\"https:\"==window.location.protocol};google.ml=function(){return null};google.wl=function(a,b){try{google.ml(Error(a),!1,b)}catch(c){}};google.time=function(){return(new Date).getTime()};google.log=function(a,b,c,e,g){a=google.logUrl(a,b,c,e,g);if(\"\"!=a){b=new Image;var d=google.lc,f=google.li;d[f]=b;b.onerror=b.onload=b.onabort=function(){delete d[f]};window.google&&window.google.vel&&window.google.vel.lu&&window.google.vel.lu(a);b.src=a;google.li=f+1}};google.logUrl=function(a,b,c,e,g){var d=\"\",f=google.ls||\"\";if(!c&&-1==b.search(\"&ei=\")){var h=google.getEI(e),d=\"&ei=\"+h;-1==b.search(\"&lei=\")&&((e=google.getLEI(e))?d+=\"&lei=\"+e:h!=google.kEI&&(d+=\"&lei=\"+google.kEI))}a=c||\"/\"+(g||\"gen_204\")+\"?atyp=i&ct=\"+a+\"&cad=\"+b+d+f+\"&zx=\"+google.time();/^http:/i.test(a)&&google.https()&&(google.ml(Error(\"a\"),!1,{src:a,glmm:1}),a=\"\");return a};google.y={};google.x=function(a,b){google.y[a.id]=[a,b];return!1};google.load=function(a,b,c){google.x({id:a+k++},function(){google.load(a,b,c)})};var k=0;})();var _gjwl=location;function _gjuc(){var a=_gjwl.href.indexOf(\"#\");if(0<=a&&(a=_gjwl.href.substring(a),0<a.indexOf(\"&q=\")||0<=a.indexOf(\"#q=\"))&&(a=a.substring(1),-1==a.indexOf(\"#\"))){for(var d=0;d<a.length;){var b=d;\"&\"==a.charAt(b)&&++b;var c=a.indexOf(\"&\",b);-1==c&&(c=a.length);b=a.substring(b,c);if(0==b.indexOf(\"fp=\"))a=a.substring(0,d)+a.substring(c,a.length),c=d;else if(\"cad=h\"==b)return 0;d=c}_gjwl.href=\"/search?\"+a+\"&cad=h\";return 1}return 0}\nfunction _gjh(){!_gjuc()&&window.google&&google.x&&google.x({id:\"GJH\"},function(){google.nav&&google.nav.gjh&&google.nav.gjh()})};window._gjh&&_gjh();</script><style>#gbar,#guser{font-size:13px;padding-top:1px !important;}#gbar{height:22px}#guser{padding-bottom:7px !important;text-align:right}.gbh,.gbd{border-top:1px solid #c9d7f1;font-size:1px}.gbh{height:0;position:absolute;top:24px;width:100%}@media all{.gb1{height:22px;margin-right:.5em;vertical-align:top}#gbar{float:left}}a.gb1,a.gb4{text-decoration:underline !important}a.gb1,a.gb4{color:#00c !important}.gbi .gb4{color:#dd8e27 !important}.gbf .gb4{color:#900 !important}\n</style><style>body,td,a,p,.h{font-family:arial,sans-serif}body{margin:0;overflow-y:scroll}#gog{padding:3px 8px 0}td{line-height:.8em}.gac_m td{line-height:17px}form{margin-bottom:20px}.h{color:#36c}.q{color:#00c}.ts td{padding:0}.ts{border-collapse:collapse}em{font-weight:bold;font-style:normal}.lst{height:25px;width:496px}.gsfi,.lst{font:18px arial,sans-serif}.gsfs{font:17px arial,sans-serif}.ds{display:inline-box;display:inline-block;margin:3px 0 4px;margin-left:4px}input{font-family:inherit}a.gb1,a.gb2,a.gb3,a.gb4{color:#11c !important}body{background:#fff;color:black}a{color:#11c;text-decoration:none}a:hover,a:active{text-decoration:underline}.fl a{color:#36c}a:visited{color:#551a8b}a.gb1,a.gb4{text-decoration:underline}a.gb3:hover{text-decoration:none}#ghead a.gb2:hover{color:#fff !important}.sblc{padding-top:5px}.sblc a{display:block;margin:2px 0;margin-left:13px;font-size:11px}.lsbb{background:#eee;border:solid 1px;border-color:#ccc #999 #999 #ccc;height:30px}.lsbb{display:block}.ftl,#fll a{display:inline-block;margin:0 12px}.lsb{background:url(/images/nav_logo229.png) 0 -261px repeat-x;border:none;color:#000;cursor:pointer;height:30px;margin:0;outline:0;font:15px arial,sans-serif;vertical-align:top}.lsb:active{background:#ccc}.lst:focus{outline:none}</style><script></script><link href=\"/images/branding/product/ico/googleg_lodp.ico\" rel=\"shortcut icon\"></head><body bgcolor=\"#fff\"><script>(function(){var src='/images/nav_logo229.png';var iesg=false;document.body.onload = function(){window.n && window.n();if (document.images){new Image().src=src;}\nif (!iesg){document.f&&document.f.q.focus();document.gbqf&&document.gbqf.q.focus();}\n}\n})();</script><div id=\"mngb\">    <div id=gbar><nobr><b class=gb1>Search</b> <a class=gb1 href=\"http://www.google.com/imghp?hl=en&tab=wi\">Images</a> <a class=gb1 href=\"http://maps.google.com/maps?hl=en&tab=wl\">Maps</a> <a class=gb1 href=\"https://play.google.com/?hl=en&tab=w8\">Play</a> <a class=gb1 href=\"http://www.youtube.com/?tab=w1\">YouTube</a> <a class=gb1 href=\"http://news.google.com/nwshp?hl=en&tab=wn\">News</a> <a class=gb1 href=\"https://mail.google.com/mail/?tab=wm\">Gmail</a> <a class=gb1 href=\"https://drive.google.com/?tab=wo\">Drive</a> <a class=gb1 style=\"text-decoration:none\" href=\"https://www.google.com/intl/en/options/\"><u>More</u> &raquo;</a></nobr></div><div id=guser width=100%><nobr><span id=gbn class=gbi></span><span id=gbf class=gbf></span><span id=gbe></span><a href=\"http://www.google.com/history/optout?hl=en\" class=gb4>Web History</a> | <a  href=\"/preferences?hl=en\" class=gb4>Settings</a> | <a target=_top id=gb_70 href=\"https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=http://www.google.com/\" class=gb4>Sign in</a></nobr></div><div class=gbh style=left:0></div><div class=gbh style=right:0></div>    </div><center><br clear=\"all\" id=\"lgpd\"><div id=\"lga\"><img alt=\"Google\" height=\"92\" src=\"/images/branding/googlelogo/1x/googlelogo_white_background_color_272x92dp.png\" style=\"padding:28px 0 14px\" width=\"272\" id=\"hplogo\" onload=\"window.lol&&lol()\"><br><br></div><form action=\"/search\" name=\"f\"><table cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\"><td width=\"25%\">&nbsp;</td><td align=\"center\" nowrap=\"\"><input name=\"ie\" value=\"ISO-8859-1\" type=\"hidden\"><input value=\"en\" name=\"hl\" type=\"hidden\"><input name=\"source\" type=\"hidden\" value=\"hp\"><input name=\"biw\" type=\"hidden\"><input name=\"bih\" type=\"hidden\"><div class=\"ds\" style=\"height:32px;margin:4px 0\"><input style=\"color:#000;margin:0;padding:5px 8px 0 6px;vertical-align:top\" autocomplete=\"off\" class=\"lst\" value=\"\" title=\"Google Search\" maxlength=\"2048\" name=\"q\" size=\"57\"></div><br style=\"line-height:0\"><span class=\"ds\"><span class=\"lsbb\"><input class=\"lsb\" value=\"Google Search\" name=\"btnG\" type=\"submit\"></span></span><span class=\"ds\"><span class=\"lsbb\"><input class=\"lsb\" value=\"I'm Feeling Lucky\" name=\"btnI\" onclick=\"if(this.form.q.value)this.checked=1; else top.location='/doodles/'\" type=\"submit\"></span></span></td><td class=\"fl sblc\" align=\"left\" nowrap=\"\" width=\"25%\"><a href=\"/advanced_search?hl=en&amp;authuser=0\">Advanced search</a><a href=\"/language_tools?hl=en&amp;authuser=0\">Language tools</a></td></tr></table><input id=\"gbv\" name=\"gbv\" type=\"hidden\" value=\"1\"></form><div id=\"gac_scont\"></div><div style=\"font-size:83%;min-height:3.5em\"><br><div id=\"prm\"><style>.szppmdbYutt__middle-slot-promo{font-size:small;margin-bottom:32px}.szppmdbYutt__middle-slot-promo a._uFi{display:inline-block;text-decoration:none}.szppmdbYutt__middle-slot-promo img{border:none;margin-r", 7168) = 7168
+24273 write(1, "Inside while loop\n", 18) = 18
+24273 write(1, "Inside if chunked\n", 18) = 18
+24273 write(1, "Before process_interactive\n", 27) = 27
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999999})
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "ight:5px;vertical-align:middle}.szppmdbYutt__middle-slot-promo ._vFi{color:red}</style><div class=\"szppmdbYutt__middle-slot-promo r-iNslFMDfYeuQ\" jsl=\"$t t-Gza07Ho9En4;$x 0;\" data-ved=\"0ahUKEwjhlJ3ktLfNAhWCqh4KHfShAxIQnIcBCAQ\"><a class=\"_XIi\" href=\"https://www.google.com/url?q=https://googleblog.blogspot.com/2016/06/showing-support-on-world-refugee-day.html&amp;source=hpp&amp;id=5085003&amp;ct=3&amp;usg=AFQjCNEYkPPLlu8GMAu151HsjidvGgJt4A&amp;sa=X&amp;ved=0ahUKEwjhlJ3ktLfNAhWCqh4KHfShAxIQ8IcBCAU\" rel=\"nofollow\">Showing support on #WorldRefugeeDay</a></div></div></div><span id=\"footer\"><div style=\"font-size:10pt\"><div style=\"margin:19px auto;text-align:center\" id=\"fll\"><a href=\"/intl/en/ads/\">Advertising\240Programs</a><a href=\"/services/\">Business Solutions</a><a href=\"https://plus.google.com/116899029375914044550\" rel=\"publisher\">+Google</a><a href=\"/intl/en/about.html\">About Google</a></div></div><p style=\"color:#767676;font-size:8pt\">&copy; 2016 - <a href=\"/intl/en/policies/privacy/\">Privacy</a> - <a href=\"/intl/en/policies/terms/\">Terms</a></p></span></center><script>(function(){window.google.cdo={height:0,width:0};(function(){var a=window.innerWidth,b=window.innerHeight;if(!a||!b)var c=window.document,d=\"CSS1Compat\"==c.compatMode?c.documentElement:c.body,a=d.clientWidth,b=d.clientHeight;a&&b&&(a!=google.cdo.width||b!=google.cdo.height)&&google.log(\"\",\"\",\"/client_204?&atyp=i&biw=\"+a+\"&bih=\"+b+\"&ei=\"+google.kEI);})();})();</script><div id=\"xjsd\"></div><div id=\"xjsi\"><script>(function(){function c(b){window.setTimeout(function(){var a=document.createElement(\"script\");a.src=b;document.getElementById(\"xjsd\").appendChild(a)},0)}google.dljp=function(b,a){google.xjsu=b;c(a)};google.dlj=c;})();(function(){window.google.xjsrm=['mids'];})();if(google.y)google.y.first=[];if(!google.xjs){window._=window._||{};window._._DumpException=function(e){throw e};if(google.timers&&google.timers.load.t){google.timers.load.t.xjsls=new Date().getTime();}google.dljp('/xjs/_/js/k\\x3dxjs.hp.en_US.dLENfisyuL4.O/m\\x3dsb_he,d/rt\\x3dj/d\\x3d1/t\\x3dzcms/rs\\x3dACT90oHpdS6z3KChcxP9yMAs72tcUpqHHg','/xjs/_/js/k\\x3dxjs.hp.en_US.dLENfisyuL4.O/m\\x3dsb_he,d/rt\\x3dj/d\\x3d1/t\\x3dzcms/rs\\x3dACT90oHpdS6z3KChcxP9yMAs72tcUpqHHg');google.xjs=1;}google.pmc={\"sb_he\":{\"agen\":true,\"cgen\":true,\"client\":\"heirloom-hp\",\"dh\":true,\"dhqt\":true,\"ds\":\"\",\"fl\":true,\"host\":\"google.com\",\"isbh\":28,\"jam\":0,\"jsonp\":true,\"msgs\":{\"cibl\":\"Clear Search\",\"dym\":\"Did you mean:\",\"lcky\":\"I\\u0026#39;m Feeling Lucky\",\"lml\":\"Learn more\",\"oskt\":\"Input tools\",\"psrc\":\"This search was removed from your \\u003Ca href=\\\"/history\\\"\\u003EWeb History\\u003C/a\\u003E\",\"psrl\":\"Remove\",\"sbit\":\"Search by image\",\"srch\":\"Google Search\"},\"nds\":true,\"ovr\":{},\"pq\":\"\",\"refpd\":true,\"rfs\":[],\"scd\":10,\"sce\":5,\"stok\":\"2pCVDUo8J_Xw6vzX0h8nF9whbzg\"},\"d\":{}};google.y.first.push(function(){if(google.med){google.med('init');google.initHistory();google.med('history');}});if(google.j&&google.j.en&&google.j.xi){window.setTimeout(google.j.xi,0);}\n</script></div></body></html>", 3016) = 3016
+24273 clock_gettime(CLOCK_MONOTONIC, {665062, 669120386}) = 0
+24273 write(1, "ight:5px;vertical-align:middle}.szppmdbYutt__middle-slot-promo ._vFi{color:red}</style><div class=\"szppmdbYutt__middle-slot-promo r-iNslFMDfYeuQ\" jsl=\"$t t-Gza07Ho9En4;$x 0;\" data-ved=\"0ahUKEwjhlJ3ktLfNAhWCqh4KHfShAxIQnIcBCAQ\"><a class=\"_XIi\" href=\"https://www.google.com/url?q=https://googleblog.blogspot.com/2016/06/showing-support-on-world-refugee-day.html&amp;source=hpp&amp;id=5085003&amp;ct=3&amp;usg=AFQjCNEYkPPLlu8GMAu151HsjidvGgJt4A&amp;sa=X&amp;ved=0ahUKEwjhlJ3ktLfNAhWCqh4KHfShAxIQ8IcBCAU\" rel=\"nofollow\">Showing support on #WorldRefugeeDay</a></div></div></div><span id=\"footer\"><div style=\"font-size:10pt\"><div style=\"margin:19px auto;text-align:center\" id=\"fll\"><a href=\"/intl/en/ads/\">Advertising\240Programs</a><a href=\"/services/\">Business Solutions</a><a href=\"https://plus.google.com/116899029375914044550\" rel=\"publisher\">+Google</a><a href=\"/intl/en/about.html\">About Google</a></div></div><p style=\"color:#767676;font-size:8pt\">&copy; 2016 - <a href=\"/intl/en/policies/privacy/\">Privacy</a> - <a href=\"/in", 1024) = 1024
+24273 write(1, "tl/en/policies/terms/\">Terms</a></p></span></center><script>(function(){window.google.cdo={height:0,width:0};(function(){var a=window.innerWidth,b=window.innerHeight;if(!a||!b)var c=window.document,d=\"CSS1Compat\"==c.compatMode?c.documentElement:c.body,a=d.clientWidth,b=d.clientHeight;a&&b&&(a!=google.cdo.width||b!=google.cdo.height)&&google.log(\"\",\"\",\"/client_204?&atyp=i&biw=\"+a+\"&bih=\"+b+\"&ei=\"+google.kEI);})();})();</script><div id=\"xjsd\"></div><div id=\"xjsi\"><script>(function(){function c(b){window.setTimeout(function(){var a=document.createElement(\"script\");a.src=b;document.getElementById(\"xjsd\").appendChild(a)},0)}google.dljp=function(b,a){google.xjsu=b;c(a)};google.dlj=c;})();(function(){window.google.xjsrm=['mids'];})();if(google.y)google.y.first=[];if(!google.xjs){window._=window._||{};window._._DumpException=function(e){throw e};if(google.timers&&google.timers.load.t){google.timers.load.t.xjsls=new Date().getTime();}google.dljp('/xjs/_/js/k\\x3dxjs.hp.en_US.dLENfisyuL4.O/m\\x3dsb_he,d/rt\\x3dj/d\\x3d1/t\\", 1024) = 1024
+24273 write(1, "x3dzcms/rs\\x3dACT90oHpdS6z3KChcxP9yMAs72tcUpqHHg','/xjs/_/js/k\\x3dxjs.hp.en_US.dLENfisyuL4.O/m\\x3dsb_he,d/rt\\x3dj/d\\x3d1/t\\x3dzcms/rs\\x3dACT90oHpdS6z3KChcxP9yMAs72tcUpqHHg');google.xjs=1;}google.pmc={\"sb_he\":{\"agen\":true,\"cgen\":true,\"client\":\"heirloom-hp\",\"dh\":true,\"dhqt\":true,\"ds\":\"\",\"fl\":true,\"host\":\"google.com\",\"isbh\":28,\"jam\":0,\"jsonp\":true,\"msgs\":{\"cibl\":\"Clear Search\",\"dym\":\"Did you mean:\",\"lcky\":\"I\\u0026#39;m Feeling Lucky\",\"lml\":\"Learn more\",\"oskt\":\"Input tools\",\"psrc\":\"This search was removed from your \\u003Ca href=\\\"/history\\\"\\u003EWeb History\\u003C/a\\u003E\",\"psrl\":\"Remove\",\"sbit\":\"Search by image\",\"srch\":\"Google Search\"},\"nds\":true,\"ovr\":{},\"pq\":\"\",\"refpd\":true,\"rfs\":[],\"scd\":10,\"sce\":5,\"stok\":\"2pCVDUo8J_Xw6vzX0h8nF9whbzg\"},\"d\":{}};google.y.first.push(function(){if(google.med){google.med('init');google.initHistory();google.med('history');}});if(google.j&&google.j.en&&google.j.xi){window.setTimeout(google.j.xi,0);}\n", 939) = 939
+24273 write(1, "</script></div></body></html>", 29) = 29
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999998})
+24273 recv(3, "\r\n0\r\n\r\n", 127, MSG_PEEK) = 7
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "\r\n", 2)                = 2
+24273 write(1, "Inside while loop\n", 18) = 18
+24273 write(1, "Inside if chunked\n", 18) = 18
+24273 write(1, "before fd_read_line\n", 20) = 20
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999997})
+24273 recv(3, "0\r\n\r\n", 127, MSG_PEEK) = 5
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "0\r\n", 3)               = 3
+24273 write(1, "before strtol\n", 14)   = 14
+24273 write(1, "after strtol\n", 13)    = 13
+24273 write(1, "0\r\n", 3)              = 3
+24273 write(1, "\n", 1)                 = 1
+24273 write(1, "After xfree, before second remaining_chunk_size\n", 48) = 48
+24273 write(1, "before second fd_read_line\n", 27) = 27
+24273 select(4, [3], NULL, NULL, {900, 0}) = 1 (in [3], left {899, 999997})
+24273 recv(3, "\r\n", 127, MSG_PEEK)    = 2
+24273 write(1, "about to sock_read", 18) = 18
+24273 read(3, "\r\n", 2)                = 2
+24273 write(1, "After fd_read_body\n", 19) = 19
+24273 write(1, "After read_response_body\n", 25) = 25
+24273 write(1, "About to return \n", 17) = 17
+24273 write(1, "After gethttp\n", 14)   = 14
+24273 time(NULL)                        = 1466453442
+24273 open("/etc/localtime", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+24273 write(1, "After schemes\n", 14)   = 14
+24273 write(1, "After retrieve_url", 18) = 18
+24273 write(1, "after url argument list loop\n", 29) = 29
+24273 write(1, "before recursive spider\n", 24) = 24
+24273 close(1)                          = 0
+24273 munmap(0xb7fd9000, 4096)          = 0
+24273 exit_group(0)                     = ?
+24273 +++ exited with 0 +++
