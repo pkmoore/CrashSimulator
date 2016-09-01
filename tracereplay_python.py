@@ -134,6 +134,9 @@ def write_buffer(pid, address, value, buffer_length):
 
 
 def cleanup_return_value(val):
+    if val == '?':
+        logging.debug('Heads up! We\'re going to -1 for a "?" value')
+        return -1
     if type(val) == type(list()):
         ret_val = list_of_flags_to_int(val)
     else:
