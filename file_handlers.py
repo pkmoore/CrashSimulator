@@ -94,18 +94,17 @@ def dup_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup exit handler')
     exec_fd = tracereplay.peek_register(pid, tracereplay.EAX)
     trace_fd = int(syscall_object.ret[0])
-    check_fd = offset_file_descriptor(trace_fd)
     logging.debug('Execution return value: %d', exec_fd)
     logging.debug('Trace return value: %d', trace_fd)
-    logging.debug('Check fd: %d', check_fd)
-    if ret_val_from_execution != check_ret_val_from_trace:
+
+    if exec_fd != trace_fd:
         raise Exception('Return value from execution ({}) differs from '
-                        'check return value from trace ({})'
-                        .format(ret_val_from_execution,
-                                check_ret_val_from_trace))
-    if ret_val_from_execution >= 0:
-        add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
-    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
+                        'return value from trace ({})'
+                        .format(exec_fd,
+                                trace_fd))
+    if exec_fd >= 0:
+        add_os_fd_mapping(exec_fd, trace_fd)
+    tracereplay.poke_register(pid, tracereplay.EAX, trace_fd)
 
 
 def close_entry_handler(syscall_id, syscall_object, pid):
@@ -408,7 +407,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
 
 
 def open_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entring open exit handler')
+    logging.debug('Entering open exit handler')
     ret_val_from_trace = int(syscall_object.ret[0])
     ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
     if ret_val_from_trace == -1:
