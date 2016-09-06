@@ -59,8 +59,8 @@ def pipe_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering pipe entry handler')
     read_end_from_trace = int(syscall_object.args[0].value)
     write_end_from_trace = int(syscall_object.args[1].value.strip(']'))
-    if is_mmapd_before_close(read_end_from_trace) \
-       or is_mmapd_before_close(write_end_from_trace):
+    if is_mmapd_before_close(read_end_from_trace, tracereplay.syscalls) \
+       or is_mmapd_before_close(write_end_from_trace, tracereplay.syscalls):
         raise NotImplementedError('mmap() on file descriptors allocated by '
                                   'pipe() is unsupported')
     logging.debug('Read end from trace: %d', read_end_from_trace)
@@ -391,7 +391,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
                         'file name from trace ({})'.format(fn_from_execution,
                                                            fn_from_trace))
     fd_from_trace = int(syscall_object.ret[0])
-    if fd_from_trace == -1 or not is_mmapd_before_close(fd_from_trace):
+    if fd_from_trace == -1 or not is_file_mmapd_at_any_time(fn_from_trace):
         if fd_from_trace == -1:
             logging.debug('This is an unsuccessful open call. We will replay '
                           'it')
