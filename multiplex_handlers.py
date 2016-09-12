@@ -19,11 +19,10 @@ import re
 # return EWOULDBLOCK or something like that which would result in a replay
 # delta.
 def select_entry_handler(syscall_id, syscall_object, pid):
-    global rc
     logging.debug('Entering select entry handler')
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted select. Will advance past')
-        syscall_object = rc.advance_trace()
+        syscall_object = globals.rc.advance_trace()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'select':
             raise Exception('Attempt to advance past interrupted accept line '

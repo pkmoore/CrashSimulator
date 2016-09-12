@@ -1,4 +1,5 @@
 import tracereplay
+import tracereplay_globals
 import os
 import logging
 import binascii
@@ -384,10 +385,7 @@ def should_replay_based_on_fd(trace_fd):
 
 def find_close_for_fd(fd):
     logging.debug('Finding close for file descriptor: %d', fd)
-    # This list will not have the current syscall in it
-    # Must unroll the iterator
-    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
-    tmp_syscalls = list(tmp_syscalls)
+    tmp_syscalls = tracereplay_globals.rc.system_calls[tracereplay_globals.rc.system_call_index:]
     close_index = None
     for index, obj in enumerate(tmp_syscalls):
         if obj.name == 'close' and int(obj.args[0].value) == fd:
@@ -401,10 +399,7 @@ def find_close_for_fd(fd):
 
 
 def is_mmapd_before_close(fd):
-    # This list will not have the current syscall in it
-    # Must unroll the iterator
-    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
-    tmp_syscalls = list(tmp_syscalls)
+    tmp_syscalls = tracereplay_globals.rc.system_calls[tracereplay_globals.rc.system_call_index:]
     close_index = find_close_for_fd(fd)
     if close_index:
         logging.debug('Looking for mmap2 of fd %d up to %d calls away',

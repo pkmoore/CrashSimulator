@@ -4,6 +4,7 @@ from os_dict import SHUTDOWN_INT_TO_CMD, SHUTDOWN_CMD_TO_INT
 from os_dict import ADDRFAM_INT_TO_FAM
 from os_dict import SOCKTYPE_INT_TO_TYPE
 from os_dict import PROTOFAM_INT_TO_FAM
+import tracereplay_globals
 import logging
 
 
@@ -300,12 +301,11 @@ def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
 
 
 def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
-    global rc
     logging.debug('Checking if line from trace is interrupted accept')
     # Hack to fast forward through interrupted accepts
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted accept. Will advance past')
-        rc.advance_trace()
+        tracereplay_globals.rc.advance_trace()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'accept':
             raise Exception('Attempt to advance past interrupted accept line '
