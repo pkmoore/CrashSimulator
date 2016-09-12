@@ -130,7 +130,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (197, True): fstat64_entry_handler,
         (197, False): fstat64_exit_handler,
         (122, True): uname_entry_handler,
-#        (183, True): getcwd_entry_handler,
+        (183, True): getcwd_entry_handler,
         (140, True): llseek_entry_handler,
         (140, False): llseek_exit_handler,
         (42, True): pipe_entry_handler,
