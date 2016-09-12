@@ -420,11 +420,6 @@ def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Return value from trace: %d', ret_val_from_trace)
     logging.debug('Check return value from trace: %d',
                   check_ret_val_from_trace)
-    if ret_val_from_execution != check_ret_val_from_trace:
-        raise Exception('Return value from execution ({}) differs from '
-                        'check return value from trace ({})'
-                        .format(ret_val_from_execution,
-                                check_ret_val_from_trace))
     if ret_val_from_execution >= 0:
         add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
