@@ -11,7 +11,6 @@ from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
 from os_dict import OS_CONST, STAT_CONST
 
-tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
 tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1, 2]
 tracereplay.OS_FILE_DESCRIPTORS = []
@@ -35,7 +34,7 @@ def noop_current_syscall(pid):
     if skipping != 20:
         raise Exception('Nooping did not result in getpid exit. Got {}'
                         .format(skipping))
-    tracereplay.entering_syscall = False
+    tracereplay_globals.entering_syscall = False
 
 
 def next_syscall():

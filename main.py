@@ -265,7 +265,7 @@ if __name__ == '__main__':
             logging.info('System call id from execution: %d', orig_eax)
             logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
-                         'entry' if tracereplay.entering_syscall else 'exit')
+                         'entry' if tracereplay_globals.entering_syscall else 'exit')
             # This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
@@ -274,7 +274,7 @@ if __name__ == '__main__':
                 advance_trace()
                 tracereplay.syscall(pid)
                 continue
-            if tracereplay.entering_syscall:
+            if tracereplay_globals.entering_syscall:
                 syscall_object = advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
@@ -282,7 +282,7 @@ if __name__ == '__main__':
                               syscall_object)
             try:
                 handle_syscall(orig_eax, syscall_object,
-                               tracereplay.entering_syscall,
+                               tracereplay_globals.entering_syscall,
                                pid)
             except:
                 traceback.print_exc()
@@ -295,6 +295,6 @@ if __name__ == '__main__':
                 sys.exit(1)
             logging.info('# of System Calls Handled: %d',
                          tracereplay.handled_syscalls)
-            tracereplay.entering_syscall = not tracereplay.entering_syscall
+            tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
