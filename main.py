@@ -8,6 +8,7 @@ import traceback
 import ConfigParser
 
 from tracereplay_python import *
+from tracereplay_python import ReplayContext as ReplayContext
 from time_handlers import *
 from send_handlers import *
 from recv_handlers import *
@@ -25,6 +26,7 @@ from os_dict import OS_CONST, STAT_CONST
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
 
+global rc
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
@@ -254,7 +256,9 @@ if __name__ == '__main__':
             221: fcntl64_entry_debug_printer
         }
         t = Trace.Trace(trace)
-        tracereplay.system_calls = iter(t.syscalls)
+        global rc
+        rc = ReplayContext(t.syscalls)
+        tracereplay.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
@@ -270,11 +274,11 @@ if __name__ == '__main__':
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
                 logging.debug('Ignoring syscall')
-                tracereplay.system_calls.next()
+                rc.advance_trace()
                 tracereplay.syscall(pid)
                 continue
             if tracereplay.entering_syscall:
-                syscall_object = tracereplay.system_calls.next()
+                syscall_object = rc.advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',

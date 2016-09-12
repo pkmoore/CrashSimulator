@@ -1,6 +1,6 @@
 #!/bin/sh
 cd .. > /dev/null;
-OUTPUT=$(python main.py -f ./sample_traces/telnet_google.ini);
+OUTPUT=$(python main.py -f ./sample_traces/telnet_google.ini -l DEBUG);
 RET=$?
 echo $OUTPUT | grep -q "HTTP/1.0 200 OK"
 FOUND=$?

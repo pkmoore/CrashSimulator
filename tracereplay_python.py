@@ -12,9 +12,20 @@ from os_dict import OS_CONST, STAT_CONST
 
 tracereplay.entering_syscall = True
 tracereplay.handled_syscalls = 0
-tracereplay.system_calls = None
 tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1, 2]
 tracereplay.OS_FILE_DESCRIPTORS = []
+
+
+class ReplayContext:
+    def __init__(self, call_list):
+        self.system_calls = call_list
+        self.system_call_index = 0
+
+    def advance_trace(self):
+        if self.system_call_index < len(self.system_calls):
+            obj = self.system_calls[self.system_call_index]
+        self.system_call_index += 1
+        return obj
 
 
 # This function leaves the child process in a state of waiting at the point
