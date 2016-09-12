@@ -59,8 +59,8 @@ def pipe_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering pipe entry handler')
     read_end_from_trace = int(syscall_object.args[0].value)
     write_end_from_trace = int(syscall_object.args[1].value.strip(']'))
-    if is_mmapd_before_close(read_end_from_trace, tracereplay.syscalls) \
-       or is_mmapd_before_close(write_end_from_trace, tracereplay.syscalls):
+    if is_mmapd_before_close(read_end_from_trace, tracereplay_globals.syscalls) \
+       or is_mmapd_before_close(write_end_from_trace, tracereplay_globals.syscalls):
         raise NotImplementedError('mmap() on file descriptors allocated by '
                                   'pipe() is unsupported')
     logging.debug('Read end from trace: %d', read_end_from_trace)

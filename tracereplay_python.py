@@ -374,31 +374,27 @@ def should_replay_based_on_fd(trace_fd):
 
 
 def is_file_mmapd_at_any_time(file_name):
-    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
-    open_indexes = find_remaining_opens_for_file_name(file_name, tmp_syscalls)
+    open_indexes = find_opens_for_file_name(file_name, tracereplay_globals.system_calls)
     logging.debug('Checking open()\'s at the following indexes: {}'.format(open_indexes))
-    tracereplay.system_calls, tmp_syscalls = itertools.tee(tracereplay.system_calls)
     for i in open_indexes:
-        tmp_syscalls, current_segment = itertools.tee(tmp_syscalls)
-        current_segment = list(current_segment)
-        current_segment = current_segment[i:]
-        current_segment = iter(current_segment)
-        open_obj = current_segment.next()
+        current_segment = tracereplay_globals.system_calls[i:]
+        open_obj = current_segment[0]
         if open_obj.name != 'open':
-            raise ReplayDeltaError('Current segment did not start with an open() call')
+            raise ReplayDeltaError('Current segment did not start with an '
+                                   ' open() call')
         open_obj_fd = int(open_obj.ret[0])
         if is_mmapd_before_close(open_obj_fd, current_segment):
-            logging.debug('{} is mmap()\'d after being open()\'d {} calls away'.format(file_name, i))
+            logging.debug('{} is mmap()\'d after being open()\'d {} calls away'
+                          .format(file_name, i))
             return True
     logging.debug('{} is not mmap()\'d by any subsequent opens')
     return False
 
 
-def find_remaining_opens_for_file_name(name, current_segment):
+def find_opens_for_file_name(name, current_segment):
     logging.debug('Finding open()\'s for {}'.format(name))
-    current_segment, tmp_syscalls = itertools.tee(current_segment)
-    open_indexes = [0]
-    for index, obj in enumerate(tmp_syscalls):
+    open_indexes = []
+    for index, obj in enumerate(current_segment):
         if obj.name == 'open' and cleanup_quotes(obj.args[0].value) == name:
             open_indexes.append(index)
     for i in open_indexes:
@@ -408,9 +404,8 @@ def find_remaining_opens_for_file_name(name, current_segment):
 
 def find_close_for_fd(fd, current_segment):
     logging.debug('Finding close for file descriptor: %d', fd)
-    tmp_syscalls = tracereplay_globals.system_calls[tracereplay_globals.system_call_index:]
-    close_index = None
-    for index, obj in enumerate(tmp_syscalls):
+    close_index = len(current_segment)
+    for index, obj in enumerate(current_segment):
         if obj.name == 'close' and int(obj.args[0].value) == fd:
             close_index = index
             logging.debug('Found close for this open\'s file descriptor %d '
@@ -421,16 +416,15 @@ def find_close_for_fd(fd, current_segment):
     return close_index
 
 
-def is_mmapd_before_close(fd):
-    tmp_syscalls = tracereplay_globals.system_calls[tracereplay_globals.system_call_index:]
-    close_index = find_close_for_fd(fd)
+def is_mmapd_before_close(fd, current_segment):
+    close_index = find_close_for_fd(fd, current_segment)
     if close_index:
         logging.debug('Looking for mmap2 of fd %d up to %d calls away',
                       fd, close_index)
-        tmp_syscalls = tmp_syscalls[:close_index]
+        current_segment = current_segment[:close_index]
     else:
         logging.debug('Looking for mmap2 of fd %d before end of segment', fd)
-    for index, obj in enumerate(tmp_syscalls):
+    for index, obj in enumerate(current_segment):
         if obj.name == 'mmap2' and int(obj.args[4].value) == fd:
             logging.debug('Found mmap2 call for fd %d %d calls away',
                           fd, index)
