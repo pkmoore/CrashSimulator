@@ -17,16 +17,11 @@ tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1, 2]
 tracereplay.OS_FILE_DESCRIPTORS = []
 
 
-class ReplayContext:
-    def __init__(self, call_list):
-        self.system_calls = call_list
-        self.system_call_index = 0
-
-    def advance_trace(self):
-        if self.system_call_index < len(self.system_calls):
-            obj = self.system_calls[self.system_call_index]
-        self.system_call_index += 1
-        return obj
+def advance_trace():
+    if tracereplay_globals.system_call_index < len(tracereplay_globals.system_calls):
+        obj = tracereplay_globals.system_calls[tracereplay_globals.system_call_index]
+    tracereplay_globals.system_call_index += 1
+    return obj
 
 
 # This function leaves the child process in a state of waiting at the point
@@ -385,7 +380,7 @@ def should_replay_based_on_fd(trace_fd):
 
 def find_close_for_fd(fd):
     logging.debug('Finding close for file descriptor: %d', fd)
-    tmp_syscalls = tracereplay_globals.rc.system_calls[tracereplay_globals.rc.system_call_index:]
+    tmp_syscalls = tracereplay_globals.system_calls[tracereplay_globals.system_call_index:]
     close_index = None
     for index, obj in enumerate(tmp_syscalls):
         if obj.name == 'close' and int(obj.args[0].value) == fd:
@@ -399,7 +394,7 @@ def find_close_for_fd(fd):
 
 
 def is_mmapd_before_close(fd):
-    tmp_syscalls = tracereplay_globals.rc.system_calls[tracereplay_globals.rc.system_call_index:]
+    tmp_syscalls = tracereplay_globals.system_calls[tracereplay_globals.system_call_index:]
     close_index = find_close_for_fd(fd)
     if close_index:
         logging.debug('Looking for mmap2 of fd %d up to %d calls away',

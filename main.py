@@ -9,7 +9,6 @@ import ConfigParser
 import tracereplay_globals
 
 from tracereplay_python import *
-from tracereplay_python import ReplayContext as ReplayContext
 from time_handlers import *
 from send_handlers import *
 from recv_handlers import *
@@ -256,7 +255,7 @@ if __name__ == '__main__':
             221: fcntl64_entry_debug_printer
         }
         t = Trace.Trace(trace)
-        tracereplay_globals.rc = ReplayContext(t.syscalls)
+        tracereplay_globals.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
@@ -272,11 +271,11 @@ if __name__ == '__main__':
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
                 logging.debug('Ignoring syscall')
-                tracereplay_globals.rc.advance_trace()
+                advance_trace()
                 tracereplay.syscall(pid)
                 continue
             if tracereplay.entering_syscall:
-                syscall_object = tracereplay_globals.rc.advance_trace()
+                syscall_object = advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
