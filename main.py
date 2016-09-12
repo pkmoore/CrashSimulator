@@ -6,6 +6,7 @@ import argparse
 import logging
 import traceback
 import ConfigParser
+import tracereplay_globals
 
 from tracereplay_python import *
 from time_handlers import *
@@ -69,7 +70,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
     if entering:
-        tracereplay.handled_syscalls += 1
+        tracereplay_globals.handled_syscalls += 1
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -254,7 +255,7 @@ if __name__ == '__main__':
             221: fcntl64_entry_debug_printer
         }
         t = Trace.Trace(trace)
-        tracereplay.system_calls = iter(t.syscalls)
+        tracereplay_globals.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
@@ -264,24 +265,24 @@ if __name__ == '__main__':
             logging.info('System call id from execution: %d', orig_eax)
             logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
-                         'entry' if tracereplay.entering_syscall else 'exit')
+                         'entry' if tracereplay_globals.entering_syscall else 'exit')
             # This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
                 logging.debug('Ignoring syscall')
-                tracereplay.system_calls.next()
+                advance_trace()
                 tracereplay.syscall(pid)
                 continue
-            if tracereplay.entering_syscall:
-                syscall_object = tracereplay.system_calls.next()
+            if tracereplay_globals.entering_syscall:
+                syscall_object = advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
                               syscall_object)
             try:
                 handle_syscall(orig_eax, syscall_object,
-                               tracereplay.entering_syscall,
+                               tracereplay_globals.entering_syscall,
                                pid)
             except:
                 traceback.print_exc()
@@ -293,7 +294,7 @@ if __name__ == '__main__':
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
             logging.info('# of System Calls Handled: %d',
-                         tracereplay.handled_syscalls)
-            tracereplay.entering_syscall = not tracereplay.entering_syscall
+                         tracereplay_globals.handled_syscalls)
+            tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)

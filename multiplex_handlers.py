@@ -22,7 +22,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering select entry handler')
     while syscall_object.ret[0] == '?':
         logging.debug('Got interrupted select. Will advance past')
-        syscall_object = tracereplay.system_calls.next()
+        syscall_object = advance_trace()
         logging.debug('Got new line %s', syscall_object.original_line)
         if syscall_object.name != 'select':
             raise Exception('Attempt to advance past interrupted accept line '

@@ -151,7 +151,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         # file descriptor
         validate_integer_argument(pid, syscall_object, 0, 0)
         # bytes to read

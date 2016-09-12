@@ -72,7 +72,7 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+        if params[0] not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
             raise Exception('Tried to recvfrom from non-existent file '
                             'descriptor')
         buffer_address = params[1]
