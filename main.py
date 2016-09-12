@@ -70,7 +70,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
     if entering:
-        tracereplay.handled_syscalls += 1
+        tracereplay_globals.handled_syscalls += 1
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
         ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
             logging.info('# of System Calls Handled: %d',
-                         tracereplay.handled_syscalls)
+                         tracereplay_globals.handled_syscalls)
             tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)

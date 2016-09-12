@@ -58,7 +58,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
                                'does not match file descriptor from trace ({})'
                                .format(fd, fd_from_trace))
     # Decide if this is a file descriptor we want to deal with
-    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -341,12 +341,12 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
                                                   sockaddr_length)
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
-            if ret in tracereplay.REPLAY_FILE_DESCRIPTORS:
+            if ret in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
                 raise Exception('Syscall object return value ({}) already '
                                 'exists in tracked file descriptors list ({})'
                                 .format(ret,
-                                        tracereplay.REPLAY_FILE_DESCRIPTORS))
-            tracereplay.REPLAY_FILE_DESCRIPTORS.append(ret)
+                                        tracereplay_globals.REPLAY_FILE_DESCRIPTORS))
+            tracereplay_globals.REPLAY_FILE_DESCRIPTORS.append(ret)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')

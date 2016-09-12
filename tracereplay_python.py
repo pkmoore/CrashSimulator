@@ -11,10 +11,6 @@ from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
 from os_dict import OS_CONST, STAT_CONST
 
-tracereplay.handled_syscalls = 0
-tracereplay.REPLAY_FILE_DESCRIPTORS = [tracereplay.STDIN, 1, 2]
-tracereplay.OS_FILE_DESCRIPTORS = []
-
 
 def advance_trace():
     if tracereplay_globals.system_call_index < len(tracereplay_globals.system_calls):
@@ -46,7 +42,7 @@ def next_syscall():
 
 def offset_file_descriptor(fd):
     # The -3 is to account for stdin, stdout, stderr
-    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 3)
+    return fd - (len(tracereplay_globals.REPLAY_FILE_DESCRIPTORS) - 3)
 
 
 def peek_bytes(pid, address, num_bytes):
@@ -267,22 +263,22 @@ def validate_integer_argument(pid,
 
 
 def add_os_fd_mapping(os_fd, trace_fd):
-    logging.debug('Mappings: {}'.format(tracereplay.OS_FILE_DESCRIPTORS))
+    logging.debug('Mappings: {}'.format(tracereplay_globals.OS_FILE_DESCRIPTORS))
     new = {'os_fd': os_fd, 'trace_fd': trace_fd}
     logging.debug('Adding mapping: {}'.format(new))
-    if len(tracereplay.OS_FILE_DESCRIPTORS) != 0:
-        for i in tracereplay.OS_FILE_DESCRIPTORS:
+    if len(tracereplay_globals.OS_FILE_DESCRIPTORS) != 0:
+        for i in tracereplay_globals.OS_FILE_DESCRIPTORS:
             if i['os_fd'] == os_fd and i['trace_fd'] == trace_fd:
                 raise ReplayDeltaError('Mapping ({}) already exists!')
-    tracereplay.OS_FILE_DESCRIPTORS.append(new)
+    tracereplay_globals.OS_FILE_DESCRIPTORS.append(new)
 
 
 def remove_os_fd_mapping(trace_fd):
-    logging.debug('Mappings: {}'.format(tracereplay.OS_FILE_DESCRIPTORS))
+    logging.debug('Mappings: {}'.format(tracereplay_globals.OS_FILE_DESCRIPTORS))
     logging.debug('Removing mapping for tracefd: {}'.format(trace_fd))
     found = 0
     index = None
-    for i, item in enumerate(tracereplay.OS_FILE_DESCRIPTORS):
+    for i, item in enumerate(tracereplay_globals.OS_FILE_DESCRIPTORS):
         if item['trace_fd'] == trace_fd:
             found = found + 1
             index = i
@@ -290,12 +286,12 @@ def remove_os_fd_mapping(trace_fd):
         raise ReplayDeltaError('Tried to remove non-existant mapping')
     if found > 1:
         raise ReplayDeltaError('A trace_fd mapped to multiple os_fds')
-    tracereplay.OS_FILE_DESCRIPTORS.pop(index)
+    tracereplay_globals.OS_FILE_DESCRIPTORS.pop(index)
 
 
 def fd_pair_for_trace_fd(trace_fd):
     logging.debug('Looking up trace file descriptor %d', trace_fd)
-    res = [x for x in tracereplay.OS_FILE_DESCRIPTORS
+    res = [x for x in tracereplay_globals.OS_FILE_DESCRIPTORS
            if x['trace_fd'] == trace_fd]
     logging.debug(res)
     if len(res) > 1:
@@ -353,19 +349,19 @@ def update_socketcall_paramater(pid, params_addr, pos, value):
 def should_replay_based_on_fd(trace_fd):
     logging.debug('Should we replay?')
     d = fd_pair_for_trace_fd(trace_fd)
-    if d and trace_fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if d and trace_fd not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Call using non-replayed fd, not replaying')
         logging.debug('Looked up trace_fd: %d', d['trace_fd'])
         logging.debug('Looked up os_fd: %d', d['os_fd'])
         logging.debug('We should not replay, there is an os fd for this call '
                       'and no entry for it in REPLAY_FILE_DESCRIPTORS')
         return False
-    elif not d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    elif not d and trace_fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         logging.debug('This fd %d has no OS_FILE_DESCRIPTORS entry but does '
                       'exist in REPLAY_FILE_DESCRIPTORS. Should be replayed',
                       trace_fd)
         return True
-    elif d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    elif d and trace_fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('This fd ({}) is in both the OS file '
                                'descriptor list and the replay file '
                                'descriptor list'.format(trace_fd))
@@ -411,18 +407,18 @@ def is_mmapd_before_close(fd):
 
 
 def add_replay_fd(fd):
-    if fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('File descriptor ({}) alread exists in replay '
                                'file descriptors list'.format(fd))
-    tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd)
+    tracereplay_globals.REPLAY_FILE_DESCRIPTORS.append(fd)
 
 
 def remove_replay_fd(fd):
-    if fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
+    if fd not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('Tried to remove non-existant file descriptor '
                                '({}) from replay file descriptor lists'
                                .format(fd))
-    tracereplay.REPLAY_FILE_DESCRIPTORS.remove(fd)
+    tracereplay_globals.REPLAY_FILE_DESCRIPTORS.remove(fd)
 
 
 def find_arg_matching_string(args, s):
@@ -447,7 +443,7 @@ def get_stack_start_and_end(pid):
 def dump_stack(pid, syscall_id, entering):
     start, end = get_stack_start_and_end(pid)
     b = tracereplay.copy_address_range(pid, start, end)
-    f = open(str(tracereplay.handled_syscalls) + '-' +
+    f = open(str(tracereplay_globals.handled_syscalls) + '-' +
              SYSCALLS[syscall_id] + '-' +
              ('entry' if entering else 'exit') + '-' +
              str(int(time.time())) + '-' +
