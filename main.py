@@ -53,7 +53,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('recvmsg', False): recvmsg_exit_handler,
          ('getsockname', True): getsockname_entry_handler,
          ('getsockname', False): getsockname_exit_handler,
-        # ('getpeername', True): getpeername_entry_handler
+         ('getpeername', True): getpeername_entry_handler
         }
     subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
     validate_subcall(subcall_id, syscall_object)
@@ -101,7 +101,11 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
 #
 #        (195, True): check_return_value_entry_handler,
 #        (195, False): check_return_value_exit_handler,
-#
+
+        (39, True): check_return_value_entry_handler,
+        (39, False): check_return_value_exit_handler,
+
+        #
         (45, True): check_return_value_entry_handler,
         (45, False): check_return_value_exit_handler,
 #
@@ -124,7 +128,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (27, True): syscall_return_success_handler,
         (5, True): open_entry_handler,
         (5, False): open_exit_handler,
-        (39, True): mkdir_entry_handler,
         (85, True): readlink_entry_handler,
         (146, True): writev_entry_handler,
         (146, False): writev_exit_handler,
