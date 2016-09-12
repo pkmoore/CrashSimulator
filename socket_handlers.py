@@ -77,7 +77,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
-                raise NotImplementedException('getpeername only '
+                raise NotImplementedError('getpeername only '
                                               'supports AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                   addr,
@@ -122,7 +122,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Port: %d', port)
             logging.debug('Ip: %s', ip)
             if family != 'AF_INET':
-                raise NotImplementedException('getsockname only supports '
+                raise NotImplementedError('getsockname only supports '
                                               'AF_INET')
             tracereplay.populate_af_inet_sockaddr(pid,
                                                   addr,
@@ -158,7 +158,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def setsockopt_entry_handler(syscall_id, syscall_object, pid):
@@ -179,7 +179,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         optval_len = int(syscall_object.args[4].value)
         if optval_len != 4:
-            raise NotImplementedException('setsockopt() not implemented for '
+            raise NotImplementedError('setsockopt() not implemented for '
                                           'optval sizes other than 4')
         optval = int(syscall_object.args[3].value.strip('[]'))
         logging.debug('Optval: %s', optval)
@@ -191,7 +191,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
@@ -210,7 +210,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         optval_len = int(syscall_object.args[4].value.strip('[]'))
         if optval_len != 4:
-            raise NotImplementedException('getsockopt() not implemented for '
+            raise NotImplementedError('getsockopt() not implemented for '
                                           'optval sizes other than 4')
         optval = int(syscall_object.args[3].value.strip('[]'))
         logging.debug('Optval: %s', optval)
@@ -224,7 +224,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def connect_entry_handler(syscall_id, syscall_object, pid):
@@ -238,7 +238,7 @@ def connect_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def connect_exit_handler(syscall_id, syscall_object, pid):
@@ -259,7 +259,7 @@ def socket_exit_handler(syscall_id, syscall_object, pid):
         raise ReplayDeltaError('File descriptor from execution ({}) '
                                'differs from file descriptor from '
                                'trace ({})'
-                               .format(fd, fd_from_trace))
+                               .format(fd_from_execution, fd_from_trace))
     if fd_from_execution >= 0:
         add_os_fd_mapping(fd_from_execution, fd_from_trace)
     tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)
@@ -350,7 +350,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def accept_exit_handler(syscall_id, syscall_object, pid):
@@ -361,7 +361,7 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
         raise ReplayDeltaError('File descriptor from execution ({}) '
                                'differs from file descriptor from '
                                'trace ({})'
-                               .format(fd, fd_from_trace))
+                               .format(fd_from_execution, fd_from_trace))
     if fd_from_execution >= 0:
         add_os_fd_mapping(fd_from_execution, fd_from_trace)
     tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)

@@ -87,6 +87,6 @@ def times_entry_handler(syscall_id, syscall_object, pid):
 def time_entry_debug_printer(pid, orig_eax, syscall_object):
     param = tracereplay.peek_register(pid, tracereplay.EBX)
     if param == 0:
-        logging.debug('Time called with a NULL time_t');
+        logging.debug('Time called with a NULL time_t')
     else:
         logging.debug('time_t addr: %d', param)
