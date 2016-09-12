@@ -13,7 +13,7 @@ def send_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
-        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=params)
 
 
 def send_exit_handler(syscall_id, syscall_object, pid):
@@ -57,7 +57,7 @@ def sendmmsg_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('Got successful sendmmsg call')
             number_of_messages = syscall_object.ret[0]
             if syscall_id == 102:
-                p = tracereplay.peek_register(pid, tracreplay.ECX)
+                p = tracereplay.peek_register(pid, tracereplay.ECX)
                 params = extract_socketcall_parameters(pid, p, 4)
                 addr = params[1]
             else:
