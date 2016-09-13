@@ -120,6 +120,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         # descriptor  in position 4.
         (192, True): mmap2_entry_handler,
         (192, False): check_return_value_exit_handler,
+        (196, True): lstat64_entry_handler,
         (20, True): syscall_return_success_handler,
         (30, True): syscall_return_success_handler,
 #        (15, True): syscall_return_success_handler,
