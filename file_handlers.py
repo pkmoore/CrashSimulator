@@ -2,7 +2,7 @@ from tracereplay_python import *
 import logging
 from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
-from time import strptime, mktime, time
+from time import strptime, mktime
 
 
 def mkdir_entry_handler(syscall_id, syscall_object, pid):
