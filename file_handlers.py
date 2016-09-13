@@ -370,15 +370,6 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
 
 
-def lstat64_entry_handler(syscall_id, syscall_object, pid):
-    logging.debug('Entering lstat64 handler')
-    noop_current_syscall(pid)
-    if syscall_object.ret[0] != -1:
-        logging.debug('Got successful lstat64 call')
-        raise NotImplementedError('Successful lstat64 not supported')
-    apply_return_conditions(pid, syscall_object)
-
-
 def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open entry handler')
     ebx = tracereplay.peek_register(pid, tracereplay.EBX)
@@ -757,9 +748,9 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
     buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
     if syscall_object.ret[0] == -1:
-        logging.debug('Got unsuccessful stat64 call')
+        logging.debug('Got unsuccessful lstat64 call')
     else:
-        logging.debug('Got successful stat64 call')
+        logging.debug('Got successful lstat64 call')
         # There should always be an st_dev
         idx, arg = find_arg_matching_string(syscall_object.args[1:],
                                             'st_dev')[0]
