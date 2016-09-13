@@ -36,7 +36,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         buffer_address = params[1]
-        data = syscall_object.args[1].value.lstrip('"').rstrip('"')
+        data = cleanup_quotes(syscall_object.args[1].value)
         data = data.decode('string_escape')
         tracereplay.populate_char_buffer(pid,
                                          buffer_address,
