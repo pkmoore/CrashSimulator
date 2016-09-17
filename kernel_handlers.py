@@ -6,6 +6,19 @@ from os_dict import SIGPROCMASK_INT_TO_CMD
 import logging
 
 
+def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fadvise_64_64 entry handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    validate_integer_argument(pid, syscall_object, 1, 1)
+    validate_integer_argument(pid, syscall_object, 2, 2)
+    if should_replay_based_on_fd(int(syscall_object.args[0].value)):
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+
+
 # This handler assumes that uname cannot fail. The only documented way it can
 # fail is if the buffer it is handed is somehow invalid. This code assumes that
 # well written programs don't do this.
