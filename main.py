@@ -121,6 +121,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (192, True): mmap2_entry_handler,
         (192, False): check_return_value_exit_handler,
         (196, True): lstat64_entry_handler,
+        (10, True): unlink_entry_handler,
+        (10, False): check_return_value_exit_handler,
         (20, True): syscall_return_success_handler,
         (30, True): syscall_return_success_handler,
         (38, True): rename_entry_handler,
