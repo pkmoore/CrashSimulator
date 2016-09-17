@@ -5,6 +5,36 @@ from os_dict import PERM_INT_TO_PERM
 from time import strptime, mktime
 
 
+def rename_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('entering rename entry handler')
+    name1_from_trace = cleanup_quotes(syscall_object.args[0].value)
+    name1_from_execution = peek_string(pid,
+                                       tracereplay.peek_register(pid,
+                                                                 tracereplay.EBX))
+    name2_from_trace = cleanup_quotes(syscall_object.args[1].value)
+    name2_from_execution = peek_string(pid,
+                                       tracereplay.peek_register(pid,
+                                                                 tracereplay.ECX))
+    if name1_from_execution != name1_from_trace:
+        raise ReplayDeltaError('Name1 from execution ({}) does not match '
+                               'name1 from trace ({})'
+                               .format(name1_from_execution,
+                                       name1_from_trace))
+    if name2_from_execution != name2_from_trace:
+        raise ReplayDeltaError('Name2 from execution ({}) does not match '
+                               'name2 from trace ({})'
+                               .format(name2_from_execution,
+                                       name2_from_trace))
+    if is_file_mmapd_at_any_time(name1_from_trace) or \
+       is_file_mmapd_at_any_time(name2_from_trace):
+        logging.debug('One of the involved filenames is mmapd at some point '
+                      'will not replay system call')
+    else:
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+
 def mkdir_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering mkdir entry handler')
     noop_current_syscall(pid)
