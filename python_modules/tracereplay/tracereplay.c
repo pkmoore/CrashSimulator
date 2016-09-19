@@ -673,6 +673,7 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     time_t st__ctime;
     time_t st__mtime;
     time_t st__atime;
+    char buffer[100];
 
     if(!PyArg_ParseTuple(args, "iiiiKiiiiiKiiKiii", &child, &addr, &st_dev1, &st_dev2,
                     &st_blocks,    (int*)&st_nlink,  (int*)&st_gid,
@@ -704,8 +705,12 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
     s.st_blksize = st_blksize;
     s.st_blocks = st_blocks;
     s.st_ctime = st__ctime;
+    s.st_ctim.tv_nsec = 0;
     s.st_mtime = st__mtime;
+    s.st_mtim.tv_nsec = 0;
     s.st_atime = st__atime;
+    s.st_atim.tv_nsec = 0;
+
 
     if(DEBUG) {
         printf("sizeof(st.st_dev): %d\n", sizeof(s.st_dev));
@@ -729,7 +734,6 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
         printf("sizeof(s.st_blocks): %d\n", sizeof(s.st_blocks));
         printf("s.st_blocks: %llu\n", s.st_blocks);
 
-        char buffer[100];
         strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_ctime));
         printf("s.st_ctime: %s\n", buffer);
         strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_mtime));
@@ -741,6 +745,21 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
                                           addr,
                                           (unsigned char*)&s,
                                           sizeof(s));
+    if(DEBUG) {
+        struct stat64 r;
+        copy_child_process_memory_into_buffer(child, addr,
+                                              (unsigned char*)&r, sizeof(r));
+            strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&r.st_ctime));
+            printf("r.st_ctime: %s\n", buffer);
+            strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&r.st_mtime));
+            printf("r.st_mtime: %s\n", buffer);
+            strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&r.st_atime));
+            printf("r.st_atime: %s\n", buffer);
+            printf("!!!!!!\n");
+            printf("r.st_ctime: %lld\n", (long long)r.st_ctime);
+            printf("r.st_mtime: %lld\n", (long long)r.st_mtime);
+            printf("r.st_atime: %lld\n", (long long)r.st_atime);
+    }
     Py_RETURN_NONE;
 }
 
