@@ -170,6 +170,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, False): dup_exit_handler,
         (272, True): fadvise64_64_entry_handler,
         (272, False): check_return_value_exit_handler,
+        (320, True): utimensat_entry_handler,
+        (320, False): check_return_value_exit_handler,
         (340, True): prlimit64_entry_handler,
         (345, True): sendmmsg_entry_handler,
         (345, False): sendmmsg_exit_handler
