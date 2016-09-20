@@ -953,6 +953,30 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
 
 
+def fchown_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fchown entry handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # TODO: Validate second argument here. Issue -> it is a flags object
+    validate_integer_argument(pid, syscall_object, 2, 2)
+    if should_replay_based_on_fd(int(syscall_object.args[0].value)):
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+
+
+def fchmod_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fchmod entry handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    if should_replay_based_on_fd(int(syscall_object.args[0].value)):
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+
+
 def cleanup_st_mode(m):
     m = m.split('|')
     tmp = 0

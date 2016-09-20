@@ -103,6 +103,8 @@ def validate_syscall(syscall_id, syscall_object):
         return
     if syscall_id == 202 and 'getegid' in syscall_object.name:
         return
+    if syscall_id == 207 and 'fchown' in syscall_object.name:
+        return
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
         raise ReplayDeltaError('System call validation failed: from '
                                'execution: {0}({1}) is not from '
