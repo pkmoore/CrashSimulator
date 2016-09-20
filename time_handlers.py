@@ -118,6 +118,7 @@ def utimensat_entry_handler(syscall_id, syscall_object, pid):
                                                 timespec1_nseconds)
         apply_return_conditions(pid, syscall_object)
     else:
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         logging.debug('Not replaying this system call')
 
 
