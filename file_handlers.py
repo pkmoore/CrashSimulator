@@ -241,13 +241,6 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
-# This thing must be here to handle exits for read calls that we let pass. This
-# will go away once the new "open" machinery is in place and we intercept all
-# calls to read.
-def read_exit_handler(syscall_id, syscall_object, pid):
-    pass
-
-
 # Note: This handler only takes action on syscalls made to file descriptors we
 # are tracking. Otherwise it simply does any required debug-printing and lets
 # it execute
@@ -627,14 +620,6 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
                                            st_atime)
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
-
-
-def fstat64_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug('fstat64 exit handler does nothing')
-
-
-def stat64_exit_handler(syscall_id, syscall_object, pid):
-    pass
 
 
 def stat64_entry_handler(syscall_id, syscall_object, pid):
