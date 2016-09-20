@@ -486,6 +486,52 @@ def open_exit_handler(syscall_id, syscall_object, pid):
     tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
 
 
+def openat_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering openat entry handler')
+    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    fn_from_execution = peek_string(pid, ecx)
+    fn_from_trace = syscall_object.args[1].value.strip('"')
+    logging.debug('Filename from trace: %s', fn_from_trace)
+    logging.debug('Filename from execution: %s', fn_from_execution)
+    if fn_from_execution != fn_from_trace:
+        raise Exception('File name from execution ({}) differs from '
+                        'file name from trace ({})'.format(fn_from_execution,
+                                                           fn_from_trace))
+    fd_from_trace = int(syscall_object.ret[0])
+    if fd_from_trace == -1 or not is_file_mmapd_at_any_time(fn_from_trace):
+        if fd_from_trace == -1:
+            logging.debug('This is an unsuccessful open call. We will replay '
+                          'it')
+        else:
+            logging.debug('File descriptor is not mmap\'d before it is closed '
+                          'so we will replay it')
+            add_replay_fd(fd_from_trace)
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Resultant file descriptor is mmap\'d before close. '
+                      'Will not replay')
+
+
+def openat_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering openat exit handler')
+    ret_val_from_trace = int(syscall_object.ret[0])
+    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    if ret_val_from_trace == -1:
+        errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
+        logging.debug('Errno return value: %d', errno_ret)
+        check_ret_val_from_trace = errno_ret
+    else:
+        check_ret_val_from_trace = offset_file_descriptor(ret_val_from_trace)
+    logging.debug('Return value from execution: %d', ret_val_from_execution)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    logging.debug('Check return value from trace: %d',
+                  check_ret_val_from_trace)
+    if ret_val_from_execution >= 0:
+        add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
+    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
+
+
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fstat64 handler')
     if not should_replay_based_on_fd(int(syscall_object.args[0].value)):
