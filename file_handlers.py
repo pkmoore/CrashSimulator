@@ -1246,6 +1246,13 @@ def read_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('Tried to read from fd: %d', fd)
 
 
+def unlink_entry_debug_printer(pid, orig_eax, syscall_object):
+    name = peek_string(pid,
+                       tracereplay.peek_register(pid,
+                                                 tracereplay.EBX))
+    logging.debug('Tried to unlink name %s', name)
+
+
 def cleanup_quotes(quo):
     if quo.startswith('"'):
         quo = quo[1:]

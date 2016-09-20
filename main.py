@@ -259,6 +259,7 @@ if __name__ == '__main__':
             6: close_entry_debug_printer,
             3: read_entry_debug_printer,
             4: write_entry_debug_printer,
+            10: unlink_entry_debug_printer,
             13: time_entry_debug_printer,
             33: access_entry_debug_printer,
             41: dup_entry_debug_printer,
