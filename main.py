@@ -176,6 +176,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (272, False): check_return_value_exit_handler,
         (300, True): fstatat64_entry_handler,
         (300, False): check_return_value_exit_handler,
+        (301, True): unlinkat_entry_handler,
+        (301, False): check_return_value_exit_handler,
         (320, True): utimensat_entry_handler,
         (320, False): check_return_value_exit_handler,
         (340, True): prlimit64_entry_handler,

@@ -5,6 +5,30 @@ from os_dict import PERM_INT_TO_PERM
 from time import strptime, mktime
 
 
+def unlinkat_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering unlinkat entry handler')
+    name_from_execution = peek_string(pid,
+                                      tracereplay.peek_register(pid,
+                                                                tracereplay.ECX))
+    name_from_trace = cleanup_quotes(syscall_object.args[1].value)
+    logging.debug('Name from execution: %s', name_from_execution)
+    logging.debug('Name from trace: %s', name_from_trace)
+    if name_from_execution != name_from_trace:
+        raise ReplayDeltaError('Name from execution ({}) does not match '
+                               'name from trace ({})'
+                               .format(name_from_execution,
+                                       name_from_trace))
+    if not syscall_object.args[0].value == 'AT_FDCWD':
+        if not should_replay_based_on_fd(int(syscall_object.args[0].value)) \
+           or is_file_mmapd_at_any_time(name_from_trace):
+            logging.debug('Not replaying this system call')
+            swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+    else:
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+
 def unlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlink entry handler')
     name_from_execution = peek_string(pid,
