@@ -1117,6 +1117,7 @@ def fchown_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def fchmod_entry_handler(syscall_id, syscall_object, pid):
@@ -1128,6 +1129,7 @@ def fchmod_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
 def cleanup_st_mode(m):
