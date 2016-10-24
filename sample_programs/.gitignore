@@ -19,3 +19,4 @@ charactertest
 callselect_noaction
 read_known_hosts
 dropbear_read_calls
+callrename
