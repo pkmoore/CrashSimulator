@@ -336,3 +336,13 @@ if __name__ == '__main__':
             tracereplay.syscall(pid)
         logging.info('Exited with checker in accepting state: %s',
                      checker.in_accepting_state())
+        logging.info('Exiting state: %s',
+                     checker.current_state)
+
+        # Clean this up!!
+        print(checker.source_been_lstat64)
+        print(checker.destination_been_lstat64)
+        print(checker.destination_been_stat64)
+        print(checker.rename_attempted)
+        print(checker.source_been_fstat64)
+        print(checker.destination_been_fstat64)
