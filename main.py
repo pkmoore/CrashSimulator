@@ -18,6 +18,8 @@ from kernel_handlers import *
 from multiplex_handlers import *
 from generic_handlers import *
 
+from checkers import CrossDeviceMoveChecker
+
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
 from errno_dict import ERRNO_CODES
@@ -281,6 +283,8 @@ if __name__ == '__main__':
         t = Trace.Trace(trace)
         tracereplay_globals.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
+        checker = CrossDeviceMoveChecker()
+        logging.debug('Checker is a cross device move checker')
         logging.info('Entering syscall handling loop')
         while next_syscall():
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
@@ -317,8 +321,12 @@ if __name__ == '__main__':
                                     'printer'.format(orig_eax))
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
+            logging.debug('Transitioning checker')
+            checker.transition(syscall_object)
             logging.info('# of System Calls Handled: %d',
                          tracereplay_globals.handled_syscalls)
             tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
+        logging.info('Exited with checker in accepting state: %s',
+                     checker.in_accepting_state())
