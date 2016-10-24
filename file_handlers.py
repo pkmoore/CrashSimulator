@@ -1202,6 +1202,118 @@ def fchmod_entry_handler(syscall_id, syscall_object, pid):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
+def flistxattr_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('In flistxattr entry handler')
+    # validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # validate buffer size
+    validate_integer_argument(pid, syscall_object, 2, 2)
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(fd):
+        if syscall_object.ret[0] != -1:
+            buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
+            logging.debug('buffer address: %x', buffer_address)
+            # if param 2 is NULL, we don't populate
+            if buffer_address != 0:
+                data = cleanup_quotes(syscall_object.args[1].value)
+                if data == 'NULL':
+                    data = ''
+                else:
+                    data = data.decode('string-escape')
+                logging.debug('data: %s', data)
+                tracereplay.populate_char_buffer(pid,
+                                                 buffer_address,
+                                                 data)
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def flixtxattr_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering flistxattr exit handler')
+    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
+
+
+def fgetxattr_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('In fgetxattr entry handler')
+    # validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # validate buffer size
+    validate_integer_argument(pid, syscall_object, 3, 3)
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(fd):
+        if syscall_object.ret[0] != -1:
+            buffer_address = tracereplay.peek_register(pid, tracereplay.EDX)
+            logging.debug('buffer address: %x', buffer_address)
+            # if param 2 is NULL, we don't populate
+            if buffer_address != 0:
+                data = cleanup_quotes(syscall_object.args[1].value)
+                if data == 'NULL':
+                    data = ''
+                else:
+                    data = data.decode('string-escape')
+                logging.debug('data: %s', data)
+                tracereplay.populate_char_buffer(pid,
+                                                 buffer_address,
+                                                 data)
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def fgetxattr_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fgetxattr exit handler')
+    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
+
+
+def fsetxattr_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fsetxattr entry handler')
+    # validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # validate size
+    validate_integer_argument(pid, syscall_object, 3, 3)
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(fd):
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def fsetxattr_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering fstexattr exit handler')
+    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
+
+
 def cleanup_st_mode(m):
     m = m.split('|')
     tmp = 0
