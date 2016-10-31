@@ -54,6 +54,9 @@ class CrossDeviceMoveChecker:
             self.current_state = self.states[1]
 
     # We almost need a checklist type situation here
+    # We don't have a way of knowing what the appliation is doing with the results
+    # of the system call so we end up having to just accept calls whenever they happen.
+    # We can't make judgements about when a call is made.
 
     def complete_item(self, syscall_object):
         if not self.source_been_lstat64 and is_lstat64_source(syscall_object):
@@ -79,8 +82,7 @@ class CrossDeviceMoveChecker:
          and self.destination_been_lstat64 \
          and self.destination_been_stat64 \
          and self.source_been_fstat64 \
-         and self.destination_been_fstat64 \
-         and self.rename_attempted:
+         and self.destination_been_fstat64:
             return True
         return False
 
