@@ -1,4 +1,10 @@
-all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls
+all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64
+
+callgetdents64: callgetdents64.c
+	gcc -ggdb -o callgetdents64 callgetdents64.c
+
+callreaddir: callreaddir.c
+	gcc -ggdb -o callreaddir callreaddir.c
 
 callrename: callrename.c
 	gcc -ggdb -o callrename callrename.c
@@ -80,3 +86,4 @@ clean:
 	- rm callpoll_null
 	- rm callsetlocale
 	- rm callrename
+	- rm callreaddir
