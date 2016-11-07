@@ -4,6 +4,8 @@ from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
 from time import strptime, mktime
 
+from getdents64_parser import parse_getdents64_structure
+
 
 def unlinkat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlinkat entry handler')
@@ -1304,6 +1306,48 @@ def fsetxattr_entry_handler(syscall_id, syscall_object, pid):
 
 def fsetxattr_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fstexattr exit handler')
+    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
+
+
+def getdents64_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getdents64 entry handler')
+    # Validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # We must check the this argument manually because posix-omni-parser
+    # does not split the list of structures up correctly
+    size = tracereplay.peek_register(pid, tracereplay.EDX)
+    size_from_trace = int(syscall_object.args[-1].value)
+    if size != size_from_trace:
+        raise ReplayDeltaError('Size from execution ({}) did not match size '
+                               'from trace ({})'
+                               .format(size, size_from_trace))
+
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(fd):
+        logging.debug('Replaying this system call')
+        logging.debug('PID: %d', pid)
+        addr = tracereplay.peek_register(pid, tracereplay.ECX)
+        logging.debug('addr: %x', addr & 0xffffffff)
+        retlen = int(syscall_object.ret[0])
+        data = parse_getdents64_structure(syscall_object)
+        if len(data) > 0:
+            tracereplay.populate_getdents64_structure(pid, addr, data, retlen)
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def getdents64_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getdents64 exit handler')
     ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)

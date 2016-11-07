@@ -25,6 +25,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <sys/ioctl.h>
+#include <dirent.h>
 
 static PyObject* TraceReplayError;
 
@@ -105,6 +106,10 @@ int copy_buffer_into_child_process_memory(pid_t child,
         for(i = 0; i < buf_length; i++) {
             printf("%02X ", buffer[i]);
         }
+        printf("C: copy_buffer: buffer data(ASCII): \n");
+        for(i = 0; i < buf_length; i++) {
+                    printf("%c ", buffer[i]);
+        }
         printf("\n");
     }
     // Special case for buffers smaller than one 4 byte write
@@ -150,6 +155,139 @@ int copy_buffer_into_child_process_memory(pid_t child,
         }
     }
     return 0;
+}
+
+struct linux_dirent64 {
+    unsigned long long d_ino;
+    long long d_off;
+    unsigned short d_reclen;
+    unsigned char d_type;
+    char d_name[];
+};
+
+static PyObject* tracereplay_populate_getdents64_structure(PyObject* self,
+                                                           PyObject* args) {
+    pid_t child;
+    void* addr;
+    PyObject* dents;
+    size_t retlen;
+    if(!PyArg_ParseTuple(args, "IIOI", &child, &addr, &dents, &retlen)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_getdents64_structure arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: populate_getdents64: child %d\n", child);
+        printf("C: populate_getdents64: addr %p\n", addr);
+    }
+
+    if(!PyList_Check(dents)) {
+        PyErr_SetString(TraceReplayError,
+                        "list of dents is not a list");
+    }
+
+    PyObject* iter;
+    Py_ssize_t dents_len;
+    PyObject* next;
+
+    PyObject* d_ino_obj;
+    PyObject* d_name_obj;
+    PyObject* d_reclen_obj;
+    PyObject* d_type_obj;
+    PyObject* d_off_obj;
+
+    unsigned long d_ino;
+    char* d_name;
+    unsigned short d_reclen;
+    char d_type;
+    unsigned long d_off;
+
+
+    dents_len = PyList_Size(dents);
+
+    unsigned char c_dents[retlen];
+    memset(c_dents, 0, sizeof(c_dents));
+    unsigned char* write_ptr = c_dents;
+    iter = PyObject_GetIter(dents);
+    next = PyIter_Next(iter);
+    while(next) {
+        if(!PyDict_Check(next)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-dict object in dents list");
+        }
+        d_ino_obj = PyDict_GetItemString(next, "d_ino");
+        if(!PyInt_Check(d_ino_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_ino");
+        }
+        d_name_obj = PyDict_GetItemString(next, "d_name");
+        if(!PyString_Check(d_name_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-string object in d_name");
+        }
+        d_reclen_obj = PyDict_GetItemString(next, "d_reclen");
+        if(!PyInt_Check(d_reclen_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_reclen");
+        }
+        d_type_obj = PyDict_GetItemString(next, "d_type");
+        if(!PyInt_Check(d_type_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_type");
+        }
+        d_off_obj = PyDict_GetItemString(next, "d_off");
+        if(!PyInt_Check(d_off_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_off");
+        }
+        d_ino = (unsigned long)PyInt_AsLong(d_ino_obj);
+        d_name = PyString_AsString(d_name_obj);
+        d_off = (unsigned long)PyInt_AsLong(d_off_obj);
+        d_reclen = (unsigned short)PyInt_AsLong(d_reclen_obj);
+        d_type = (char)PyInt_AsLong(d_type_obj);
+        if(DEBUG) {
+            printf("C: populate_getdents64: d_ino: %lu\n", d_ino);
+            printf("C: populate_getdents64: d_name: %s\n", d_name);
+            printf("C: populate_getdents64: d_off: %lu\n", d_off);
+            printf("C: populate_getdents64: d_reclen: %hu\n", d_reclen);
+            printf("C: populate_getdents64: d_type: %d\n", (int)d_type);
+            printf("C: populate_getdents64: strlen(d_name): %d\n",
+                   strlen(d_name));
+            printf("C: populate_getdents64: write_ptr: %p\n", write_ptr);
+        }
+        ((struct linux_dirent64*)write_ptr)->d_ino = d_ino;
+        ((struct linux_dirent64*)write_ptr)->d_off = d_off;
+        ((struct linux_dirent64*)write_ptr)->d_reclen = d_reclen;
+        ((struct linux_dirent64*)write_ptr)->d_type = d_type;
+        strcpy((((struct linux_dirent64*)write_ptr)->d_name),
+               d_name);
+        next = PyIter_Next(iter);
+        printf("%llu\n", ((struct linux_dirent64*)write_ptr)->d_ino);
+        printf("%lld\n", ((struct linux_dirent64*)write_ptr)->d_off);
+        printf("%hu\n", ((struct linux_dirent64*)write_ptr)->d_reclen);
+        if(DEBUG) {
+            printf("C: populate_getdents64: d_ino: %llu\n",
+                   ((struct linux_dirent64*)write_ptr)->d_ino);
+            printf("C: populate_getdents64: d_name: %s\n",
+                   ((struct linux_dirent64*)write_ptr)->d_name);
+            printf("C: populate_getdents64: d_off: %lld\n",
+                   ((struct linux_dirent64*)write_ptr)->d_off);
+            printf("C: populate_getdents64: d_reclen: %hu\n",
+                   ((struct linux_dirent64*)write_ptr)->d_reclen);
+            printf("C: populate_getdents64: d_type: %d\n",
+                   (int)((struct linux_dirent64*)write_ptr)->d_type);
+            printf("C: populate_getdents64: strlen(d_name): %d\n",
+                   strlen(d_name));
+        }
+        write_ptr += d_reclen;
+        if(DEBUG) {
+            printf("C: populate_getdents64: write_ptr: %p\n", write_ptr);
+        }
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&c_dents,
+                                          retlen);
+    Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_populate_pipefd_array(PyObject* self,
@@ -1317,6 +1455,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate pipefd array"},
     {"get_select_fds", tracereplay_get_select_fds,
      METH_VARARGS, "get select fds"},
+    {"populate_getdents64_structure", tracereplay_populate_getdents64_structure,
+     METH_VARARGS, "populate getdents64 structure"},
     {NULL, NULL, 0, NULL}
 };
 
