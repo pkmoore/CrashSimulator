@@ -230,37 +230,38 @@ def read_entry_handler(syscall_id, syscall_object, pid):
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
-    if fd_from_trace in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
-        # file descriptor
-        validate_integer_argument(pid, syscall_object, 0, 0)
-        # bytes to read
-        validate_integer_argument(pid, syscall_object, 2, 2)
-        buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-        buffer_size_from_execution = tracereplay.peek_register(pid,
-                                                               tracereplay.EDX)
-        buffer_size_from_trace = int(syscall_object.args[2].value)
-        logging.debug('Address: %x', buffer_address & 0xffffffff)
-        logging.debug('Buffer size from execution: %d',
-                      buffer_size_from_execution)
-        logging.debug('Buffer size from trace: %d', buffer_size_from_trace)
-        ret_val = int(syscall_object.ret[0])
+    if should_replay_based_on_fd(fd_from_trace):
+        ret_val = cleanup_return_value(syscall_object.ret[0])
         noop_current_syscall(pid)
-        data = syscall_object.args[1].value
-        data = cleanup_quotes(data)
-        data = data.decode('string_escape')
-        if len(data) != ret_val:
-            raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
-                                   'return value from trace ({})'
-                                   .format(len(data), ret_val))
-        tracereplay.populate_char_buffer(pid,
-                                         buffer_address,
-                                         data)
-        buf = tracereplay.copy_address_range(pid,
+        if ret_val != -1:
+            # file descriptor
+            validate_integer_argument(pid, syscall_object, 0, 0)
+            # bytes to read
+            validate_integer_argument(pid, syscall_object, 2, 2)
+            buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
+            buffer_size_from_execution = tracereplay.peek_register(pid,
+                                                                   tracereplay.EDX)
+            buffer_size_from_trace = int(syscall_object.args[2].value)
+            logging.debug('Address: %x', buffer_address & 0xffffffff)
+            logging.debug('Buffer size from execution: %d',
+                          buffer_size_from_execution)
+            logging.debug('Buffer size from trace: %d', buffer_size_from_trace)
+            data = syscall_object.args[1].value
+            data = cleanup_quotes(data)
+            data = data.decode('string_escape')
+            if len(data) != ret_val:
+                raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
+                                       'return value from trace ({})'
+                                       .format(len(data), ret_val))
+            tracereplay.populate_char_buffer(pid,
                                              buffer_address,
-                                             buffer_address + ret_val)
-        if buf != data:
-            raise ReplayDeltaError('Data copied by read() handler doesn\'t '
-                                   'match after copy')
+                                             data)
+            buf = tracereplay.copy_address_range(pid,
+                                                 buffer_address,
+                                                 buffer_address + ret_val)
+            if buf != data:
+                raise ReplayDeltaError('Data copied by read() handler doesn\'t '
+                                       'match after copy')
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
@@ -287,9 +288,6 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     #                           'execution!')
     fd = int(syscall_object.args[0].value)
     if should_replay_based_on_fd(fd):
-        print('Write: \n {} \n to to file descriptor: {}'
-              .format(bytes_from_execution.encode('string-escape'),
-                      fd))
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
@@ -711,7 +709,6 @@ def fstatat64_entry_handler(syscall_id, syscall_object, pid):
         syscall_object.args = list(syscall_object.args)
         del(syscall_object.args[1])
         syscall_object.args = tuple(syscall_object.args)
-        print(syscall_object.args)
         logging.debug('Got successful fstatat64 call')
         # There should always be an st_dev
         idx, arg = find_arg_matching_string(syscall_object.args[1:],
