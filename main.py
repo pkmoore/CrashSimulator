@@ -226,6 +226,9 @@ if __name__ == '__main__':
     parser.add_argument('-l',
                         '--loglevel',
                         help='Level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
+    parser.add_argument('-k',
+                        '--checker',
+                        help='Specify a checker by Python constructor')
     args = vars(parser.parse_args())
     # Don't allow switches combined with config file option
     if (args.get('command') is not None or args.get('trace') is not None) \
@@ -263,6 +266,12 @@ if __name__ == '__main__':
         logging.info('Logging engaged')
         tracereplay.enable_debug_output(numeric_level)
     logging.debug('About to spawn child process')
+    # TODO: HACK!
+    checker = None
+    if args.get('checker') is not None:
+        checker = args['checker']
+        logging.debug('Checker string: %s', checker)
+        checker = eval(checker)
     pid = os.fork()
     if pid == 0:
         tracereplay.traceme()
@@ -292,8 +301,6 @@ if __name__ == '__main__':
         t = Trace.Trace(trace)
         tracereplay_globals.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
-        checker = XattrsCopiedDuringCopyChecker('/mnt/b/test.txt')
-        logging.debug('Checker is a cross device move checker')
         logging.info('Entering syscall handling loop')
         while next_syscall():
             orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
@@ -330,12 +337,15 @@ if __name__ == '__main__':
                                     'printer'.format(orig_eax))
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
-            logging.debug('Transitioning checker')
-            checker.transition(syscall_object)
+
+            if checker:
+                logging.debug('Transitioning checker')
+                checker.transition(syscall_object)
             logging.info('# of System Calls Handled: %d',
                          tracereplay_globals.handled_syscalls)
             tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
-        logging.info('Exited with checker in accepting state: %s',
+        if checker:
+            logging.info('Exited with checker in accepting state: %s',
                      checker.is_accepting())
