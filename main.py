@@ -18,7 +18,8 @@ from kernel_handlers import *
 from multiplex_handlers import *
 from generic_handlers import *
 
-from checkers import CrossDeviceMoveChecker
+from checkers import FileReplacedDuringCopyChecker, \
+                     XattrsCopiedDuringCopyChecker
 
 from syscall_dict import SYSCALLS
 from syscall_dict import SOCKET_SUBCALLS
@@ -291,7 +292,7 @@ if __name__ == '__main__':
         t = Trace.Trace(trace)
         tracereplay_globals.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
-        checker = CrossDeviceMoveChecker()
+        checker = XattrsCopiedDuringCopyChecker('/mnt/b/test.txt')
         logging.debug('Checker is a cross device move checker')
         logging.info('Entering syscall handling loop')
         while next_syscall():
@@ -337,14 +338,4 @@ if __name__ == '__main__':
             logging.debug('Requesting next syscall')
             tracereplay.syscall(pid)
         logging.info('Exited with checker in accepting state: %s',
-                     checker.in_accepting_state())
-        logging.info('Exiting state: %s',
-                     checker.current_state)
-
-        # Clean this up!!
-        print(checker.source_been_lstat64)
-        print(checker.destination_been_lstat64)
-        print(checker.destination_been_stat64)
-        print(checker.rename_attempted)
-        print(checker.source_been_fstat64)
-        print(checker.destination_been_fstat64)
+                     checker.is_accepting())
