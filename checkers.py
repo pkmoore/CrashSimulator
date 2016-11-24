@@ -29,6 +29,77 @@ class XattrsCopiedDuringCopyChecker:
         return self.copy_automaton.is_accepting()
 
 
+# Accepts traces where an attempt to rename() the target filename returns
+# EXDEV.
+# NOTE: some applications specify cross disk move by user input so this
+# automaton is not useful in all situations (e.g. mmv)
+class RenameEXDEVAutomaton:
+    def __init__(self, filename):
+        self.filename = filename
+        self.states = [{'id': 0,
+                        'comment': 'rename has not been attempted on {} yet'
+                                   .format(self.filename),
+                        'accepting': False},
+                       {'id': 1,
+                        'comment': 'Got rename that failed with EXDEV',
+                        'accepting': True}]
+        self.current_state = self.states[0]
+
+    def transition(self, syscall_object):
+        if self.current_state['id'] == 0:
+            if syscall_object.name == 'rename':
+                if self.filename in syscall_object.args[0].value:
+                    if syscall_object.ret[1] == 'EXDEV':
+                        self.current_state = self.states[1]
+        else:
+            # There is no way to exit state 1
+            pass
+
+    def is_accepting(self):
+        return self.current_state['accepting']
+
+
+# Rejects traces where /dev/urandom is opened and read from as part of a copy
+# process. How do we know this is what the program is doing? For example,
+# a program could simply be getting some random data from /dev/urandom.
+# Likely incomplete handling of some system call orderings.
+
+class UrandomReadDuringCopyAutomaton:
+    def __init__(self):
+        self.states = [{'id': 0,
+                     'comment': '/dev/urandom has not been opened yet',
+                     'accepting': True},
+                    {'id': 1,
+                     'comment': '/dev/urandom is open but has not been '
+                                'read from yet',
+                     'accepting': True},
+                    {'id': 2,
+                     'comment': '/dev/urandom is has been read from',
+                     'accepting': True},
+                    {'id': 3,
+                     'comment': 'the data has been written to destination file',
+                     'accepting':False}]
+
+        self.data_register = None
+        self.urandom_fd = None
+
+
+    def transition(self, syscall_object):
+        if self.current_state['id'] == 0:
+            if 'open' in syscall_object.name:
+                if '/dev/urandom' in syscall_object.args[0]:
+                    self.current_state = self.states[1]
+                    self.urandom_fd = int(syscall_object.ret[0])
+        if self.current_state['id'] == 1:
+            if
+
+
+    def is_accepting(self):
+        return self.current_state['accepting']
+
+
+# Accepts traces where every xattr that was read from the source file is
+# applied to the destination file. Will fail on some orderings
 class XattrsCopiedInBulkAutomaton:
     def __init__(self, filename):
         self.filename = filename
