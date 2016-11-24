@@ -194,6 +194,24 @@ def mmap2_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('ignoring anonymous mmap2 call')
 
 
+def mmap2_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering mmap2 exit handler')
+    ret_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_from_trace = cleanup_return_value(syscall_object.ret[0])
+    logging.debug('Return value from execution %x', ret_from_execution)
+    logging.debug('Return value from trace %x', ret_from_trace)
+    if ret_from_execution < 0:
+        ret_from_execution = ret_from_execution & 0xffffffff
+    if ret_from_execution != ret_from_trace:
+        logging.debug('Return value from execution (%d, %x) differs '
+                      'from return value from trace (%d, %x)',
+                      ret_from_execution,
+                      ret_from_execution,
+                       ret_from_trace,
+                      ret_from_trace)
+
+
+
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   tracereplay.peek_register(pid, tracereplay.EBX))
