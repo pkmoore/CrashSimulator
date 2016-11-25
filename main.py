@@ -1,30 +1,23 @@
 from __future__ import print_function
-import os
+
+import ConfigParser
+import argparse
 import signal
 import sys
-import argparse
-import logging
 import traceback
-import ConfigParser
-import tracereplay_globals
+import tracereplay
+from tracereplay import cinterface as cint
 
-from tracereplay_python import *
-from time_handlers import *
-from send_handlers import *
-from recv_handlers import *
-from socket_handlers import *
 from file_handlers import *
+from generic_handlers import *
 from kernel_handlers import *
 from multiplex_handlers import *
-from generic_handlers import *
+from recv_handlers import *
+from send_handlers import *
+from socket_handlers import *
+from time_handlers import *
 
-from checkers import FileReplacedDuringCopyChecker, \
-                     XattrsCopiedDuringCopyChecker
-
-from syscall_dict import SYSCALLS
-from syscall_dict import SOCKET_SUBCALLS
-from errno_dict import ERRNO_CODES
-from os_dict import OS_CONST, STAT_CONST
+from util import *
 
 sys.path.append('./python_modules/posix-omni-parser/')
 import Trace
@@ -58,7 +51,7 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
          ('getsockname', False): getsockname_exit_handler,
          ('getpeername', True): getpeername_entry_handler
         }
-    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
+    subcall_id = cint.peek_register(pid, cint.EBX)
     validate_subcall(subcall_id, syscall_object)
     try:
         subcall_handlers[(syscall_object.name, entering)](syscall_id,
@@ -73,10 +66,10 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Handling syscall')
     if entering:
-        tracereplay_globals.handled_syscalls += 1
+        tracereplay.handled_syscalls += 1
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
-        ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+        ebx = cint.peek_register(pid, cint.EBX)
         logging.debug('Socketcall id from EBX is: %s', ebx)
         socketcall_handler(syscall_id, syscall_object, entering, pid)
         return
@@ -264,17 +257,17 @@ if __name__ == '__main__':
                 sys.exit(1)
         logging.basicConfig(stream=sys.stderr, level=numeric_level)
         logging.info('Logging engaged')
-        tracereplay.enable_debug_output(numeric_level)
+        cint.enable_debug_output(numeric_level)
     logging.debug('About to spawn child process')
     # TODO: HACK!
     checker = None
     if args.get('checker') is not None:
         checker = args['checker']
         logging.debug('Checker string: %s', checker)
-        checker = eval(checker)
+        checker = eval('tracereplay.checker.' + checker)
     pid = os.fork()
     if pid == 0:
-        tracereplay.traceme()
+        cint.traceme()
         os.execvp(command[0], command)
     else:
         debug_printers = {
@@ -299,26 +292,26 @@ if __name__ == '__main__':
             221: fcntl64_entry_debug_printer
         }
         t = Trace.Trace(trace)
-        tracereplay_globals.system_calls = t.syscalls
+        tracereplay.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
         while next_syscall():
-            orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
+            orig_eax = cint.peek_register(pid, cint.ORIG_EAX)
             logging.info('===')
             logging.info('Advanced to next system call')
             logging.info('System call id from execution: %d', orig_eax)
             logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
-                         'entry' if tracereplay_globals.entering_syscall else 'exit')
+                         'entry' if tracereplay.entering_syscall else 'exit')
             # This if statement is an ugly hack
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
                 logging.debug('Ignoring syscall')
                 advance_trace()
-                tracereplay.syscall(pid)
+                cint.syscall(pid)
                 continue
-            if tracereplay_globals.entering_syscall:
+            if tracereplay.entering_syscall:
                 syscall_object = advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
@@ -326,7 +319,7 @@ if __name__ == '__main__':
                               syscall_object)
             try:
                 handle_syscall(orig_eax, syscall_object,
-                               tracereplay_globals.entering_syscall,
+                               tracereplay.entering_syscall,
                                pid)
             except:
                 traceback.print_exc()
@@ -342,10 +335,10 @@ if __name__ == '__main__':
                 logging.debug('Transitioning checker')
                 checker.transition(syscall_object)
             logging.info('# of System Calls Handled: %d',
-                         tracereplay_globals.handled_syscalls)
-            tracereplay_globals.entering_syscall = not tracereplay_globals.entering_syscall
+                         tracereplay.handled_syscalls)
+            tracereplay.entering_syscall = not tracereplay.entering_syscall
             logging.debug('Requesting next syscall')
-            tracereplay.syscall(pid)
+            cint.syscall(pid)
         if checker:
             logging.info('Exited with checker in accepting state: %s',
                      checker.is_accepting())

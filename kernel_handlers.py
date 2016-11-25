@@ -1,9 +1,10 @@
-from tracereplay_python import *
-from os_dict import SIGNAL_INT_TO_SIG
+import logging
+
 from os_dict import IOCTLS_INT_TO_IOCTL
+from os_dict import SIGNAL_INT_TO_SIG
 from os_dict import SIGPROCMASK_INT_TO_CMD
 
-import logging
+from util import *
 
 
 def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):
@@ -28,9 +29,9 @@ def uname_entry_handler(syscall_id, syscall_object, pid):
             for x in syscall_object.args}
     args = {x.strip('{}'): y.strip('"{}') for x, y in args.iteritems()}
     logging.debug(args)
-    address = tracereplay.peek_register(pid, tracereplay.EBX)
+    address = cint.peek_register(pid, cint.EBX)
     noop_current_syscall(pid)
-    tracereplay.populate_uname_structure(pid,
+    cint.populate_uname_structure(pid,
                                          address,
                                          args['sysname'],
                                          args['nodename'],
@@ -46,7 +47,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     cmd = syscall_object.args[0].value[0]
     if cmd != 'RLIMIT_STACK':
         raise Exception('Unimplemented getrlimit command {}'.format(cmd))
-    addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    addr = cint.peek_register(pid, cint.ECX)
     rlim_cur = syscall_object.args[1].value.strip('{')
     rlim_cur = rlim_cur.split('=')[1]
     if rlim_cur.find('*') == -1:
@@ -61,7 +62,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('rlim_max: %x', rlim_max)
     logging.debug('Address: %s', addr)
     noop_current_syscall(pid)
-    tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
+    cint.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
     apply_return_conditions(pid, syscall_object)
 
 
@@ -73,7 +74,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
     logging.debug('Replaying this system call')
-    edx = tracereplay.peek_register(pid, tracereplay.EDX)
+    edx = cint.peek_register(pid, cint.EDX)
     logging.debug('edx: %x', edx & 0xffffffff)
     addr = edx
     noop_current_syscall(pid)
@@ -96,7 +97,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('ws_col: %s', ws_col)
             logging.debug('ws_xpixel: %s', ws_xpixel)
             logging.debug('ws_ypixel: %s', ws_ypixel)
-            tracereplay.populate_winsize_structure(pid,
+            cint.populate_winsize_structure(pid,
                                                    addr,
                                                    ws_row,
                                                    ws_col,
@@ -105,12 +106,12 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
         elif 'FIONREAD' in cmd:
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
-            tracereplay.populate_int(pid, addr, num_bytes)
+            cint.populate_int(pid, addr, num_bytes)
 
         elif 'FIONBIO' in cmd:
             out_val = int(syscall_object.args[2].value.strip('[]'))
-            out_addr = tracereplay.peek_register(pid, tracereplay.EDX)
-            tracereplay.poke_address(pid, out_addr, out_val)
+            out_addr = cint.peek_register(pid, cint.EDX)
+            cint.poke_address(pid, out_addr, out_val)
         elif 'TCGETS' in cmd:
             c_iflags = syscall_object.args[2].value
             c_iflags = int(c_iflags[c_iflags.rfind('=')+1:], 16)
@@ -136,7 +137,7 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('c_lflags: %x', c_lflags)
             logging.debug('c_line: %s', c_line)
             logging.debug('len(cc): %s', len(cc))
-            tracereplay.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
+            cint.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
                                                  c_cflags,
                                                  c_lflags,
                                                  c_line,
@@ -174,10 +175,10 @@ def prlimit64_entry_handler(syscall_id, syscall_object, pid):
         rlim_max = rlim_max.split('*')
         rlim_max = int(rlim_max[0]) * int(rlim_max[1].strip('}'))
         logging.debug('rlim_max: %d', rlim_max)
-        addr = tracereplay.peek_register(pid, tracereplay.ESI)
+        addr = cint.peek_register(pid, cint.ESI)
         logging.debug('addr: %x', addr & 0xFFFFFFFF)
         noop_current_syscall(pid)
-        tracereplay.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
+        cint.populate_rlimit_structure(pid, addr, rlim_cur, rlim_max)
         apply_return_conditions(pid, syscall_object)
     else:
         raise NotImplementedError('prlimit64 calls with both a new and old '
@@ -196,7 +197,7 @@ def mmap2_entry_handler(syscall_id, syscall_object, pid):
 
 def mmap2_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering mmap2 exit handler')
-    ret_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_from_execution = cint.peek_register(pid, cint.EAX)
     ret_from_trace = cleanup_return_value(syscall_object.ret[0])
     logging.debug('Return value from execution %x', ret_from_execution)
     logging.debug('Return value from trace %x', ret_from_trace)
@@ -214,35 +215,35 @@ def mmap2_exit_handler(syscall_id, syscall_object, pid):
 
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
 
 
 def mmap2_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to mmap2: %d',
-                  tracereplay.peek_register(pid, tracereplay.EDI))
+                  cint.peek_register(pid, cint.EDI))
 
 
 def munmap_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried munmap address: %x length: %d',
-                  tracereplay.peek_register(pid, tracereplay.EBX) & 0xFFFFFFFF,
-                  tracereplay.peek_register(pid, tracereplay.ECX))
+                  cint.peek_register(pid, cint.EBX) & 0xFFFFFFFF,
+                  cint.peek_register(pid, cint.ECX))
 
 
 def ioctl_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call used file descriptor: %d',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
     logging.debug('This call used command: %s',
                   IOCTLS_INT_TO_IOCTL[
-                      tracereplay.peek_register(pid, tracereplay.ECX)])
+                      cint.peek_register(pid, cint.ECX)])
 
 
 def rt_sigaction_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call use signum: %s',
                   SIGNAL_INT_TO_SIG[
-                      tracereplay.peek_register(pid, tracereplay.EBX)])
+                      cint.peek_register(pid, cint.EBX)])
 
 
 def rt_sigprocmask_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call used command: %s',
                   SIGPROCMASK_INT_TO_CMD[
-                      tracereplay.peek_register(pid, tracereplay.EBX)])
+                      cint.peek_register(pid, cint.EBX)])

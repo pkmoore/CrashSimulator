@@ -1,21 +1,24 @@
-import tracereplay
-import tracereplay_globals
-import os
-import logging
 import binascii
-import itertools
+import logging
+import os
 import time
 from struct import pack, unpack
-from syscall_dict import SYSCALLS
-from syscall_dict import SOCKET_SUBCALLS
+import tracereplay
+from tracereplay import cinterface as cint
+
 from errno_dict import ERRNO_CODES
-from os_dict import OS_CONST, STAT_CONST
+from os_dict import OS_CONST
+from os_dict import STAT_CONST
+from syscall_dict import SOCKET_SUBCALLS
+from syscall_dict import SYSCALLS
 
 
 def advance_trace():
-    if tracereplay_globals.system_call_index < len(tracereplay_globals.system_calls):
-        obj = tracereplay_globals.system_calls[tracereplay_globals.system_call_index]
-    tracereplay_globals.system_call_index += 1
+    if tracereplay.system_call_index < len(
+            tracereplay.system_calls):
+        obj = tracereplay.system_calls[
+            tracereplay.system_call_index]
+    tracereplay.system_call_index += 1
     return obj
 
 
@@ -23,14 +26,14 @@ def advance_trace():
 # just before execution returns to user code.
 def noop_current_syscall(pid):
     logging.debug('Nooping the current system call in pid: %s', pid)
-    tracereplay.poke_register(pid, tracereplay.ORIG_EAX, 20)
-    tracereplay.syscall(pid)
+    cint.poke_register(pid, cint.ORIG_EAX, 20)
+    cint.syscall(pid)
     next_syscall()
-    skipping = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
+    skipping = cint.peek_register(pid, cint.ORIG_EAX)
     if skipping != 20:
         raise Exception('Nooping did not result in getpid exit. Got {}'
                         .format(skipping))
-    tracereplay_globals.entering_syscall = False
+    tracereplay.entering_syscall = False
 
 
 def next_syscall():
@@ -42,7 +45,7 @@ def next_syscall():
 
 def offset_file_descriptor(fd):
     # The -3 is to account for stdin, stdout, stderr
-    return fd - (len(tracereplay_globals.REPLAY_FILE_DESCRIPTORS) - 3)
+    return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 3)
 
 
 def peek_bytes(pid, address, num_bytes):
@@ -50,10 +53,10 @@ def peek_bytes(pid, address, num_bytes):
     remainder = num_bytes % 4
     data = ''
     for i in range(reads):
-        data = data + pack('<i', tracereplay.peek_address(pid, address))
+        data = data + pack('<i', cint.peek_address(pid, address))
         address = address + 4
     if remainder != 0:
-        last_chunk = pack('<i', tracereplay.peek_address(pid, address))
+        last_chunk = pack('<i', cint.peek_address(pid, address))
         data = data + last_chunk[:remainder]
     return data
 
@@ -61,7 +64,7 @@ def peek_bytes(pid, address, num_bytes):
 def peek_string(pid, address):
     data = ''
     while True:
-        data = data + pack('<i', tracereplay.peek_address(pid, address))
+        data = data + pack('<i', cint.peek_address(pid, address))
         address = address + 4
         if '\0' in data:
             while '\0' in data:
@@ -72,7 +75,7 @@ def peek_string(pid, address):
 def extract_socketcall_parameters(pid, address, num):
     params = []
     for i in range(num):
-        params += [tracereplay.peek_address(pid, address)]
+        params += [cint.peek_address(pid, address)]
         address = address + 4
     logging.debug('Extracted socketcall parameters: %s', params)
     return params
@@ -133,14 +136,14 @@ def write_buffer(pid, address, value, buffer_length):
     for i in writes:
         i = i[::-1]
         data = int(binascii.hexlify(i), 16)
-        tracereplay.poke_address(pid, address, data)
+        cint.poke_address(pid, address, data)
         address = address + 4
     if trailing != 0:
         address = address
-        data = tracereplay.peek_address(pid, address)
+        data = cint.peek_address(pid, address)
         d = pack('i', data)
         d = left + d[len(left):]
-        tracereplay.poke_address(pid, address, unpack('i', d)[0])
+        cint.poke_address(pid, address, unpack('i', d)[0])
 
 
 def cleanup_return_value(val):
@@ -204,7 +207,7 @@ def apply_return_conditions(pid, syscall_object):
     else:
         ret_val = cleanup_return_value(ret_val)
     logging.debug('Injecting return value %s', ret_val)
-    tracereplay.poke_register(pid, tracereplay.EAX, ret_val)
+    cint.poke_register(pid, cint.EAX, ret_val)
 
 
 # Generic handler for all calls that just need to return what they returned in
@@ -217,7 +220,7 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
         logging.debug('Handling unsuccessful call')
     else:
         logging.debug('Handling successful call')
-        ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+        ecx = cint.peek_register(pid, cint.ECX)
         logging.debug('Extracting parameters from address %s', ecx)
         params = extract_socketcall_parameters(pid, ecx, 1)
         fd = params[0]
@@ -246,13 +249,13 @@ def validate_integer_argument(pid,
                   trace_arg,
                   exec_arg)
     # EAX is the system call number
-    POS_TO_REG = {0: tracereplay.EBX,
-                  1: tracereplay.ECX,
-                  2: tracereplay.EDX,
-                  3: tracereplay.ESI,
-                  4: tracereplay.EDI}
+    POS_TO_REG = {0: cint.EBX,
+                  1: cint.ECX,
+                  2: cint.EDX,
+                  3: cint.ESI,
+                  4: cint.EDI}
     if not params:
-        arg = tracereplay.peek_register(pid, POS_TO_REG[exec_arg])
+        arg = cint.peek_register(pid, POS_TO_REG[exec_arg])
     else:
         arg = params[exec_arg]
     arg_from_trace = int(syscall_object.args[trace_arg].value)
@@ -271,22 +274,24 @@ def validate_integer_argument(pid,
 
 
 def add_os_fd_mapping(os_fd, trace_fd):
-    logging.debug('Mappings: {}'.format(tracereplay_globals.OS_FILE_DESCRIPTORS))
+    logging.debug('Mappings: {}'.format(
+        tracereplay.OS_FILE_DESCRIPTORS))
     new = {'os_fd': os_fd, 'trace_fd': trace_fd}
     logging.debug('Adding mapping: {}'.format(new))
-    if len(tracereplay_globals.OS_FILE_DESCRIPTORS) != 0:
-        for i in tracereplay_globals.OS_FILE_DESCRIPTORS:
+    if len(tracereplay.OS_FILE_DESCRIPTORS) != 0:
+        for i in tracereplay.OS_FILE_DESCRIPTORS:
             if i['os_fd'] == os_fd and i['trace_fd'] == trace_fd:
                 raise ReplayDeltaError('Mapping ({}) already exists!')
-    tracereplay_globals.OS_FILE_DESCRIPTORS.append(new)
+    tracereplay.OS_FILE_DESCRIPTORS.append(new)
 
 
 def remove_os_fd_mapping(trace_fd):
-    logging.debug('Mappings: {}'.format(tracereplay_globals.OS_FILE_DESCRIPTORS))
+    logging.debug('Mappings: {}'.format(
+        tracereplay.OS_FILE_DESCRIPTORS))
     logging.debug('Removing mapping for tracefd: {}'.format(trace_fd))
     found = 0
     index = None
-    for i, item in enumerate(tracereplay_globals.OS_FILE_DESCRIPTORS):
+    for i, item in enumerate(tracereplay.OS_FILE_DESCRIPTORS):
         if item['trace_fd'] == trace_fd:
             found = found + 1
             index = i
@@ -294,12 +299,12 @@ def remove_os_fd_mapping(trace_fd):
         raise ReplayDeltaError('Tried to remove non-existant mapping')
     if found > 1:
         raise ReplayDeltaError('A trace_fd mapped to multiple os_fds')
-    tracereplay_globals.OS_FILE_DESCRIPTORS.pop(index)
+    tracereplay.OS_FILE_DESCRIPTORS.pop(index)
 
 
 def fd_pair_for_trace_fd(trace_fd):
     logging.debug('Looking up trace file descriptor %d', trace_fd)
-    res = [x for x in tracereplay_globals.OS_FILE_DESCRIPTORS
+    res = [x for x in tracereplay.OS_FILE_DESCRIPTORS
            if x['trace_fd'] == trace_fd]
     logging.debug(res)
     if len(res) > 1:
@@ -314,11 +319,11 @@ def fd_pair_for_trace_fd(trace_fd):
 
 def swap_trace_fd_to_execution_fd(pid, pos, syscall_object, params_addr=None):
     POS_TO_REG = {
-        0: tracereplay.EBX,
-        1: tracereplay.ECX,
-        2: tracereplay.EDX,
-        3: tracereplay.ESI,
-        4: tracereplay.EDI,
+        0: cint.EBX,
+        1: cint.ECX,
+        2: cint.EDX,
+        3: cint.ESI,
+        4: cint.EDI,
     }
     logging.debug('Cleaning up file descriptor at position: {}'
                   .format(pos))
@@ -328,13 +333,13 @@ def swap_trace_fd_to_execution_fd(pid, pos, syscall_object, params_addr=None):
         params = extract_socketcall_parameters(pid, params_addr, pos+1)
         execution_fd = params[pos]
     else:
-        execution_fd = tracereplay.peek_register(pid, POS_TO_REG[pos])
+        execution_fd = cint.peek_register(pid, POS_TO_REG[pos])
     logging.debug('Replacing old value (trace fd): {} with new value: {}'
                   .format(execution_fd, looked_up_fd))
     if params_addr:
         update_socketcall_paramater(pid, params_addr, pos, looked_up_fd)
     else:
-        tracereplay.poke_register(pid, POS_TO_REG[pos], looked_up_fd)
+        cint.poke_register(pid, POS_TO_REG[pos], looked_up_fd)
 
 
 def update_socketcall_paramater(pid, params_addr, pos, value):
@@ -345,7 +350,7 @@ def update_socketcall_paramater(pid, params_addr, pos, value):
     logging.debug('Specific parameter addr: %x', addr)
     value = int(value)
     logging.debug('Value: %d', value)
-    tracereplay.poke_address(pid, addr, value)
+    cint.poke_address(pid, addr, value)
     logging.debug('Re-extracting socketcall parameters')
     p = extract_socketcall_parameters(pid, params_addr, pos + 1)
     if p[pos] != value:
@@ -357,19 +362,19 @@ def update_socketcall_paramater(pid, params_addr, pos, value):
 def should_replay_based_on_fd(trace_fd):
     logging.debug('Should we replay?')
     d = fd_pair_for_trace_fd(trace_fd)
-    if d and trace_fd not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    if d and trace_fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('Call using non-replayed fd, not replaying')
         logging.debug('Looked up trace_fd: %d', d['trace_fd'])
         logging.debug('Looked up os_fd: %d', d['os_fd'])
         logging.debug('We should not replay, there is an os fd for this call '
                       'and no entry for it in REPLAY_FILE_DESCRIPTORS')
         return False
-    elif not d and trace_fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    elif not d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.debug('This fd %d has no OS_FILE_DESCRIPTORS entry but does '
                       'exist in REPLAY_FILE_DESCRIPTORS. Should be replayed',
                       trace_fd)
         return True
-    elif d and trace_fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    elif d and trace_fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('This fd ({}) is in both the OS file '
                                'descriptor list and the replay file '
                                'descriptor list'.format(trace_fd))
@@ -382,10 +387,10 @@ def should_replay_based_on_fd(trace_fd):
 
 
 def is_file_mmapd_at_any_time(file_name):
-    open_indexes = find_opens_for_file_name(file_name, tracereplay_globals.system_calls)
+    open_indexes = find_opens_for_file_name(file_name, tracereplay.system_calls)
     logging.debug('Checking open()\'s at the following indexes: {}'.format(open_indexes))
     for i in open_indexes:
-        current_segment = tracereplay_globals.system_calls[i:]
+        current_segment = tracereplay.system_calls[i:]
         open_obj = current_segment[0]
         if open_obj.name != 'open':
             raise ReplayDeltaError('Current segment did not start with an '
@@ -442,18 +447,18 @@ def is_mmapd_before_close(fd, current_segment):
 
 
 def add_replay_fd(fd):
-    if fd in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    if fd in tracereplay.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('File descriptor ({}) alread exists in replay '
                                'file descriptors list'.format(fd))
-    tracereplay_globals.REPLAY_FILE_DESCRIPTORS.append(fd)
+    tracereplay.REPLAY_FILE_DESCRIPTORS.append(fd)
 
 
 def remove_replay_fd(fd):
-    if fd not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    if fd not in tracereplay.REPLAY_FILE_DESCRIPTORS:
         raise ReplayDeltaError('Tried to remove non-existant file descriptor '
                                '({}) from replay file descriptor lists'
                                .format(fd))
-    tracereplay_globals.REPLAY_FILE_DESCRIPTORS.remove(fd)
+    tracereplay.REPLAY_FILE_DESCRIPTORS.remove(fd)
 
 
 def find_arg_matching_string(args, s):
@@ -477,8 +482,8 @@ def get_stack_start_and_end(pid):
 
 def dump_stack(pid, syscall_id, entering):
     start, end = get_stack_start_and_end(pid)
-    b = tracereplay.copy_address_range(pid, start, end)
-    f = open(str(tracereplay_globals.handled_syscalls) + '-' +
+    b = cint.copy_address_range(pid, start, end)
+    f = open(str(tracereplay.handled_syscalls) + '-' +
              SYSCALLS[syscall_id] + '-' +
              ('entry' if entering else 'exit') + '-' +
              str(int(time.time())) + '-' +

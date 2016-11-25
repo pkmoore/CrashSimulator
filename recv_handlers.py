@@ -1,11 +1,9 @@
-from tracereplay_python import *
-import logging
-
+from util import *
 
 # Bare minimum implementation
 def recvmsg_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering recvmsg entry handler')
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 1)
     fd_from_trace = int(syscall_object.args[0].value)
     validate_integer_argument(pid, syscall_object, 0, 0, params)
@@ -22,7 +20,7 @@ def recvmsg_exit_handler(syscall_id, syscall_object, pid):
 
 
 def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
     # Pull out everything we can check
     fd_from_trace = syscall_object.args[0].value
@@ -38,7 +36,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         buffer_address = params[1]
         data = cleanup_quotes(syscall_object.args[1].value)
         data = data.decode('string_escape')
-        tracereplay.populate_char_buffer(pid,
+        cint.populate_char_buffer(pid,
                                          buffer_address,
                                          data)
         apply_return_conditions(pid, syscall_object)
@@ -48,7 +46,7 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
 
 
 def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 6)
     fd_from_trace = syscall_object.args[0].value
     validate_integer_argument(pid, syscall_object, 0, 0, params)
@@ -72,7 +70,7 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
     if should_replay_based_on_fd(fd_from_trace):
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
-        if params[0] not in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+        if params[0] not in tracereplay.REPLAY_FILE_DESCRIPTORS:
             raise Exception('Tried to recvfrom from non-existent file '
                             'descriptor')
         buffer_address = params[1]
@@ -84,21 +82,21 @@ def recvfrom_subcall_entry_handler(syscall_id, syscall_object, pid):
             raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
                                    'return value from trace ({})'
                                    .format(len(data), ret_val))
-        tracereplay.populate_char_buffer(pid, buffer_address, data)
-        tracereplay.populate_af_inet_sockaddr(pid,
+        cint.populate_char_buffer(pid, buffer_address, data)
+        cint.populate_af_inet_sockaddr(pid,
                                               addr,
                                               port,
                                               ip,
                                               length_addr,
                                               int(length))
-        buf = tracereplay.copy_address_range(pid,
+        buf = cint.copy_address_range(pid,
                                              buffer_address,
                                              buffer_address + ret_val)
         if buf != data:
             raise ReplayDeltaError('Data copied by read() handler doesn\'t '
                                    'match after copy')
         apply_return_conditions(pid, syscall_object)
-        print(tracereplay.peek_register(pid, tracereplay.EAX))
+        print(cint.peek_register(pid, cint.EAX))
     else:
         logging.info('Not replaying this system call')
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)

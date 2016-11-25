@@ -91,7 +91,7 @@ class UrandomReadDuringCopyAutomaton:
                     self.current_state = self.states[1]
                     self.urandom_fd = int(syscall_object.ret[0])
         if self.current_state['id'] == 1:
-            if
+            pass
 
 
     def is_accepting(self):

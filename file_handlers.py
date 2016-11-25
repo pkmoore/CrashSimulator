@@ -1,17 +1,16 @@
-from tracereplay_python import *
-import logging
-from os_dict import FCNTL64_INT_TO_CMD
-from os_dict import PERM_INT_TO_PERM
 from time import strptime, mktime
 
 from getdents64_parser import parse_getdents64_structure
+from os_dict import FCNTL64_INT_TO_CMD
+from os_dict import PERM_INT_TO_PERM
 
+from util import *
 
 def unlinkat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlinkat entry handler')
     name_from_execution = peek_string(pid,
-                                      tracereplay.peek_register(pid,
-                                                                tracereplay.ECX))
+                                      cint.peek_register(pid,
+                                                                cint.ECX))
     name_from_trace = cleanup_quotes(syscall_object.args[1].value)
     logging.debug('Name from execution: %s', name_from_execution)
     logging.debug('Name from trace: %s', name_from_trace)
@@ -34,8 +33,8 @@ def unlinkat_entry_handler(syscall_id, syscall_object, pid):
 def unlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlink entry handler')
     name_from_execution = peek_string(pid,
-                                      tracereplay.peek_register(pid,
-                                                                tracereplay.EBX))
+                                      cint.peek_register(pid,
+                                                                cint.EBX))
     name_from_trace = cleanup_quotes(syscall_object.args[0].value)
     logging.debug('Name from execution: %s', name_from_execution)
     logging.debug('Name from trace: %s', name_from_trace)
@@ -56,12 +55,12 @@ def rename_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('entering rename entry handler')
     name1_from_trace = cleanup_quotes(syscall_object.args[0].value)
     name1_from_execution = peek_string(pid,
-                                       tracereplay.peek_register(pid,
-                                                                 tracereplay.EBX))
+                                       cint.peek_register(pid,
+                                                                 cint.EBX))
     name2_from_trace = cleanup_quotes(syscall_object.args[1].value)
     name2_from_execution = peek_string(pid,
-                                       tracereplay.peek_register(pid,
-                                                                 tracereplay.ECX))
+                                       cint.peek_register(pid,
+                                                                 cint.ECX))
     if name1_from_execution != name1_from_trace:
         raise ReplayDeltaError('Name1 from execution ({}) does not match '
                                'name1 from trace ({})'
@@ -111,11 +110,11 @@ def writev_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Vectors: %d', vectors)
     logging.debug('Datas: %s', datas)
     logging.debug('Lengths: %s', lengths)
-    addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    addr = cint.peek_register(pid, cint.ECX)
     logging.debug('Addr: %d', addr)
     vector_addresses = []
     for i in range(vectors):
-        vector_addresses.append(tracereplay.peek_address(pid, addr + (i * 8)))
+        vector_addresses.append(cint.peek_address(pid, addr + (i * 8)))
     # We may need to copy buffers over manually at some point.
     # Working for now.
     fd = int(syscall_object.args[0].value)
@@ -137,18 +136,18 @@ def pipe_entry_handler(syscall_id, syscall_object, pid):
     read_end_from_trace = int(syscall_object.args[0].value)
     write_end_from_trace = int(syscall_object.args[1].value.strip(']'))
     if is_mmapd_before_close(read_end_from_trace,
-                             tracereplay_globals.system_calls) \
+                             tracereplay.system_calls) \
        or is_mmapd_before_close(write_end_from_trace,
-                                tracereplay_globals.system_calls):
+                                tracereplay.system_calls):
         raise NotImplementedError('mmap() on file descriptors allocated by '
                                   'pipe() is unsupported')
     logging.debug('Read end from trace: %d', read_end_from_trace)
     logging.debug('Write end from trace: %d', write_end_from_trace)
-    array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    array_addr = cint.peek_register(pid, cint.EBX)
     add_replay_fd(read_end_from_trace)
     add_replay_fd(write_end_from_trace)
     noop_current_syscall(pid)
-    tracereplay.populate_pipefd_array(pid,
+    cint.populate_pipefd_array(pid,
                                       array_addr,
                                       read_end_from_trace,
                                       write_end_from_trace)
@@ -171,7 +170,7 @@ def dup_entry_handler(syscall_id, syscall_object, pid):
 
 def dup_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering dup exit handler')
-    exec_fd = tracereplay.peek_register(pid, tracereplay.EAX)
+    exec_fd = cint.peek_register(pid, cint.EAX)
     trace_fd = int(syscall_object.ret[0])
     logging.debug('Execution return value: %d', exec_fd)
     logging.debug('Trace return value: %d', trace_fd)
@@ -183,7 +182,7 @@ def dup_exit_handler(syscall_id, syscall_object, pid):
                                 trace_fd))
     if exec_fd >= 0:
         add_os_fd_mapping(exec_fd, trace_fd)
-    tracereplay.poke_register(pid, tracereplay.EAX, trace_fd)
+    cint.poke_register(pid, cint.EAX, trace_fd)
 
 
 def close_entry_handler(syscall_id, syscall_object, pid):
@@ -208,7 +207,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
 def close_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entring close exit handler')
     ret_val_from_trace = syscall_object.ret[0]
-    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
     logging.debug('Return value from execution: %d', ret_val_from_execution)
     check_ret_val_from_trace = ret_val_from_trace
@@ -226,7 +225,7 @@ def close_exit_handler(syscall_id, syscall_object, pid):
 
 
 def read_entry_handler(syscall_id, syscall_object, pid):
-    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    fd = cint.peek_register(pid, cint.EBX)
     fd_from_trace = syscall_object.args[0].value
     logging.debug('File descriptor from execution: %s', fd)
     logging.debug('File descriptor from trace: %s', fd_from_trace)
@@ -238,9 +237,9 @@ def read_entry_handler(syscall_id, syscall_object, pid):
             validate_integer_argument(pid, syscall_object, 0, 0)
             # bytes to read
             validate_integer_argument(pid, syscall_object, 2, 2)
-            buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
-            buffer_size_from_execution = tracereplay.peek_register(pid,
-                                                                   tracereplay.EDX)
+            buffer_address = cint.peek_register(pid, cint.ECX)
+            buffer_size_from_execution = cint.peek_register(pid,
+                                                                   cint.EDX)
             buffer_size_from_trace = int(syscall_object.args[2].value)
             logging.debug('Address: %x', buffer_address & 0xffffffff)
             logging.debug('Buffer size from execution: %d',
@@ -253,10 +252,10 @@ def read_entry_handler(syscall_id, syscall_object, pid):
                 raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
                                        'return value from trace ({})'
                                        .format(len(data), ret_val))
-            tracereplay.populate_char_buffer(pid,
+            cint.populate_char_buffer(pid,
                                              buffer_address,
                                              data)
-            buf = tracereplay.copy_address_range(pid,
+            buf = cint.copy_address_range(pid,
                                                  buffer_address,
                                                  buffer_address + ret_val)
             if buf != data:
@@ -274,10 +273,10 @@ def read_entry_handler(syscall_id, syscall_object, pid):
 def write_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, 0)
     validate_integer_argument(pid, syscall_object, 2, 2)
-    bytes_addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    bytes_len = tracereplay.peek_register(pid, tracereplay.EDX)
+    bytes_addr = cint.peek_register(pid, cint.ECX)
+    bytes_len = cint.peek_register(pid, cint.EDX)
     bytes_from_trace = cleanup_quotes(syscall_object.args[1].value)
-    bytes_from_execution = tracereplay.copy_address_range(pid,
+    bytes_from_execution = cint.copy_address_range(pid,
                                                           bytes_addr,
                                                           bytes_addr + bytes_len)
     bytes_from_trace = bytes_from_trace.decode('string-escape')
@@ -299,7 +298,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
 # is in place
 def write_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering write exit handler')
-    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
@@ -317,12 +316,12 @@ def llseek_entry_handler(syscall_id, syscall_object, pid):
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
             result = int(syscall_object.args[2].value.strip('[]'))
-            result_addr = int(tracereplay.peek_register(pid, tracereplay.ESI))
+            result_addr = int(cint.peek_register(pid, cint.ESI))
             logging.debug('result: %s', result)
             logging.debug('result_addr: %s', result_addr)
             logging.debug('Got successful llseek call')
             logging.debug('Populating result')
-            tracereplay.populate_llseek_result(pid, result_addr, result)
+            cint.populate_llseek_result(pid, result_addr, result)
         else:
             logging.debug('Got unsucceesful llseek call')
         apply_return_conditions(pid, syscall_object)
@@ -337,7 +336,7 @@ def llseek_exit_handler(syscall_id, syscall_object, pid):
 
 def getcwd_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getcwd entry handler')
-    array_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    array_addr = cint.peek_register(pid, cint.EBX)
     data = str(syscall_object.args[0].value.strip('"'))
     data_length = int(syscall_object.ret[0])
     noop_current_syscall(pid)
@@ -346,7 +345,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Data: %s', data)
         logging.debug('Data length: %s', data_length)
         logging.debug('Populating character array')
-        tracereplay.populate_char_buffer(pid,
+        cint.populate_char_buffer(pid,
                                          array_addr,
                                          data)
     else:
@@ -356,7 +355,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
 
 def readlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering readlink entry handler')
-    array_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    array_addr = cint.peek_register(pid, cint.ECX)
     data = str(syscall_object.args[0].value.strip('"'))
     data_length = int(syscall_object.ret[0])
     noop_current_syscall(pid)
@@ -365,7 +364,7 @@ def readlink_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Data: %s', data)
         logging.debug('Data length: %s', data_length)
         logging.debug('Populating character array')
-        tracereplay.populate_char_buffer(pid,
+        cint.populate_char_buffer(pid,
                                          array_addr,
                                          data)
     else:
@@ -375,11 +374,11 @@ def readlink_entry_handler(syscall_id, syscall_object, pid):
 
 def statfs64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering statfs64 handler')
-    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
-    edx = tracereplay.peek_register(pid, tracereplay.EDX)
-    edi = tracereplay.peek_register(pid, tracereplay.EDI)
-    esi = tracereplay.peek_register(pid, tracereplay.ESI)
+    ebx = cint.peek_register(pid, cint.EBX)
+    ecx = cint.peek_register(pid, cint.ECX)
+    edx = cint.peek_register(pid, cint.EDX)
+    edi = cint.peek_register(pid, cint.EDI)
+    esi = cint.peek_register(pid, cint.ESI)
     logging.debug("EBX: %s, ECX: %s, EDX: %s, ESI: %s, EDI: %s",
                   ebx, ecx, edx, edi, esi)
     addr = edx
@@ -423,7 +422,7 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('f_namelen: %s', f_namelen)
         logging.debug('f_frsize: %s', f_frsize)
         logging.debug('f_flags: %s', f_flags)
-        tracereplay.populate_statfs64_structure(pid,
+        cint.populate_statfs64_structure(pid,
                                                 addr,
                                                 f_type,
                                                 f_bsize,
@@ -442,7 +441,7 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
 
 def open_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open entry handler')
-    ebx = tracereplay.peek_register(pid, tracereplay.EBX)
+    ebx = cint.peek_register(pid, cint.EBX)
     fn_from_execution = peek_string(pid, ebx)
     fn_from_trace = syscall_object.args[0].value.strip('"')
     logging.debug('Filename from trace: %s', fn_from_trace)
@@ -470,7 +469,7 @@ def open_entry_handler(syscall_id, syscall_object, pid):
 def open_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering open exit handler')
     ret_val_from_trace = int(syscall_object.ret[0])
-    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX)
     if ret_val_from_trace == -1:
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
@@ -483,12 +482,12 @@ def open_exit_handler(syscall_id, syscall_object, pid):
                   check_ret_val_from_trace)
     if ret_val_from_execution >= 0:
         add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
-    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
+    cint.poke_register(pid, cint.EAX, ret_val_from_trace)
 
 
 def openat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering openat entry handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     fn_from_execution = peek_string(pid, ecx)
     fn_from_trace = syscall_object.args[1].value.strip('"')
     logging.debug('Filename from trace: %s', fn_from_trace)
@@ -516,7 +515,7 @@ def openat_entry_handler(syscall_id, syscall_object, pid):
 def openat_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering openat exit handler')
     ret_val_from_trace = int(syscall_object.ret[0])
-    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX)
     if ret_val_from_trace == -1:
         errno_ret = (ERRNO_CODES[syscall_object.ret[1]] * -1)
         logging.debug('Errno return value: %d', errno_ret)
@@ -529,7 +528,7 @@ def openat_exit_handler(syscall_id, syscall_object, pid):
                   check_ret_val_from_trace)
     if ret_val_from_execution >= 0:
         add_os_fd_mapping(ret_val_from_execution, ret_val_from_trace)
-    tracereplay.poke_register(pid, tracereplay.EAX, ret_val_from_trace)
+    cint.poke_register(pid, cint.EAX, ret_val_from_trace)
 
 
 def fstat64_entry_handler(syscall_id, syscall_object, pid):
@@ -537,7 +536,7 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
     if not should_replay_based_on_fd(int(syscall_object.args[0].value)):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
         return
-    buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    buf_addr = cint.peek_register(pid, cint.ECX)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful fstat64 call')
@@ -671,7 +670,7 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Injecting values into structure')
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
-        tracereplay.populate_stat64_struct(pid,
+        cint.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
                                            int(st_dev2),
@@ -699,7 +698,7 @@ def fstatat64_entry_handler(syscall_id, syscall_object, pid):
             swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
             return
     # At this point we replay calls with either AT_FDCWD or replay fds
-    buf_addr = tracereplay.peek_register(pid, tracereplay.EDX)
+    buf_addr = cint.peek_register(pid, cint.EDX)
     logging.debug('EDX: %x', (buf_addr & 0xffffffff))
     # TODO: Check path name
     if syscall_object.ret[0] == -1:
@@ -838,7 +837,7 @@ def fstatat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Injecting values into structure')
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
-        tracereplay.populate_stat64_struct(pid,
+        cint.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
                                            int(st_dev2),
@@ -864,7 +863,7 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.args[0].value == '"/etc/resolv.conf"':
         logging.error('Workaround for stat64 problem')
         return
-    buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    buf_addr = cint.peek_register(pid, cint.ECX)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful stat64 call')
@@ -998,7 +997,7 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Injecting values into structure')
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
-        tracereplay.populate_stat64_struct(pid,
+        cint.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
                                            int(st_dev2),
@@ -1020,7 +1019,7 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
 
 
 def lstat64_entry_handler(syscall_id, syscall_object, pid):
-    buf_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    buf_addr = cint.peek_register(pid, cint.ECX)
     logging.debug('ECX: %x', (buf_addr & 0xffffffff))
     if syscall_object.ret[0] == -1:
         logging.debug('Got unsuccessful lstat64 call')
@@ -1154,7 +1153,7 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Injecting values into structure')
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
-        tracereplay.populate_stat64_struct(pid,
+        cint.populate_stat64_struct(pid,
                                            buf_addr,
                                            int(st_dev1),
                                            int(st_dev2),
@@ -1210,7 +1209,7 @@ def flistxattr_entry_handler(syscall_id, syscall_object, pid):
     fd = int(syscall_object.args[0].value)
     if should_replay_based_on_fd(fd):
         if syscall_object.ret[0] != -1:
-            buffer_address = tracereplay.peek_register(pid, tracereplay.ECX)
+            buffer_address = cint.peek_register(pid, cint.ECX)
             logging.debug('buffer address: %x', buffer_address)
             # if param 2 is NULL, we don't populate
             if buffer_address != 0:
@@ -1220,7 +1219,7 @@ def flistxattr_entry_handler(syscall_id, syscall_object, pid):
                 else:
                     data = data.decode('string-escape')
                 logging.debug('data: %s', data)
-                tracereplay.populate_char_buffer(pid,
+                cint.populate_char_buffer(pid,
                                                  buffer_address,
                                                  data)
         logging.debug('Replaying this system call')
@@ -1233,7 +1232,7 @@ def flistxattr_entry_handler(syscall_id, syscall_object, pid):
 
 def flixtxattr_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering flistxattr exit handler')
-    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
@@ -1252,7 +1251,7 @@ def fgetxattr_entry_handler(syscall_id, syscall_object, pid):
     fd = int(syscall_object.args[0].value)
     if should_replay_based_on_fd(fd):
         if syscall_object.ret[0] != -1:
-            buffer_address = tracereplay.peek_register(pid, tracereplay.EDX)
+            buffer_address = cint.peek_register(pid, cint.EDX)
             logging.debug('buffer address: %x', buffer_address)
             # if param 2 is NULL, we don't populate
             if buffer_address != 0:
@@ -1262,7 +1261,7 @@ def fgetxattr_entry_handler(syscall_id, syscall_object, pid):
                 else:
                     data = data.decode('string-escape')
                 logging.debug('data: %s', data)
-                tracereplay.populate_char_buffer(pid,
+                cint.populate_char_buffer(pid,
                                                  buffer_address,
                                                  data)
         logging.debug('Replaying this system call')
@@ -1275,7 +1274,7 @@ def fgetxattr_entry_handler(syscall_id, syscall_object, pid):
 
 def fgetxattr_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fgetxattr exit handler')
-    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
@@ -1303,7 +1302,7 @@ def fsetxattr_entry_handler(syscall_id, syscall_object, pid):
 
 def fsetxattr_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fstexattr exit handler')
-    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
@@ -1319,7 +1318,7 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, 0)
     # We must check the this argument manually because posix-omni-parser
     # does not split the list of structures up correctly
-    size = tracereplay.peek_register(pid, tracereplay.EDX)
+    size = cint.peek_register(pid, cint.EDX)
     size_from_trace = int(syscall_object.args[-1].value)
     if size != size_from_trace:
         raise ReplayDeltaError('Size from execution ({}) did not match size '
@@ -1330,12 +1329,12 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
     if should_replay_based_on_fd(fd):
         logging.debug('Replaying this system call')
         logging.debug('PID: %d', pid)
-        addr = tracereplay.peek_register(pid, tracereplay.ECX)
+        addr = cint.peek_register(pid, cint.ECX)
         logging.debug('addr: %x', addr & 0xffffffff)
         retlen = int(syscall_object.ret[0])
         data = parse_getdents64_structure(syscall_object)
         if len(data) > 0:
-            tracereplay.populate_getdents64_structure(pid, addr, data, retlen)
+            cint.populate_getdents64_structure(pid, addr, data, retlen)
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
@@ -1345,7 +1344,7 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
 
 def getdents64_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getdents64 exit handler')
-    ret_val = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)
     logging.debug('Return value from trace: %d', ret_val_from_trace)
@@ -1386,15 +1385,15 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
 def open_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to open: %s',
                   peek_string(pid,
-                              tracereplay.peek_register(pid,
-                                                        tracereplay.EBX)))
+                              cint.peek_register(pid,
+                                                        cint.EBX)))
 
 
 def write_entry_debug_printer(pid, orig_eax, syscall_object):
-    fd = tracereplay.peek_register(pid, tracereplay.EBX)
-    addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    data_count = tracereplay.peek_register(pid, tracereplay.EDX)
-    data = tracereplay.copy_address_range(pid, addr, addr + data_count)
+    fd = cint.peek_register(pid, cint.EBX)
+    addr = cint.peek_register(pid, cint.ECX)
+    data_count = cint.peek_register(pid, cint.EDX)
+    data = cint.copy_address_range(pid, addr, addr + data_count)
     logging.debug('This call tried to write: %s', data.encode('string-escape'))
     logging.debug('Length: %d', data_count)
     logging.debug('File descriptor: %d', fd)
@@ -1402,38 +1401,38 @@ def write_entry_debug_printer(pid, orig_eax, syscall_object):
 
 def fstat64_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to fstat: %s',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
 
 
 def close_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to close: %s',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
 
 
 def dup_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to dup: %d',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
 
 
 def fcntl64_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to fcntl: %d',
-                  tracereplay.peek_register(pid, tracereplay.EBX))
+                  cint.peek_register(pid, cint.EBX))
     logging.debug('fcntl command: %s',
                   FCNTL64_INT_TO_CMD[
-                      tracereplay.peek_register(pid, tracereplay.ECX)])
+                      cint.peek_register(pid, cint.ECX)])
     logging.debug('Param 3: %d',
-                  tracereplay.peek_register(pid, tracereplay.EDX))
+                  cint.peek_register(pid, cint.EDX))
 
 
 def stat64_entry_debug_printer(pid, orig_eax, syscall_object):
-    path_addr = tracereplay.peek_register(pid, tracereplay.EBX)
+    path_addr = cint.peek_register(pid, cint.EBX)
     logging.debug('This call tried to use path: %s',
                   peek_string(pid, path_addr))
 
 
 def access_entry_debug_printer(pid, orig_eax, syscall_object):
-    path_addr = tracereplay.peek_register(pid, tracereplay.EBX)
-    mode = tracereplay.peek_register(pid, tracereplay.ECX)
+    path_addr = cint.peek_register(pid, cint.EBX)
+    mode = cint.peek_register(pid, cint.ECX)
     logging.debug('This call tried to use path: %s',
                   peek_string(pid, path_addr))
     logging.debug('Mode: %s',
@@ -1441,14 +1440,14 @@ def access_entry_debug_printer(pid, orig_eax, syscall_object):
 
 
 def read_entry_debug_printer(pid, orig_eax, syscall_object):
-    fd = tracereplay.peek_register(pid, tracereplay.EBX)
+    fd = cint.peek_register(pid, cint.EBX)
     logging.debug('Tried to read from fd: %d', fd)
 
 
 def unlink_entry_debug_printer(pid, orig_eax, syscall_object):
     name = peek_string(pid,
-                       tracereplay.peek_register(pid,
-                                                 tracereplay.EBX))
+                       cint.peek_register(pid,
+                                                 cint.EBX))
     logging.debug('Tried to unlink name %s', name)
 
 

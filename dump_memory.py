@@ -1,8 +1,8 @@
 from __future__ import print_function
+
 import argparse
-import time
-from syscall_dict import SYSCALLS
-from tracereplay_python import *
+
+from util import *
 
 
 if __name__ == '__main__':
@@ -15,7 +15,7 @@ if __name__ == '__main__':
     command = args['command'].split(' ')
     pid = os.fork()
     if pid == 0:
-        tracereplay.traceme()
+        cint.traceme()
         os.execvp(command[0], command)
     else:
         f = open('/proc/' + str(pid) + '/maps', 'r')
@@ -28,17 +28,17 @@ if __name__ == '__main__':
         count = 0
         entering = True
         orig_eax = -1
-        #tracereplay.enable_debug_output(10)
+        #cint.enable_debug_output(10)
         os.mkdir('dumps')
         os.chdir('dumps')
         while next_syscall():
-            orig_eax = tracereplay.peek_register(pid, tracereplay.ORIG_EAX)
+            orig_eax = cint.peek_register(pid, cint.ORIG_EAX)
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
-                tracereplay.syscall(pid)
+                cint.syscall(pid)
                 continue
-            b = tracereplay.copy_address_range(pid, start, end)
+            b = cint.copy_address_range(pid, start, end)
             f = open(str(count) + '-' + SYSCALLS[orig_eax] + '-' +
                      ('entry' if entering else 'exit') + '-' +
                      str(int(time.time())) +
@@ -50,4 +50,4 @@ if __name__ == '__main__':
             elif not entering:
                 entering = True
                 count = count + 1
-            tracereplay.syscall(pid)
+            cint.syscall(pid)

@@ -1,7 +1,7 @@
-from tracereplay_python import *
-import os
 import logging
 import re
+
+from util import *
 
 
 # A lot of the parsing in this function needs to be moved into the
@@ -30,17 +30,17 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     timeval_addr = None
     if syscall_object.args[4].value != 'NULL':
-        timeval_addr = tracereplay.peek_register(pid, tracereplay.EDI)
+        timeval_addr = cint.peek_register(pid, cint.EDI)
         logging.debug('timeval_addr: %d')
         seconds = int(syscall_object.args[4].value.strip('{}'))
         microseconds = int(syscall_object.args[5].value.strip('{}'))
         logging.debug('seconds: %d', seconds)
         logging.debug('microseconds: %d', microseconds)
-    readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
+    readfds_addr = cint.peek_register(pid, cint.ECX)
     logging.debug('readfds addr: %x', readfds_addr & 0xFFFFFFFF)
-    writefds_addr = tracereplay.peek_register(pid, tracereplay.EDX)
+    writefds_addr = cint.peek_register(pid, cint.EDX)
     logging.debug('writefds addr: %x', writefds_addr & 0xFFFFFFFF)
-    exceptfds_addr = tracereplay.peek_register(pid, tracereplay.ESI)
+    exceptfds_addr = cint.peek_register(pid, cint.ESI)
     logging.debug('exceptfds addr: %x', exceptfds_addr & 0xFFFFFFFF)
     readfds = []
     writefds = []
@@ -67,7 +67,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('readfds: %s', readfds)
     logging.debug('writefds: %s', writefds)
     logging.debug('exceptfds: %s', exceptfds)
-    tracereplay.populate_select_bitmaps(pid,
+    cint.populate_select_bitmaps(pid,
                                         readfds_addr,
                                         readfds,
                                         writefds_addr,
@@ -76,7 +76,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
                                         exceptfds)
     logging.debug('Populating timeval structure')
     if timeval_addr:
-        tracereplay.populate_timeval_structure(pid,
+        cint.populate_timeval_structure(pid,
                                                timeval_addr,
                                                seconds,
                                                microseconds)
@@ -88,7 +88,7 @@ def select_entry_handler(syscall_id, syscall_object, pid):
 
 def poll_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering poll entry handler')
-    array_address = tracereplay.peek_register(pid, tracereplay.EBX)
+    array_address = cint.peek_register(pid, cint.EBX)
     if syscall_object.ret[0] == 0:
         logging.debug('Poll call timed out')
     else:
@@ -110,15 +110,15 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Pollfd array address: %s', array_address)
         logging.debug('Child PID: %s', pid)
         if revent == 'POLLIN':
-            r = tracereplay.POLLIN
+            r = cint.POLLIN
         else:
-            r = tracereplay.POLLOUT
+            r = cint.POLLOUT
         found_returned_fd = False
         for index, obj in enumerate(syscall_object.args[0].value):
-            array_address = array_address + (index * tracereplay.POLLFDSIZE)
+            array_address = array_address + (index * cint.POLLFDSIZE)
             obj_fd = syscall_object.args[0].value[index].value[0]
             if obj_fd == fd:
-                tracereplay.write_poll_result(pid,
+                cint.write_poll_result(pid,
                                               array_address,
                                               fd,
                                               r)
@@ -126,7 +126,7 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
             else:
                 # For applications that re-use the pollfd array, we must clear
                 # the revents field in case they don't do it themselves.
-                tracereplay.write_poll_result(pid,
+                cint.write_poll_result(pid,
                                               array_address,
                                               obj_fd,
                                               0)
@@ -139,19 +139,19 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
 
 
 def select_entry_debug_printer(pid, orig_eax, syscall_object):
-    readfds_addr = tracereplay.peek_register(pid, tracereplay.ECX)
-    writefds_addr = tracereplay.peek_register(pid, tracereplay.EDX)
-    exceptfds_addr = tracereplay.peek_register(pid, tracereplay.EDI)
-    logging.debug("nfds: %d", tracereplay.peek_register(pid, tracereplay.EBX))
+    readfds_addr = cint.peek_register(pid, cint.ECX)
+    writefds_addr = cint.peek_register(pid, cint.EDX)
+    exceptfds_addr = cint.peek_register(pid, cint.EDI)
+    logging.debug("nfds: %d", cint.peek_register(pid, cint.EBX))
     logging.debug("readfds_addr: %x", readfds_addr & 0xffffffff)
     logging.debug("writefds_addr: %x", writefds_addr & 0xffffffff)
     logging.debug("exceptfds_addr: %x", exceptfds_addr & 0xffffffff)
     if readfds_addr != 0:
         logging.debug("readfds: %s",
-                      tracereplay.get_select_fds(pid, readfds_addr))
+                      cint.get_select_fds(pid, readfds_addr))
     if writefds_addr != 0:
         logging.debug("writefds: %s",
-                      tracereplay.get_select_fds(pid, writefds_addr))
+                      cint.get_select_fds(pid, writefds_addr))
     if exceptfds_addr != 0:
         logging.debug("exceptfds_addr: %s",
-                      tracereplay.get_select_fds(pid, exceptfds_addr))
+                      cint.get_select_fds(pid, exceptfds_addr))

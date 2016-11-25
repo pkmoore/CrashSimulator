@@ -1,15 +1,14 @@
-from tracereplay_python import *
-from syscall_dict import SOCKET_SUBCALLS
-from os_dict import SHUTDOWN_INT_TO_CMD, SHUTDOWN_CMD_TO_INT
 from os_dict import ADDRFAM_INT_TO_FAM
-from os_dict import SOCKTYPE_INT_TO_TYPE
 from os_dict import PROTOFAM_INT_TO_FAM
-import logging
+from os_dict import SHUTDOWN_INT_TO_CMD
+from os_dict import SOCKTYPE_INT_TO_TYPE
+
+from util import *
 
 
 def bind_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering bind entry handler')
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 1)
     fd_from_trace = int(syscall_object.args[0].value)
     validate_integer_argument(pid, syscall_object, 0, 0, params=params)
@@ -27,7 +26,7 @@ def bind_exit_handler(syscall_id, syscall_object, pid):
 
 def listen_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering listen entry handler')
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 1)
     fd_from_trace = int(syscall_object.args[0].value)
     validate_integer_argument(pid, syscall_object, 0, 0, params=params)
@@ -45,7 +44,7 @@ def listen_exit_handler(syscall_id, syscall_object, pid):
 def getpeername_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getpeername handler')
     # Pull out the info that we can check
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
     fd = params[0]
     # We don't compare params[1] because it is the address of an empty buffer
@@ -58,7 +57,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
                                'does not match file descriptor from trace ({})'
                                .format(fd, fd_from_trace))
     # Decide if this is a file descriptor we want to deal with
-    if fd_from_trace in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+    if fd_from_trace in tracereplay.REPLAY_FILE_DESCRIPTORS:
         logging.info('Replaying this system call')
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -79,7 +78,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
             if family != 'AF_INET':
                 raise NotImplementedError('getpeername only '
                                               'supports AF_INET')
-            tracereplay.populate_af_inet_sockaddr(pid,
+            cint.populate_af_inet_sockaddr(pid,
                                                   addr,
                                                   port,
                                                   ip,
@@ -95,7 +94,7 @@ def getpeername_entry_handler(syscall_id, syscall_object, pid):
 def getsockname_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockname handler')
     # Pull out the info that we can check
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
     # We don't compare params[1] because it is the address of an empty buffer
     # We don't compare params[2] because it is the address of an out parameter
@@ -124,7 +123,7 @@ def getsockname_entry_handler(syscall_id, syscall_object, pid):
             if family != 'AF_INET':
                 raise NotImplementedError('getsockname only supports '
                                               'AF_INET')
-            tracereplay.populate_af_inet_sockaddr(pid,
+            cint.populate_af_inet_sockaddr(pid,
                                                   addr,
                                                   port,
                                                   ip,
@@ -145,7 +144,7 @@ def getsockname_exit_handler(syscall_id, syscall_object, pid):
 def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering shutdown entry handler')
     # Pull out the info we can check
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 2)
     fd_from_trace = syscall_object.args[0].value
     validate_integer_argument(pid, syscall_object, 0, 0, params=params)
@@ -164,7 +163,7 @@ def shutdown_subcall_entry_handler(syscall_id, syscall_object, pid):
 def setsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering setsockopt handler')
     # Pull out what we can compare
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 5)
     fd_from_trace = int(syscall_object.args[0].value)
     optval_addr = params[3]
@@ -187,7 +186,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Optval addr: %x', optval_addr % 0xffffffff)
         noop_current_syscall(pid)
         logging.debug('Writing values')
-        tracereplay.populate_int(pid, optval_addr, optval)
+        cint.populate_int(pid, optval_addr, optval)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
@@ -197,7 +196,7 @@ def setsockopt_entry_handler(syscall_id, syscall_object, pid):
 def getsockopt_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getsockopt handler')
     # Pull out what we can compare
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 5)
     fd_from_trace = int(syscall_object.args[0].value)
     optval_addr = params[3]
@@ -219,8 +218,8 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Optval Lenght addr: %d', optval_len_addr % 0xffffffff)
         noop_current_syscall(pid)
         logging.debug('Writing values')
-        tracereplay.populate_int(pid, optval_addr, optval)
-        tracereplay.populate_int(pid, optval_len_addr, 4)
+        cint.populate_int(pid, optval_addr, optval)
+        cint.populate_int(pid, optval_len_addr, 4)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
@@ -229,7 +228,7 @@ def getsockopt_entry_handler(syscall_id, syscall_object, pid):
 
 def connect_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering connect entry handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
     validate_integer_argument(pid, syscall_object, 0, 0, params=params)
     validate_integer_argument(pid, syscall_object, 2, 2, params=params)
@@ -243,7 +242,7 @@ def connect_entry_handler(syscall_id, syscall_object, pid):
 
 def connect_exit_handler(syscall_id, syscall_object, pid):
     ret_val_from_trace = syscall_object.ret[0]
-    ret_val_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX)
     if ret_val_from_execution != ret_val_from_trace:
         raise ReplayDeltaError('Return value from execution ({}) differs '
                                'from return value from trace ({})'
@@ -253,7 +252,7 @@ def connect_exit_handler(syscall_id, syscall_object, pid):
 
 def socket_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering socket exit handler')
-    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    fd_from_execution = cint.peek_register(pid, cint.EAX)
     fd_from_trace = int(syscall_object.ret[0])
     if offset_file_descriptor(fd_from_trace) != fd_from_execution:
         raise ReplayDeltaError('File descriptor from execution ({}) '
@@ -262,16 +261,16 @@ def socket_exit_handler(syscall_id, syscall_object, pid):
                                .format(fd_from_execution, fd_from_trace))
     if fd_from_execution >= 0:
         add_os_fd_mapping(fd_from_execution, fd_from_trace)
-    tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)
+    cint.poke_register(pid, cint.EAX, fd_from_trace)
 
 
 # TODO: There is a lot more checking to be done here
 def socket_subcall_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering socket subcall entry handler')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
     # Only PF_INET and PF_LOCAL socket calls are handled
-    execution_is_PF_INET = (params[0] == tracereplay.PF_INET)
+    execution_is_PF_INET = (params[0] == cint.PF_INET)
     trace_is_PF_INET = (str(syscall_object.args[0]) == '[\'PF_INET\']')
     execution_is_PF_LOCAL = (params[0] == 1)  # define PF_LOCAL 1
     trace_is_PF_LOCAL = (str(syscall_object.args[0]) == '[\'PF_LOCAL\']')
@@ -309,7 +308,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
         if syscall_object.name != 'accept':
             raise Exception('Attempt to advance past interrupted accept line '
                             'failed. Next system call was not accept!')
-    ecx = tracereplay.peek_register(pid, tracereplay.ECX)
+    ecx = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, ecx, 3)
     sockaddr_addr = params[1]
     sockaddr_len_addr = params[2]
@@ -333,7 +332,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('sockaddr length addr: %x',
                           sockaddr_len_addr & 0xffffffff)
             logging.debug('pid: %s', pid)
-            tracereplay.populate_af_inet_sockaddr(pid,
+            cint.populate_af_inet_sockaddr(pid,
                                                   sockaddr_addr,
                                                   port,
                                                   ip,
@@ -341,12 +340,12 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
                                                   sockaddr_length)
         if syscall_object.ret[0] != -1:
             ret = syscall_object.ret[0]
-            if ret in tracereplay_globals.REPLAY_FILE_DESCRIPTORS:
+            if ret in tracereplay.REPLAY_FILE_DESCRIPTORS:
                 raise Exception('Syscall object return value ({}) already '
                                 'exists in tracked file descriptors list ({})'
                                 .format(ret,
-                                        tracereplay_globals.REPLAY_FILE_DESCRIPTORS))
-            tracereplay_globals.REPLAY_FILE_DESCRIPTORS.append(ret)
+                                        tracereplay.REPLAY_FILE_DESCRIPTORS))
+            tracereplay.REPLAY_FILE_DESCRIPTORS.append(ret)
         apply_return_conditions(pid, syscall_object)
     else:
         logging.info('Not replaying this system call')
@@ -355,7 +354,7 @@ def accept_subcall_entry_handler(syscall_id, syscall_object, pid):
 
 def accept_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering accept exit handler')
-    fd_from_execution = tracereplay.peek_register(pid, tracereplay.EAX)
+    fd_from_execution = cint.peek_register(pid, cint.EAX)
     fd_from_trace = int(syscall_object.ret[0])
     if offset_file_descriptor(fd_from_trace) != fd_from_execution:
         raise ReplayDeltaError('File descriptor from execution ({}) '
@@ -364,7 +363,7 @@ def accept_exit_handler(syscall_id, syscall_object, pid):
                                .format(fd_from_execution, fd_from_trace))
     if fd_from_execution >= 0:
         add_os_fd_mapping(fd_from_execution, fd_from_trace)
-    tracereplay.poke_register(pid, tracereplay.EAX, fd_from_trace)
+    cint.poke_register(pid, cint.EAX, fd_from_trace)
 
 
 def socketcall_debug_printer(pid, orig_eax, syscall_object):
@@ -373,7 +372,7 @@ def socketcall_debug_printer(pid, orig_eax, syscall_object):
         9: send_debug_printer,
         13: shutdown_debug_printer
     }
-    subcall_id = tracereplay.peek_register(pid, tracereplay.EBX)
+    subcall_id = cint.peek_register(pid, cint.EBX)
     logging.debug('Got subcall {} {}'.format(subcall_id,
                                              SOCKET_SUBCALLS[subcall_id]))
     try:
@@ -385,16 +384,16 @@ def socketcall_debug_printer(pid, orig_eax, syscall_object):
 
 
 def send_debug_printer(pid, syscall_object):
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 4)
     addr = params[1]
     size = params[2]
-    data = tracereplay.copy_address_range(pid, addr, addr + size)
+    data = cint.copy_address_range(pid, addr, addr + size)
     logging.debug('This call tried to send: %s', data.encode('string-escape'))
 
 
 def shutdown_debug_printer(pid, syscall_object):
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 2)
     fd = params[0]
     cmd = params[1]
@@ -403,7 +402,7 @@ def shutdown_debug_printer(pid, syscall_object):
 
 
 def socket_debug_printer(pid, syscall_object):
-    p = tracereplay.peek_register(pid, tracereplay.ECX)
+    p = cint.peek_register(pid, cint.ECX)
     params = extract_socketcall_parameters(pid, p, 3)
     logging.debug('Domain: %s', ADDRFAM_INT_TO_FAM[params[0]])
     logging.debug('Type: %s', SOCKTYPE_INT_TO_TYPE[params[1]])

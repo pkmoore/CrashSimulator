@@ -1460,12 +1460,12 @@ static PyMethodDef TraceReplayMethods[]  = {
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC inittracereplay(void) {
+PyMODINIT_FUNC initcinterface(void) {
     PyObject* m;
-    if((m = Py_InitModule("tracereplay", TraceReplayMethods)) == NULL) {
+    if((m = Py_InitModule("tracereplay.cinterface", TraceReplayMethods)) == NULL) {
         return;
     }
-    TraceReplayError = PyErr_NewException("tracereplay.TraceReplayError",
+    TraceReplayError = PyErr_NewException("cinterface.TraceReplayError",
                                           NULL,
                                           NULL
                                          );
