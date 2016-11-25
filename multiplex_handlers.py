@@ -29,6 +29,8 @@ def select_entry_handler(syscall_id, syscall_object, pid):
                             'failed. Next system call was not accept!')
     noop_current_syscall(pid)
     timeval_addr = None
+    seconds = 0
+    microseconds = 0
     if syscall_object.args[4].value != 'NULL':
         timeval_addr = cint.peek_register(pid, cint.EDI)
         logging.debug('timeval_addr: %d')
@@ -68,18 +70,18 @@ def select_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('writefds: %s', writefds)
     logging.debug('exceptfds: %s', exceptfds)
     cint.populate_select_bitmaps(pid,
-                                        readfds_addr,
-                                        readfds,
-                                        writefds_addr,
-                                        writefds,
-                                        exceptfds_addr,
-                                        exceptfds)
+                                 readfds_addr,
+                                 readfds,
+                                 writefds_addr,
+                                 writefds,
+                                 exceptfds_addr,
+                                 exceptfds)
     logging.debug('Populating timeval structure')
     if timeval_addr:
         cint.populate_timeval_structure(pid,
-                                               timeval_addr,
-                                               seconds,
-                                               microseconds)
+                                        timeval_addr,
+                                        seconds,
+                                        microseconds)
     apply_return_conditions(pid, syscall_object)
 
 

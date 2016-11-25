@@ -32,13 +32,13 @@ def uname_entry_handler(syscall_id, syscall_object, pid):
     address = cint.peek_register(pid, cint.EBX)
     noop_current_syscall(pid)
     cint.populate_uname_structure(pid,
-                                         address,
-                                         args['sysname'],
-                                         args['nodename'],
-                                         args['release'],
-                                         args['version'],
-                                         args['machine'],
-                                         args['domainname'])
+                                  address,
+                                  args['sysname'],
+                                  args['nodename'],
+                                  args['release'],
+                                  args['version'],
+                                  args['machine'],
+                                  args['domainname'])
     apply_return_conditions(pid, syscall_object)
 
 
@@ -98,11 +98,11 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('ws_xpixel: %s', ws_xpixel)
             logging.debug('ws_ypixel: %s', ws_ypixel)
             cint.populate_winsize_structure(pid,
-                                                   addr,
-                                                   ws_row,
-                                                   ws_col,
-                                                   ws_xpixel,
-                                                   ws_ypixel)
+                                            addr,
+                                            ws_row,
+                                            ws_col,
+                                            ws_xpixel,
+                                            ws_ypixel)
         elif 'FIONREAD' in cmd:
             num_bytes = int(syscall_object.args[2].value.strip('[]'))
             logging.debug('Number of bytes: %d', num_bytes)
@@ -202,7 +202,7 @@ def mmap2_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Return value from execution %x', ret_from_execution)
     logging.debug('Return value from trace %x', ret_from_trace)
     if ret_from_execution < 0:
-        ret_from_execution = ret_from_execution & 0xffffffff
+        ret_from_execution &= 0xffffffff
     if ret_from_execution != ret_from_trace:
         logging.debug('Return value from execution (%d, %x) differs '
                       'from return value from trace (%d, %x)',
@@ -210,7 +210,6 @@ def mmap2_exit_handler(syscall_id, syscall_object, pid):
                       ret_from_execution,
                        ret_from_trace,
                       ret_from_trace)
-
 
 
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):

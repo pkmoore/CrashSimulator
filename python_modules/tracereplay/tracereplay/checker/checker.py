@@ -79,7 +79,7 @@ class UrandomReadDuringCopyAutomaton:
                     {'id': 3,
                      'comment': 'the data has been written to destination file',
                      'accepting':False}]
-
+        self.current_state = self.states[0]
         self.data_register = None
         self.urandom_fd = None
 

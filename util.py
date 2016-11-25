@@ -8,12 +8,12 @@ from tracereplay import cinterface as cint
 
 from errno_dict import ERRNO_CODES
 from os_dict import OS_CONST
-from os_dict import STAT_CONST
 from syscall_dict import SOCKET_SUBCALLS
 from syscall_dict import SYSCALLS
 
 
 def advance_trace():
+    obj = None
     if tracereplay.system_call_index < len(
             tracereplay.system_calls):
         obj = tracereplay.system_calls[
@@ -382,8 +382,6 @@ def should_replay_based_on_fd(trace_fd):
         raise ReplayDeltaError('No entry in either list for fd {}. Maybe this '
                                'is an improperly handled unsuccessful call?'
                                .format(trace_fd))
-    logging.debug('We should replay, there is not an os fd for this call')
-    return True
 
 
 def is_file_mmapd_at_any_time(file_name):

@@ -49,5 +49,5 @@ if __name__ == '__main__':
                 entering = False
             elif not entering:
                 entering = True
-                count = count + 1
+                count += 1
             cint.syscall(pid)

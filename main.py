@@ -5,7 +5,6 @@ import argparse
 import signal
 import sys
 import traceback
-import tracereplay
 from tracereplay import cinterface as cint
 
 from file_handlers import *

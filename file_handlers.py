@@ -3,8 +3,10 @@ from time import strptime, mktime
 from getdents64_parser import parse_getdents64_structure
 from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
+from os_dict import STAT_CONST
 
 from util import *
+
 
 def unlinkat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlinkat entry handler')
@@ -423,19 +425,19 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('f_frsize: %s', f_frsize)
         logging.debug('f_flags: %s', f_flags)
         cint.populate_statfs64_structure(pid,
-                                                addr,
-                                                f_type,
-                                                f_bsize,
-                                                f_blocks,
-                                                f_bfree,
-                                                f_bavail,
-                                                f_files,
-                                                f_ffree,
-                                                f_fsid1,
-                                                f_fsid2,
-                                                f_namelen,
-                                                f_frsize,
-                                                f_flags)
+                                         addr,
+                                         f_type,
+                                         f_bsize,
+                                         f_blocks,
+                                         f_bfree,
+                                         f_bavail,
+                                         f_files,
+                                         f_ffree,
+                                         f_fsid1,
+                                         f_fsid2,
+                                         f_namelen,
+                                         f_frsize,
+                                         f_flags)
     apply_return_conditions(pid, syscall_object)
 
 
@@ -671,22 +673,22 @@ def fstat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
         cint.populate_stat64_struct(pid,
-                                           buf_addr,
-                                           int(st_dev1),
-                                           int(st_dev2),
-                                           st_blocks,
-                                           st_nlink,
-                                           st_gid,
-                                           st_blksize,
-                                           int(st_rdev1),
-                                           int(st_rdev2),
-                                           st_size,
-                                           st_mode,
-                                           st_uid,
-                                           st_ino,
-                                           st_ctime,
-                                           st_mtime,
-                                           st_atime)
+                                    buf_addr,
+                                    int(st_dev1),
+                                    int(st_dev2),
+                                    st_blocks,
+                                    st_nlink,
+                                    st_gid,
+                                    st_blksize,
+                                    int(st_rdev1),
+                                    int(st_rdev2),
+                                    st_size,
+                                    st_mode,
+                                    st_uid,
+                                    st_ino,
+                                    st_ctime,
+                                    st_mtime,
+                                    st_atime)
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
