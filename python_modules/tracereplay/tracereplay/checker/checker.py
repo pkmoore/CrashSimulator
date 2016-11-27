@@ -1,8 +1,20 @@
-# This checker determins whether or not the application under test checks to
+# This checker determines whether or not the application under test checks to
 # make sure the source file hasn't changed during the copy process. To pass,
 # the application must have called stat64 or lstat64 on the source followed by
 # a call to open on the source, and a call to fstat64 on the file descriptor
 # returned by the open call.
+
+
+class CopyUrandomIncorrectlyChecker:
+    def __init__(self):
+        self.copy_automaton = UrandomReadDuringCopyAutomaton()
+
+    def transition(self, syscall_object):
+        self.copy_automaton.transition(syscall_object)
+
+    def is_accepting(self):
+        print(self.copy_automaton.current_state)
+        return self.copy_automaton.is_accepting()
 
 
 class FileReplacedDuringCopyChecker:
@@ -67,31 +79,44 @@ class RenameEXDEVAutomaton:
 class UrandomReadDuringCopyAutomaton:
     def __init__(self):
         self.states = [{'id': 0,
-                     'comment': '/dev/urandom has not been opened yet',
-                     'accepting': True},
-                    {'id': 1,
-                     'comment': '/dev/urandom is open but has not been '
-                                'read from yet',
-                     'accepting': True},
-                    {'id': 2,
-                     'comment': '/dev/urandom is has been read from',
-                     'accepting': True},
-                    {'id': 3,
-                     'comment': 'the data has been written to destination file',
-                     'accepting':False}]
+                        'comment': '/dev/urandom has not been opened yet',
+                        'accepting': True},
+                       {'id': 1,
+                        'comment': '/dev/urandom is open but has not been '
+                                   'read from yet',
+                        'accepting': True},
+                       {'id': 2,
+                        'comment': '/dev/urandom is has been read from',
+                        'accepting': True},
+                       {'id': 3,
+                        'comment': 'the data has been written to dest file',
+                        'accepting': False}]
         self.current_state = self.states[0]
         self.data_register = None
         self.urandom_fd = None
 
-
     def transition(self, syscall_object):
         if self.current_state['id'] == 0:
             if 'open' in syscall_object.name:
-                if '/dev/urandom' in syscall_object.args[0]:
+                if '/dev/urandom' in syscall_object.args[0].value:
                     self.current_state = self.states[1]
                     self.urandom_fd = int(syscall_object.ret[0])
         if self.current_state['id'] == 1:
+            if 'read' in syscall_object.name:
+                if syscall_object.args[0].value == self.urandom_fd:
+                    # TODO: track data being read here to see if it is
+                    # written back out verbatim to another file rather than
+                    # just handling one read and one write
+                    self.data_register = syscall_object.args[1].value
+                    self.current_state = self.states[2]
+        if self.current_state['id'] == 2:
+            if 'write' in syscall_object.name:
+                if self.data_register in syscall_object.args[1].value:
+                    self.current_state = self.states[3]
+        if self.current_state['id'] == 3:
+            # It is not possible to leave this state
             pass
+
 
 
     def is_accepting(self):
