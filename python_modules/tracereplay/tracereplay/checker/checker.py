@@ -90,6 +90,110 @@ class XattrsCopiedDuringCopyChecker:
         return self.copy_automaton.is_accepting()
 
 
+class CopyTimestampsDuringCopyChecker:
+    """ Detect the case where the destination file's timestamps are not made
+        to match the source file's timestamps during a cross-device move.
+        1. The source file must be stat()'d
+        OR
+           The source file must be open()'d and fstat()'d
+        2. The destination file must be updated with utimensat()
+    """
+    # TODO: support futimens(), case with just stat()
+
+    def __init__(self, src, dst):
+        self.src = src
+        self.dst = dst
+        self.fstat_src_automaton = OpenAndFstatFileAutomaton(self.src)
+        self.update_dst_automaton = OpenAndUtimensatAutomaton(self.dst)
+
+    def transition(self, syscall_object):
+        self.fstat_src_automaton.transition(syscall_object)
+        self.update_dst_automaton.transition(syscall_object)
+
+    def is_accepting(self):
+        return (self.fstat_src_automaton.is_accepting()
+                and self.update_dst_automaton.is_accepting())
+
+
+class MoveDirectoryIntoItselfChecker:
+    """ Detect the case where the, through a weird mounting situation, the
+        destination is a directory inside the source but on a different device.
+        e.g.
+        mount /dev/sda1 /mnt/foo/
+        mount /dev/sdb1 /mnt/foo/bar
+        <move application> /mnt/foo /mnt/foo/bar/foo/
+
+        Some applications make the assumption that because it is a cross-device
+        move it is not possible for the the destination to be inside the source.
+    """
+
+    def __init__(self):
+        raise NotImplementedError('This checker has not been implemented yet')
+
+
+class OpenAndUtimensatAutomaton:
+    # TODO: parse and check for correct times?
+    def __init__(self, filename):
+        self.filename = filename
+        self.states = [{'id': 0,
+                        'comment': 'File has not been opened',
+                        'accepting': False},
+                       {'id': 1,
+                        'comment': 'File has been opened',
+                        'accepting': False},
+                       {'id': 2,
+                        'comment': 'File has been utimensat()\'d',
+                        'accepting': True}]
+        self.current_state = self.states[0]
+        self.fd_register = None
+
+    def transition(self, syscall_object):
+        if self.current_state['id'] == 0:
+            if syscall_object.name == 'open':
+                if self.filename in syscall_object.args[0].value:
+                    self.fd_register = int(syscall_object.ret[0])
+                    self.current_state = self.states[1]
+        elif self.current_state['id'] == 1:
+            if syscall_object.name == 'utimensat':
+                if self.fd_register == int(syscall_object.args[0].value):
+                    self.current_state = self.states[2]
+                    # It is not possible to transition out of state 2
+
+    def is_accepting(self):
+        return self.current_state['accepting']
+
+
+class OpenAndFstatFileAutomaton:
+    def __init__(self, filename):
+        self.filename = filename
+        self.states = [{'id': 0,
+                        'comment': 'File has not been opened',
+                        'accepting': False},
+                       {'id': 1,
+                        'comment': 'File has been opened',
+                        'accepting': False},
+                       {'id': 2,
+                        'comment': 'File has been fstat()\'d',
+                        'accepting': True}]
+        self.current_state = self.states[0]
+        self.fd_register = None
+
+    def transition(self, syscall_object):
+        if self.current_state['id'] == 0:
+            if syscall_object.name == 'open':
+                if self.filename in syscall_object.args[0].value:
+                    self.fd_register = int(syscall_object.ret[0])
+                    self.current_state = self.states[1]
+        elif self.current_state['id'] == 1:
+            if syscall_object.name == 'fstat64':
+                if self.fd_register == int(syscall_object.args[0].value):
+                    self.current_state = self.states[2]
+        # It is not possible to transition out of state 2
+
+    def is_accepting(self):
+        return self.current_state['accepting']
+
+
 class DontModifyFileAutomaton:
     def __init__(self, filename):
         self.filename = filename
