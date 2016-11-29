@@ -5,7 +5,41 @@
 # returned by the open call.
 
 
+class CopySymlinkOverTargetChecker:
+    """ Detect the case where an application tries to copy a symlink over its
+        target.
+        1. Source must be lstat()'d
+        2. Must not call unlink on destination
+        3. Must not open destination destructively
+    """
+    def __init__(self, src, dst):
+        self.src = src
+        self.dst = dst
+        self.src_checker = AtLeastOnceWithArgAutomaton('lstat64',
+                                                       self.src,
+                                                       0)
+        self.dst_write_checker = DontModifyFileAutomaton(dst)
+        self.dst_unlink_checker = AtLeastOnceWithArgAutomaton('unlink',
+                                                              self.dst,
+                                                              0)
+
+    def transition(self, syscall_object):
+        self.src_checker.transition(syscall_object)
+        self.dst_write_checker.transition(syscall_object)
+        self.dst_unlink_checker.transition(syscall_object)
+
+    def is_accepting(self):
+        return (self.src_checker.is_accepting()
+                and self.dst_write_checker.is_accepting()
+                and not self.dst_unlink_checker.is_accepting())
+
+
 class CopyUrandomIncorrectlyChecker:
+    """ Detect the case where an application tries to copy the urandom device as
+        if it were a normal file (i.e. open, read, write etc.)
+        1. The file must not read from urandom and write the data out to the
+        destination file verbatim
+    """
     def __init__(self):
         self.copy_automaton = UrandomReadDuringCopyAutomaton()
 
@@ -18,6 +52,12 @@ class CopyUrandomIncorrectlyChecker:
 
 
 class FileReplacedDuringCopyChecker:
+    """ Detect the case where an application fails to use fstat() to detect when
+        the source file changes at some point after it was stat()'d
+        1. The file must be stat()'d
+        2. The file must be opened
+        3. The file must be fstat()'d
+    """
     def __init__(self, filename):
         self.filename = filename
         self.source_automaton = StatOpenFstatAutomaton(self.filename)
@@ -30,6 +70,15 @@ class FileReplacedDuringCopyChecker:
 
 
 class XattrsCopiedDuringCopyChecker:
+    """ Detect the case where a files extended file attributes are lost during a
+        cross disk move because the application does not manually copy them from
+        the source file to the destination file
+        1. The source file must be opened
+        2. Some number of extended attributes must be read with fgetxattr
+        3. All of the previously read extended attributes must be applied to the
+        destination file with fsetxattr
+
+    """
     def __init__(self, filename):
         self.filename = filename
         self.copy_automaton = XattrsCopiedInBulkAutomaton(self.filename)
@@ -39,6 +88,49 @@ class XattrsCopiedDuringCopyChecker:
 
     def is_accepting(self):
         return self.copy_automaton.is_accepting()
+
+
+class DontModifyFileAutomaton:
+    def __init__(self, filename):
+        self.filename = filename
+        self.states = [{'id': 0,
+                        'comment': 'File has not been opened',
+                        'accepting': True},
+                       {'id': 1,
+                        'comment': 'File has been opened, not truncated',
+                        'accepting': True},
+                       {'id': 2,
+                        'comment': 'File has been destroyed',
+                        'accepting': False}]
+        self.current_state = self.states[0]
+        self.fd_register = None
+
+    def transition(self, syscall_object):
+        # TODO: deal with applications that unlink the file rather than truncate
+        if self.current_state['id'] == 0:
+            if 'open' in syscall_object.name:
+                if self.filename in syscall_object.args[0].value:
+                    self.fd_register = int(syscall_object.ret[0])
+                    if self._bad_flags(syscall_object.args[2]):
+                        self.current_state = self.states[2]
+            elif 'write' in syscall_object.name:
+                if self.fd_register == syscall_object.args[0].value:
+                    self.current_state = self.states[2]
+
+
+    def _bad_flags(self, flags):
+        append = 'O_APPEND' in flags
+        trunc = 'O_APPEND' in flags
+        if append and trunc:
+            raise NotImplementedError('Weird flag combination %s', flags)
+        elif not append:
+            return True
+        else:
+            return False
+
+
+    def is_accepting(self):
+        return self.current_state['accepting']
 
 
 # Accepts traces where an attempt to rename() the target filename returns
@@ -117,8 +209,6 @@ class UrandomReadDuringCopyAutomaton:
             # It is not possible to leave this state
             pass
 
-
-
     def is_accepting(self):
         return self.current_state['accepting']
 
@@ -195,6 +285,9 @@ class AtLeastOnceWithArgAutomaton:
             if self.name in syscall_object.name \
                     and self.arg in syscall_object.arg[self.pos].value:
                 self.current_state = self.states[1]
+
+    def is_accepting(self):
+        return self.current_state['accepting']
 
 
 class StatOpenFstatAutomaton:
