@@ -5,6 +5,25 @@
 # returned by the open call.
 
 
+class DontReadFifoChecker:
+    """ Detect the situation where an application stats a file, fails to realize
+        that it is a FIFO, and attempts to continue execution as normal.
+        1. Application must not read from the file
+
+        Limitations: only sees calls to stat64. Need to support fstat64 flow
+
+    """
+    def __init__(self, filename):
+        self.filename = filename
+        self.fifo_checker = DontReadFileAfterStatChecker(filename)
+
+    def transition(self, syscall_object):
+        self.fifo_checker.transition(syscall_object)
+
+    def is_accepting(self):
+        return self.fifo_checker.is_accepting()
+
+
 class MTUIssueChecker:
     """ Detect the situation where a client does not read all the data it is
         expected to read from a socket.
@@ -543,3 +562,41 @@ class SocketConnectedAndReadChecker:
         return self.current_state['accepting']
 
 
+class DontReadFileAfterStatChecker:
+    def __init__(self, filename):
+        self.filename = filename
+        self.states = [{'id': 0,
+                        'comment': 'file has not been stat()\'d',
+                        'accepting': True},
+                       {'id': 1,
+                        'comment': 'file has not been opened',
+                        'accepting': True},
+                       {'id': 2,
+                        'comment': 'file has not been read',
+                        'accepting': True},
+                       {'id': 3,
+                        'comment': 'file has been read',
+                        'accepting': False}]
+        self.current_state = self.states[0]
+        self.fd_register = 0
+
+    def transition(self, syscall_object):
+        if self.current_state['id'] == 0:
+            if 'stat64' in syscall_object.name:
+                if self.filename in syscall_object.args[0].value:
+                    self.current_state = self.states[1]
+        if self.current_state['id'] == 1:
+            if 'open' in syscall_object.name:
+                if self.filename in syscall_object.args[0].value:
+                    self.fd_register = int(syscall_object.ret[0])
+                    self.current_state = self.states[2]
+        if self.current_state['id'] == 2:
+            if 'read' in syscall_object.name:
+                if self.fd_register == syscall_object.args[0].value:
+                    self.current_state = self.states[3]
+        if self.current_state['id'] == 3:
+            # cannot leave this state
+            pass
+
+    def is_accepting(self):
+        return self.current_state['accepting']
