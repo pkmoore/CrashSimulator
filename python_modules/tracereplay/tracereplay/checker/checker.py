@@ -12,6 +12,13 @@ class MTUIssueChecker:
         2. Data must be repeatedly read from the connected socket until it has
         all be read
 
+        limitations: only looks at the FIRST connection to a given ip:port
+        Adding additional SocketConnectedAndReadCheckers can deal with simple
+        multi-connection situations. A more robust solution is needed for more
+        complex situations.
+        If you specify a small number of expected bytes, the data_length
+        parameter, this will almost always pass as the amount read must be
+        GREATER THAN the expected amount, not exactly equal to.
     """
     def __init__(self, addr, port, data_length):
         self.addr = addr
@@ -23,7 +30,6 @@ class MTUIssueChecker:
 
     def transition(self, syscall_object):
         self.receive_checker.transition(syscall_object)
-
 
     def is_accepting(self):
         return self.receive_checker.is_accepting()
@@ -490,12 +496,50 @@ class StatOpenFstatAutomaton:
 
 class SocketConnectedAndReadChecker:
     def __init__(self, addr, port, data_length):
-        raise NotImplementedError()
+        self.addr = addr
+        self.port = port
+        self.data_length = data_length
+        self.data_length_register = 0
+        self.sockfd_register = 0
+        self.states = [{'id': 0,
+                        'comment': 'socket not yet connected',
+                        'accepting': False},
+                       {'id': 1,
+                        'comment': 'reading data',
+                        'accepting': False},
+                       {'id': 2,
+                        'comment': 'all data read',
+                        'accepting': True}]
+        self.current_state = self.states[0]
 
     def transition(self, syscall_object):
-        raise NotImplementedError()
+        if self.current_state['id'] == 0:
+            if 'connect' in syscall_object.name:
+                if 'INET' in str(syscall_object.args[1].value[0]):
+                    print(syscall_object.args[1].value[2].value)
+                    print(type(syscall_object.args[1].value[2].value))
+                    print(syscall_object.args[1].value[1].value)
+                    print(type(syscall_object.args[1].value[1].value))
+                    print(self.addr in str(syscall_object.args[1].value[2].value))
+                    print(self.addr in str(syscall_object.args[1].value[2].value))
+                    if self.addr in str(syscall_object.args[1].value[2].value)\
+                      and self.port == syscall_object.args[1].value[1].value:
+                        print("in here")
+                        self.sockfd_register = int(syscall_object.args[0].value)
+                        self.current_state = self.states[1]
+        if self.current_state['id'] == 1:
+            if 'read' in syscall_object.name:
+                if int(syscall_object.args[0].value) == self.sockfd_register:
+                    self.data_length_register += int(syscall_object.ret[0])
+                if self.data_length_register >= self.data_length:
+                    self.current_state = self.states[2]
+        if self.current_state['id'] == 2:
+            # Cannot leave this state
+            pass
 
     def is_accepting(self):
-        raise NotImplementedError()
+        print(self.current_state['id'])
+        print(self.data_length_register)
+        return self.current_state['accepting']
 
 
