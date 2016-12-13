@@ -1,4 +1,7 @@
-all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64
+all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64 setsockoptchristmas
+
+setsockoptchristmas: setsockoptchristmas.c
+	gcc -ggdb -o setsockoptchristmas setsockoptchristmas.c
 
 callgetdents64: callgetdents64.c
 	gcc -ggdb -o callgetdents64 callgetdents64.c
@@ -87,3 +90,4 @@ clean:
 	- rm callsetlocale
 	- rm callrename
 	- rm callreaddir
+	- rm setsockoptchristmas

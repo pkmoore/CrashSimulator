@@ -39,6 +39,12 @@ class CopyUrandomIncorrectlyChecker:
         if it were a normal file (i.e. open, read, write etc.)
         1. The file must not read from urandom and write the data out to the
         destination file verbatim
+
+        Accepting trace: none -> moving a special file requires root permissions
+        Rejecting trace: mmv_crossdisk_urandom_small.strace
+
+        Limitations: Will reject applications that are copying /dev/urandom to a
+        file even though this may be valid behavior for some applications.
     """
     def __init__(self):
         self.copy_automaton = UrandomReadDuringCopyAutomaton()
@@ -57,6 +63,10 @@ class FileReplacedDuringCopyChecker:
         1. The file must be stat()'d
         2. The file must be opened
         3. The file must be fstat()'d
+
+        Accepted trace: mmv_crossdisk.strace
+        Rejected trace: mv_crossdisk_xattrs.strace
+
     """
     def __init__(self, filename):
         self.filename = filename
@@ -78,6 +88,12 @@ class XattrsCopiedDuringCopyChecker:
         3. All of the previously read extended attributes must be applied to the
         destination file with fsetxattr
 
+        Accepted trace: mv_crossdisk_xattrs.strace
+        Rejected trace: mmv_crossdisk.strace
+
+        Limitations: Will reject if attributes are not read all at once and
+        then written all at once.
+
     """
     def __init__(self, filename):
         self.filename = filename
@@ -97,6 +113,12 @@ class CopyTimestampsDuringCopyChecker:
         OR
            The source file must be open()'d and fstat()'d
         2. The destination file must be updated with utimensat()
+
+        Accepting trace: mv_crossdisk_xattrs.strace
+        Rejecting trace: mv_crossdisk.strace
+
+        Limitations: Does not check that times are correct, only that a call to
+        set them was made
     """
     # TODO: support futimens(), case with just stat()
 
