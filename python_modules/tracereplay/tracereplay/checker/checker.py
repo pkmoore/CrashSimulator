@@ -5,6 +5,30 @@
 # returned by the open call.
 
 
+class MTUIssueChecker:
+    """ Detect the situation where a client does not read all the data it is
+        expected to read from a socket.
+        1. A connect() call must be made to the target IP address and port
+        2. Data must be repeatedly read from the connected socket until it has
+        all be read
+
+    """
+    def __init__(self, addr, port, data_length):
+        self.addr = addr
+        self.port = port
+        self.data_length = data_length
+        self.receive_checker = SocketConnectedAndReadChecker(self.addr,
+                                                             self.port,
+                                                             self.data_length)
+
+    def transition(self, syscall_object):
+        self.receive_checker.transition(syscall_object)
+
+
+    def is_accepting(self):
+        return self.receive_checker.is_accepting()
+
+
 class CopySymlinkOverTargetChecker:
     """ Detect the case where an application tries to copy a symlink over its
         target.
@@ -463,5 +487,15 @@ class StatOpenFstatAutomaton:
     def is_accepting(self):
         return self.current_state['accepting']
 
+
+class SocketConnectedAndReadChecker:
+    def __init__(self, addr, port, data_length):
+        raise NotImplementedError()
+
+    def transition(self, syscall_object):
+        raise NotImplementedError()
+
+    def is_accepting(self):
+        raise NotImplementedError()
 
 
