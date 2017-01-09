@@ -60,6 +60,5 @@ main(int argc, char *argv[])
             bpos += d->d_reclen;
         }
     }
-    printf("%d\n", sizeof(d->d_name));
    exit(EXIT_SUCCESS);
 }
