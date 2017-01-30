@@ -1,4 +1,13 @@
-all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64 setsockoptchristmas
+all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64 setsockoptchristmas callrecvfrom network_speedtest filesystem_speedtest
+
+filesystem_speedtest: filesystem_speedtest.c
+	gcc -std=c11 -ggdb -o filesystem_speedtest filesystem_speedtest.c
+
+network_speedtest: network_speedtest.c
+	gcc -std=c11 -ggdb -o network_speedtest network_speedtest.c
+
+callrecvfrom: callrecvfrom.c
+	gcc -std=c11 -ggdb -o callrecvfrom callrecvfrom.c
 
 setsockoptchristmas: setsockoptchristmas.c
 	gcc -ggdb -o setsockoptchristmas setsockoptchristmas.c
@@ -91,3 +100,6 @@ clean:
 	- rm callrename
 	- rm callreaddir
 	- rm setsockoptchristmas
+	- rm callrecvfrom
+	- rm network_speedtest
+	- rm filesystem_speedtest
