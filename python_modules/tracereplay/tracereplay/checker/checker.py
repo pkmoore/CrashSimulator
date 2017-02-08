@@ -31,6 +31,9 @@ class MTUIssueChecker:
         2. Data must be repeatedly read from the connected socket until it has
         all be read
 
+        Injection: Make select return 0, application should continue trying
+        receive datapi
+
         limitations: only looks at the FIRST connection to a given ip:port
         Adding additional SocketConnectedAndReadCheckers can deal with simple
         multi-connection situations. A more robust solution is needed for more
