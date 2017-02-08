@@ -385,8 +385,10 @@ def should_replay_based_on_fd(trace_fd):
 
 
 def is_file_mmapd_at_any_time(file_name):
-    open_indexes = find_opens_for_file_name(file_name, tracereplay.system_calls)
-    logging.debug('Checking open()\'s at the following indexes: {}'.format(open_indexes))
+    open_indexes = find_opens_for_file_name(file_name,
+                                            tracereplay.system_calls)
+    logging.debug('Checking open()\'s at the following indexes: {}'
+                  .format(open_indexes))
     for i in open_indexes:
         current_segment = tracereplay.system_calls[i:]
         open_obj = current_segment[0]

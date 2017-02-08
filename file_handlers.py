@@ -4,15 +4,34 @@ from getdents64_parser import parse_getdents64_structure
 from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
 from os_dict import STAT_CONST
+from errno_dict import ERRNO_CODES
 
-from util import *
+# from util import *
+from util import (cleanup_quotes,
+                  ReplayDeltaError,
+                  logging,
+                  cint,
+                  noop_current_syscall,
+                  apply_return_conditions,
+                  should_replay_based_on_fd,
+                  cleanup_return_value,
+                  validate_integer_argument,
+                  find_arg_matching_string,
+                  peek_string,
+                  is_file_mmapd_at_any_time,
+                  swap_trace_fd_to_execution_fd,
+                  add_replay_fd,
+                  add_os_fd_mapping,
+                  remove_replay_fd,
+                  remove_os_fd_mapping,
+                  offset_file_descriptor,)
 
 
 def unlinkat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlinkat entry handler')
     name_from_execution = peek_string(pid,
                                       cint.peek_register(pid,
-                                                                cint.ECX))
+                                                         cint.ECX))
     name_from_trace = cleanup_quotes(syscall_object.args[1].value)
     logging.debug('Name from execution: %s', name_from_execution)
     logging.debug('Name from trace: %s', name_from_trace)
@@ -36,7 +55,7 @@ def unlink_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlink entry handler')
     name_from_execution = peek_string(pid,
                                       cint.peek_register(pid,
-                                                                cint.EBX))
+                                                         cint.EBX))
     name_from_trace = cleanup_quotes(syscall_object.args[0].value)
     logging.debug('Name from execution: %s', name_from_execution)
     logging.debug('Name from trace: %s', name_from_trace)
@@ -58,11 +77,11 @@ def rename_entry_handler(syscall_id, syscall_object, pid):
     name1_from_trace = cleanup_quotes(syscall_object.args[0].value)
     name1_from_execution = peek_string(pid,
                                        cint.peek_register(pid,
-                                                                 cint.EBX))
+                                                          cint.EBX))
     name2_from_trace = cleanup_quotes(syscall_object.args[1].value)
     name2_from_execution = peek_string(pid,
                                        cint.peek_register(pid,
-                                                                 cint.ECX))
+                                                          cint.ECX))
     if name1_from_execution != name1_from_trace:
         raise ReplayDeltaError('Name1 from execution ({}) does not match '
                                'name1 from trace ({})'
@@ -150,9 +169,9 @@ def pipe_entry_handler(syscall_id, syscall_object, pid):
     add_replay_fd(write_end_from_trace)
     noop_current_syscall(pid)
     cint.populate_pipefd_array(pid,
-                                      array_addr,
-                                      read_end_from_trace,
-                                      write_end_from_trace)
+                               array_addr,
+                               read_end_from_trace,
+                               write_end_from_trace)
     apply_return_conditions(pid, syscall_object)
 
 
@@ -192,7 +211,7 @@ def close_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, 0)
     fd_from_trace = int(syscall_object.args[0].value)
     # We always replay unsuccessful close calls
-    if int(syscall_object.ret[0])  == -1 \
+    if int(syscall_object.ret[0]) == -1 \
        or should_replay_based_on_fd(fd_from_trace):
         noop_current_syscall(pid)
         if syscall_object.ret[0] != -1:
@@ -241,7 +260,7 @@ def read_entry_handler(syscall_id, syscall_object, pid):
             validate_integer_argument(pid, syscall_object, 2, 2)
             buffer_address = cint.peek_register(pid, cint.ECX)
             buffer_size_from_execution = cint.peek_register(pid,
-                                                                   cint.EDX)
+                                                            cint.EDX)
             buffer_size_from_trace = int(syscall_object.args[2].value)
             logging.debug('Address: %x', buffer_address & 0xffffffff)
             logging.debug('Buffer size from execution: %d',
@@ -251,18 +270,18 @@ def read_entry_handler(syscall_id, syscall_object, pid):
             data = cleanup_quotes(data)
             data = data.decode('string_escape')
             if len(data) != ret_val:
-                raise ReplayDeltaError('Decoded bytes length ({}) does not equal '
-                                       'return value from trace ({})'
+                raise ReplayDeltaError('Decoded bytes length ({}) does not '
+                                       'equal return value from trace ({})'
                                        .format(len(data), ret_val))
             cint.populate_char_buffer(pid,
-                                             buffer_address,
-                                             data)
+                                      buffer_address,
+                                      data)
             buf = cint.copy_address_range(pid,
-                                                 buffer_address,
-                                                 buffer_address + ret_val)
+                                          buffer_address,
+                                          buffer_address + ret_val)
             if buf != data:
-                raise ReplayDeltaError('Data copied by read() handler doesn\'t '
-                                       'match after copy')
+                raise ReplayDeltaError('Data copied by read() handler doesn\'t'
+                                       ' match after copy')
         apply_return_conditions(pid, syscall_object)
     else:
         logging.debug("Ignoring read call to untracked file descriptor")
@@ -279,8 +298,8 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     bytes_len = cint.peek_register(pid, cint.EDX)
     bytes_from_trace = cleanup_quotes(syscall_object.args[1].value)
     bytes_from_execution = cint.copy_address_range(pid,
-                                                          bytes_addr,
-                                                          bytes_addr + bytes_len)
+                                                   bytes_addr,
+                                                   bytes_addr + bytes_len)
     bytes_from_trace = bytes_from_trace.decode('string-escape')
     logging.debug(bytes_from_trace.encode('hex'))
     logging.debug(bytes_from_execution.encode('hex'))
@@ -348,8 +367,8 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Data length: %s', data_length)
         logging.debug('Populating character array')
         cint.populate_char_buffer(pid,
-                                         array_addr,
-                                         data)
+                                  array_addr,
+                                  data)
     else:
         logging.debug('Got unsuccessful getcwd call')
     apply_return_conditions(pid, syscall_object)
@@ -367,8 +386,8 @@ def readlink_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Data length: %s', data_length)
         logging.debug('Populating character array')
         cint.populate_char_buffer(pid,
-                                         array_addr,
-                                         data)
+                                  array_addr,
+                                  data)
     else:
         logging.debug('Got unsuccessful readlink call')
     apply_return_conditions(pid, syscall_object)
@@ -840,22 +859,22 @@ def fstatat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
         cint.populate_stat64_struct(pid,
-                                           buf_addr,
-                                           int(st_dev1),
-                                           int(st_dev2),
-                                           st_blocks,
-                                           st_nlink,
-                                           st_gid,
-                                           st_blksize,
-                                           int(st_rdev1),
-                                           int(st_rdev2),
-                                           st_size,
-                                           st_mode,
-                                           st_uid,
-                                           st_ino,
-                                           st_ctime,
-                                           st_mtime,
-                                           st_atime)
+                                    buf_addr,
+                                    int(st_dev1),
+                                    int(st_dev2),
+                                    st_blocks,
+                                    st_nlink,
+                                    st_gid,
+                                    st_blksize,
+                                    int(st_rdev1),
+                                    int(st_rdev2),
+                                    st_size,
+                                    st_mode,
+                                    st_uid,
+                                    st_ino,
+                                    st_ctime,
+                                    st_mtime,
+                                    st_atime)
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
@@ -1000,22 +1019,22 @@ def stat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
         cint.populate_stat64_struct(pid,
-                                           buf_addr,
-                                           int(st_dev1),
-                                           int(st_dev2),
-                                           st_blocks,
-                                           st_nlink,
-                                           st_gid,
-                                           st_blksize,
-                                           int(st_rdev1),
-                                           int(st_rdev2),
-                                           st_size,
-                                           st_mode,
-                                           st_uid,
-                                           st_ino,
-                                           st_ctime,
-                                           st_mtime,
-                                           st_ctime)
+                                    buf_addr,
+                                    int(st_dev1),
+                                    int(st_dev2),
+                                    st_blocks,
+                                    st_nlink,
+                                    st_gid,
+                                    st_blksize,
+                                    int(st_rdev1),
+                                    int(st_rdev2),
+                                    st_size,
+                                    st_mode,
+                                    st_uid,
+                                    st_ino,
+                                    st_ctime,
+                                    st_mtime,
+                                    st_ctime)
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
@@ -1156,24 +1175,24 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('pid: %d', pid)
         logging.debug('addr: %d', buf_addr)
         cint.populate_stat64_struct(pid,
-                                           buf_addr,
-                                           int(st_dev1),
-                                           int(st_dev2),
-                                           st_blocks,
-                                           st_nlink,
-                                           st_gid,
-                                           st_blksize,
-                                           int(st_rdev1),
-                                           int(st_rdev2),
-                                           st_size,
-                                           st_mode,
-                                           st_uid,
-                                           st_ino,
-                                           st_ctime,
-                                           st_mtime,
-                                           st_ctime)
-    noop_current_syscall(pid)
-    apply_return_conditions(pid, syscall_object)
+                                    buf_addr,
+                                    int(st_dev1),
+                                    int(st_dev2),
+                                    st_blocks,
+                                    st_nlink,
+                                    st_gid,
+                                    st_blksize,
+                                    int(st_rdev1),
+                                    int(st_rdev2),
+                                    st_size,
+                                    st_mode,
+                                    st_uid,
+                                    st_ino,
+                                    st_ctime,
+                                    st_mtime,
+                                    st_ctime)
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
 
 
 def fchown_entry_handler(syscall_id, syscall_object, pid):
@@ -1222,8 +1241,8 @@ def flistxattr_entry_handler(syscall_id, syscall_object, pid):
                     data = data.decode('string-escape')
                 logging.debug('data: %s', data)
                 cint.populate_char_buffer(pid,
-                                                 buffer_address,
-                                                 data)
+                                          buffer_address,
+                                          data)
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -1264,8 +1283,8 @@ def fgetxattr_entry_handler(syscall_id, syscall_object, pid):
                     data = data.decode('string-escape')
                 logging.debug('data: %s', data)
                 cint.populate_char_buffer(pid,
-                                                 buffer_address,
-                                                 data)
+                                          buffer_address,
+                                          data)
         logging.debug('Replaying this system call')
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
@@ -1388,7 +1407,7 @@ def open_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to open: %s',
                   peek_string(pid,
                               cint.peek_register(pid,
-                                                        cint.EBX)))
+                                                 cint.EBX)))
 
 
 def write_entry_debug_printer(pid, orig_eax, syscall_object):
@@ -1449,13 +1468,5 @@ def read_entry_debug_printer(pid, orig_eax, syscall_object):
 def unlink_entry_debug_printer(pid, orig_eax, syscall_object):
     name = peek_string(pid,
                        cint.peek_register(pid,
-                                                 cint.EBX))
+                                          cint.EBX))
     logging.debug('Tried to unlink name %s', name)
-
-
-def cleanup_quotes(quo):
-    if quo.startswith('"'):
-        quo = quo[1:]
-    if quo.endswith('"'):
-        quo = quo[:-1]
-    return quo
