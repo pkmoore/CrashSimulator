@@ -22,3 +22,7 @@ dropbear_read_calls
 callrename
 callgetdents64
 callreaddir
+network_speedtest
+filesystem_speedtest
+setsockoptchristmas
+callrecvfrom
