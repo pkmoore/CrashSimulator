@@ -4,7 +4,14 @@ from os_dict import IOCTLS_INT_TO_IOCTL
 from os_dict import SIGNAL_INT_TO_SIG
 from os_dict import SIGPROCMASK_INT_TO_CMD
 
-from util import *
+# from util import *
+from util import(validate_integer_argument,
+                 should_replay_based_on_fd,
+                 noop_current_syscall,
+                 apply_return_conditions,
+                 cint,
+                 swap_trace_fd_to_execution_fd,
+                 cleanup_return_value,)
 
 
 def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):
@@ -138,10 +145,10 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
             logging.debug('c_line: %s', c_line)
             logging.debug('len(cc): %s', len(cc))
             cint.populate_tcgets_response(pid, addr, c_iflags, c_oflags,
-                                                 c_cflags,
-                                                 c_lflags,
-                                                 c_line,
-                                                 cc)
+                                          c_cflags,
+                                          c_lflags,
+                                          c_line,
+                                          cc)
         else:
             logging.debug('Got a %s ioctl() call', cmd)
             logging.debug('WARNING: NO SIDE EFFECTS REPLICATED')
@@ -153,12 +160,16 @@ def prlimit64_entry_handler(syscall_id, syscall_object, pid):
     validate_integer_argument(pid, syscall_object, 0, 0)
     have_new_limit = False
     have_old_limit = False
-    if syscall_object.args[2].value != 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value == 'NULL':
+    if(syscall_object.args[2].value != 'NULL'
+       and syscall_object.args[3].value != 'NULL'
+       and syscall_object.args[4].value == 'NULL'):
             logging.debug('We have a new limit')
             have_new_limit = True
-    elif syscall_object.args[2].value == 'NULL' and syscall_object.args[3].value != 'NULL' and syscall_object.args[4].value != 'NULL':
-            logging.debug('We have an old limit')
-            have_old_limit = True
+    elif(syscall_object.args[2].value == 'NULL'
+         and syscall_object.args[3].value != 'NULL'
+         and syscall_object.args[4].value != 'NULL'):
+        logging.debug('We have an old limit')
+        have_old_limit = True
     if have_new_limit and not have_old_limit:
         if syscall_object.args[1].value != 'RLIMIT_CORE':
             raise NotImplementedError('prlimit commands with a new limit only '
@@ -208,7 +219,7 @@ def mmap2_exit_handler(syscall_id, syscall_object, pid):
                       'from return value from trace (%d, %x)',
                       ret_from_execution,
                       ret_from_execution,
-                       ret_from_trace,
+                      ret_from_trace,
                       ret_from_trace)
 
 
