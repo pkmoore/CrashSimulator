@@ -24,32 +24,32 @@ import Trace
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
     subcall_handlers = {
-         ('socket', True): socket_subcall_entry_handler,
-         ('socket', False): socket_exit_handler,
-         ('accept', True): accept_subcall_entry_handler,
-         ('accept', False): accept_subcall_entry_handler,
-         ('bind', True): bind_entry_handler,
-         ('bind', False): bind_exit_handler,
-         ('listen', True): listen_entry_handler,
-         ('listen', False): listen_exit_handler,
-         ('recv', True): recv_subcall_entry_handler,
-         ('recvfrom', True): recvfrom_subcall_entry_handler,
-         ('setsockopt', True): setsockopt_entry_handler,
-         ('send', True): send_entry_handler,
-         ('send', False): send_exit_handler,
-         ('connect', True): connect_entry_handler,
-         ('connect', False): connect_exit_handler,
-         ('getsockopt', True): getsockopt_entry_handler,
+        ('socket', True): socket_subcall_entry_handler,
+        ('socket', False): socket_exit_handler,
+        ('accept', True): accept_subcall_entry_handler,
+        ('accept', False): accept_subcall_entry_handler,
+        ('bind', True): bind_entry_handler,
+        ('bind', False): bind_exit_handler,
+        ('listen', True): listen_entry_handler,
+        ('listen', False): listen_exit_handler,
+        ('recv', True): recv_subcall_entry_handler,
+        ('recvfrom', True): recvfrom_subcall_entry_handler,
+        ('setsockopt', True): setsockopt_entry_handler,
+        ('send', True): send_entry_handler,
+        ('send', False): send_exit_handler,
+        ('connect', True): connect_entry_handler,
+        ('connect', False): connect_exit_handler,
+        ('getsockopt', True): getsockopt_entry_handler,
         # ('sendmmsg', True): sendmmsg_entry_handler,
-         ('sendto', True): sendto_entry_handler,
-         ('sendto', False): sendto_exit_handler,
-         ('shutdown', True): shutdown_subcall_entry_handler,
-         ('recvmsg', True): recvmsg_entry_handler,
-         ('recvmsg', False): recvmsg_exit_handler,
-         ('getsockname', True): getsockname_entry_handler,
-         ('getsockname', False): getsockname_exit_handler,
-         ('getpeername', True): getpeername_entry_handler
-        }
+        ('sendto', True): sendto_entry_handler,
+        ('sendto', False): sendto_exit_handler,
+        ('shutdown', True): shutdown_subcall_entry_handler,
+        ('recvmsg', True): recvmsg_entry_handler,
+        ('recvmsg', False): recvmsg_exit_handler,
+        ('getsockname', True): getsockname_entry_handler,
+        ('getsockname', False): getsockname_exit_handler,
+        ('getpeername', True): getpeername_entry_handler
+    }
     subcall_id = cint.peek_register(pid, cint.EBX)
     validate_subcall(subcall_id, syscall_object)
     try:
@@ -89,28 +89,19 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         191,  # !!!!!!!!! sys_getrlimit
         ]
     handlers = {
-        # ### These calls just get their return values checked ####
-#        (9, True): check_return_value_entry_handler,
-#        (9, False): check_return_value_exit_handler,
-#
-#
-#        (195, True): check_return_value_entry_handler,
-#        (195, False): check_return_value_exit_handler,
-
+        # These calls just get their return values checked ####
+        # (9, True): check_return_value_entry_handler,
+        # (9, False): check_return_value_exit_handler,
+        # (195, True): check_return_value_entry_handler,
+        # (195, False): check_return_value_exit_handler,
         (39, True): check_return_value_entry_handler,
         (39, False): check_return_value_exit_handler,
-
-        #
         (45, True): check_return_value_entry_handler,
         (45, False): check_return_value_exit_handler,
-#
         (91, True): check_return_value_entry_handler,
         (91, False): check_return_value_exit_handler,
-#
-#        (125, True): check_return_value_entry_handler,
-#        (125, False): check_return_value_exit_handler,
-#
-#        # ###                                                  ####
+        # (125, True): check_return_value_entry_handler,
+        # (125, False): check_return_value_exit_handler,
         # mmap2 calls are never replayed. Sometimes we must fix a file
         # descriptor  in position 4.
         (192, True): mmap2_entry_handler,
@@ -122,7 +113,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (30, True): syscall_return_success_handler,
         (38, True): rename_entry_handler,
         (38, False): check_return_value_exit_handler,
-#        (15, True): syscall_return_success_handler,
+        # (15, True): syscall_return_success_handler,
         (78, True): gettimeofday_entry_handler,
         (13, True): time_entry_handler,
         (27, True): syscall_return_success_handler,
@@ -141,8 +132,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (140, True): llseek_entry_handler,
         (140, False): llseek_exit_handler,
         (42, True): pipe_entry_handler,
-#        (43, True): times_entry_handler,
-#        (10, True): syscall_return_success_handler,
+        # (43, True): times_entry_handler,
+        # (10, True): syscall_return_success_handler,
         (33, True): syscall_return_success_handler,
         (199, True): syscall_return_success_handler,
         (200, True): syscall_return_success_handler,
@@ -340,4 +331,4 @@ if __name__ == '__main__':
             cint.syscall(pid)
         if checker:
             logging.info('Exited with checker in accepting state: %s',
-                     checker.is_accepting())
+                         checker.is_accepting())
