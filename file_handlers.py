@@ -378,9 +378,20 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
 
 
 def readlink_entry_handler(syscall_id, syscall_object, pid):
+    """Concerns: We always replay. There could be issues around files that are
+    mmap()'d at some point
+    """
     logging.debug('Entering readlink entry handler')
+    ebx = cint.peek_register(pid, cint.EBX)
+    # Check the filename
+    fn_from_execution = peek_string(pid, ebx)
+    fn_from_trace = cleanup_quotes(syscall_object.args[0].value)
+    if fn_from_execution != fn_from_trace:
+        raise ReplayDeltaError('File name from execution ({}) does not match '
+                               'file name from trace ({})'
+                               .format(fn_from_execution, fn_from_trace))
     array_addr = cint.peek_register(pid, cint.ECX)
-    data = str(syscall_object.args[0].value.strip('"'))
+    data = cleanup_quotes(syscall_object.args[1].value)
     data_length = int(syscall_object.ret[0])
     noop_current_syscall(pid)
     if data_length != -1:
