@@ -1379,13 +1379,26 @@ def getdents64_exit_handler(syscall_id, syscall_object, pid):
 
 
 def cleanup_st_mode(m):
+    logging.debug('Cleaning up st_mode')
     m = m.split('|')
+    logging.debug('Found st_mode parts: %s', m)
     tmp = 0
     for i in m:
+        logging.debug('Got part: %s', i)
         if i[0] == '0':
-            tmp = tmp | int(i, 8)
+            logging.debug('Interpreting part as base 8 int')
+            val = int(i, 8)
+            logging.debug('Part value in base 10: %d', val)
+            logging.debug('Part value in base 8: %s', oct(val))
+            tmp = tmp | val
         else:
-            tmp = tmp | STAT_CONST[i]
+            logging.debug('Interpreting part as S_<CONST>')
+            val = STAT_CONST[i]
+            logging.debug('Part value in base 10: %d', val)
+            logging.debug('Part value in base 8: %s', oct(val))
+            tmp = tmp | val
+        logging.debug('New value for tmp: %d', tmp)
+    logging.debug('Final value for tmp: %d', tmp)
     return tmp
 
 
