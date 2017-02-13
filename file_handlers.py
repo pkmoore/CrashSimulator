@@ -1497,3 +1497,10 @@ def unlink_entry_debug_printer(pid, orig_eax, syscall_object):
                        cint.peek_register(pid,
                                           cint.EBX))
     logging.debug('Tried to unlink name %s', name)
+
+
+def lstat64_entry_debug_printer(pid, orig_eax, syscall_object):
+    name = peek_string(pid,
+                       cint.peek_register(pid,
+                                          cint.EBX))
+    logging.debug('Tried to lstat name: %s', name)

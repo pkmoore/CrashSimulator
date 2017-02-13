@@ -278,6 +278,7 @@ if __name__ == '__main__':
             175: rt_sigprocmask_entry_debug_printer,
             192: mmap2_entry_debug_printer,
             195: stat64_entry_debug_printer,
+            196: lstat64_entry_debug_printer,
             197: fstat64_entry_debug_printer,
             221: fcntl64_entry_debug_printer
         }
