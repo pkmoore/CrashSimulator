@@ -108,6 +108,15 @@ def validate_syscall(syscall_id, syscall_object):
         return
     if syscall_id == 207 and 'fchown' in syscall_object.name:
         return
+    # HACK: Workaround for stat-lstat ambiguity
+    if(syscall_object.name == 'stat64' and
+       SYSCALLS[syscall_id][4:] == 'lstat64'):
+        raise ReplayDeltaError('System call validation failed: from '
+                               'execution: {0}({1}) is not from '
+                               'trace:{2}'
+                               .format(SYSCALLS[syscall_id][4:],
+                                       syscall_id,
+                                       syscall_object.name))
     if syscall_object.name not in SYSCALLS[syscall_id][4:]:
         raise ReplayDeltaError('System call validation failed: from '
                                'execution: {0}({1}) is not from '
