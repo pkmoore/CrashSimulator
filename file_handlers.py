@@ -1205,8 +1205,8 @@ def lstat64_entry_handler(syscall_id, syscall_object, pid):
                                     st_ctime,
                                     st_mtime,
                                     st_ctime)
-        noop_current_syscall(pid)
-        apply_return_conditions(pid, syscall_object)
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
 
 
 def fchown_entry_handler(syscall_id, syscall_object, pid):
