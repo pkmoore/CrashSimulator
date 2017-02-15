@@ -167,6 +167,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (231, False): fgetxattr_exit_handler,
         (234, True): flistxattr_entry_handler,
         (234, False): flistxattr_entry_handler,
+        (242, True): sched_getaffinity_entry_handler,
         (272, True): fadvise64_64_entry_handler,
         (272, False): check_return_value_exit_handler,
         (295, True): openat_entry_handler,

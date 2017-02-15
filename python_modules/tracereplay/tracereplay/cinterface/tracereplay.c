@@ -26,6 +26,7 @@
 #include <time.h>
 #include <sys/ioctl.h>
 #include <dirent.h>
+#include <sched.h>
 
 static PyObject* TraceReplayError;
 
@@ -767,6 +768,33 @@ static PyObject* tracereplay_populate_int(PyObject* self,
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_populate_cpu_set(PyObject* self,
+                                              PyObject* args) {
+    // unused
+    self = self;
+    pid_t child;
+    void* addr;
+    int cpu_value;
+    if(!PyArg_ParseTuple(args, "iii", (int*)&child,
+                                      (int*)&addr,
+                                      (int*)&cpu_value)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_cpu_set arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: cpu_set: child: %d\n", (int)child);
+        printf("C: cpu_set: addr: %d\n", (int)addr);
+        printf("C: cpu_set: cpu_value: %d\n", (int)cpu_value);
+    }
+    cpu_set_t set;
+    CPU_SET(cpu_value, &set);
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&set,
+                                          sizeof(set));
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_llseek_result(PyObject* self,
                                                     PyObject* args) {
     // unused
@@ -1457,6 +1485,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "get select fds"},
     {"populate_getdents64_structure", tracereplay_populate_getdents64_structure,
      METH_VARARGS, "populate getdents64 structure"},
+    {"populate_cpu_set", tracereplay_populate_cpu_set,
+     METH_VARARGS, "populate cpu_set"},
     {NULL, NULL, 0, NULL}
 };
 

@@ -223,6 +223,23 @@ def mmap2_exit_handler(syscall_id, syscall_object, pid):
                       ret_from_trace)
 
 
+def sched_getaffinity_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering sched_getaffinity entry handler')
+    # We don't validate the first argument because the PID,
+    # which is different for some reason?
+    validate_integer_argument(pid, syscall_object, 1, 1)
+    try:
+        cpu_set_val = int(syscall_object.args[2].value.strip('{}'))
+    except ValueError:
+        raise NotImplementedError('handler cannot deal with multi-value '
+                                  'cpu_sets: {}'
+                                  .format(syscall_object.args[2]))
+    cpu_set_addr = cint.peek_register(pid, cint.EDX)
+    logging.debug('cpu_set value: %d', cpu_set_val)
+    logging.debug('cpu_set address: %d', cpu_set_addr)
+    noop_current_syscall(pid)
+    cint.populate_cpu_set(pid, cpu_set_addr, cpu_set_val)
+    apply_return_conditions(pid, syscall_object)
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   cint.peek_register(pid, cint.EBX))
