@@ -3,6 +3,7 @@ import logging
 from os_dict import IOCTLS_INT_TO_IOCTL
 from os_dict import SIGNAL_INT_TO_SIG
 from os_dict import SIGPROCMASK_INT_TO_CMD
+from os_dict import STACK_SS_TO_INT
 
 # from util import *
 from util import(validate_integer_argument,
@@ -11,7 +12,8 @@ from util import(validate_integer_argument,
                  apply_return_conditions,
                  cint,
                  swap_trace_fd_to_execution_fd,
-                 cleanup_return_value,)
+                 cleanup_return_value,
+                 ReplayDeltaError,)
 
 
 def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):
@@ -240,6 +242,82 @@ def sched_getaffinity_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     cint.populate_cpu_set(pid, cpu_set_addr, cpu_set_val)
     apply_return_conditions(pid, syscall_object)
+
+
+def sigaltstack_entry_handler(syscall_id, syscall_object, pid):
+    # This madness is to deal with the fact that the omni-parser
+    # messes up argument positions when dealing with structures
+    if (syscall_object.args[0].value == 'NULL'
+       and syscall_object.args[1].value == 'NULL'):
+        have_ss = False
+        have_oss = False
+    elif (syscall_object.args[0].value == 'NULL'
+          and syscall_object.args[1].value != 'NULL'):
+            have_ss = False
+            have_oss = True
+            # Here, oss values are located at 1, 2, 3
+            ss_sp = syscall_object.args[1].value
+            ss_flags = syscall_object.args[2].value
+            ss_size = syscall_object.args[3].value
+    elif (syscall_object.args[0].value != 'NULL'
+          and syscall_object.args[3].value == 'NULL'):
+            have_ss = True
+            have_oss = False
+    elif (syscall_object.args[0].value != 'NULL'
+          and syscall_object.args[3].value != 'NULL'):
+            have_ss = True
+            have_oss = True
+            # here oss values are at 3, 4, 5
+            ss_sp = syscall_object.args[3].value
+            ss_flags = syscall_object.args[4].value
+            ss_size = syscall_object.args[5].value
+    else:
+        raise ReplayDeltaError('Invalid parse of syscall_object')
+
+    ss_from_execution = cint.peek_register(pid, cint.EBX)
+    oss_from_execution = cint.peek_register(pid, cint.ECX)
+
+    # Check for delta
+    if ((have_oss and (oss_from_execution == 0))
+       or not have_oss and (oss_from_execution != 0)):
+        print(oss_from_execution)
+        print(have_oss)
+        raise ReplayDeltaError('Got non-NULL trace oss and null execution '
+                               'oss')
+    if ((have_ss and (ss_from_execution == 0))
+       or not have_ss and (ss_from_execution != 0)):
+        raise ReplayDeltaError('Got non-NULL trace ss and null execution '
+                               'ss')
+
+    noop_current_syscall(pid)
+    if have_oss:
+        # We have an oss so we need to populate the output structure
+        # We've gathered the arguments required above but we need to clean them
+        # up before we can use them
+        ss_sp = int(ss_sp.split('=')[1])
+        ss_flags = ss_flags.split('=')[1]
+        ss_flags = _cleanup_ss_flags(ss_flags)
+        ss_size = int(ss_size.split('=')[1].strip('}'))
+        logging.debug('pid: %d', pid)
+        logging.debug('addr: %d', oss_from_execution)
+        logging.debug('ss_sp: %d', ss_sp)
+        logging.debug('ss_flags: %d', ss_flags)
+        logging.debug('ss_size: %d', ss_size)
+        cint.populate_stack_structure(pid,
+                                      oss_from_execution,
+                                      ss_sp,
+                                      ss_flags,
+                                      ss_size)
+    apply_return_conditions(pid, syscall_object)
+
+
+def _cleanup_ss_flags(ss_flags):
+    if ss_flags == '0':
+        return 0
+    else:
+        return STACK_SS_TO_INT[ss_flags]
+
+
 def brk_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug('This call tried to use address: %x',
                   cint.peek_register(pid, cint.EBX))

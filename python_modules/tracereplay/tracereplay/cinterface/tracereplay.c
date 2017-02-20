@@ -27,6 +27,7 @@
 #include <sys/ioctl.h>
 #include <dirent.h>
 #include <sched.h>
+#include <signal.h>
 
 static PyObject* TraceReplayError;
 
@@ -768,6 +769,43 @@ static PyObject* tracereplay_populate_int(PyObject* self,
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_populate_stack_structure(PyObject* self,
+                                                      PyObject* args) {
+    // unused
+    self = self;
+    pid_t child;
+    void* addr;
+    void* ss_sp;
+    int ss_flags;
+    size_t ss_size;
+
+    if(!PyArg_ParseTuple(args, "iiiiI", (int*)&child,
+                         (int*)&addr,
+                         (int*)&ss_sp,
+                         (int*)&ss_flags,
+                         (unsigned int*)&ss_size)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_stack arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: populate_stack: child %d\n", (int)child);
+        printf("C: populate_stack: addr: %d\n", (int)addr);
+        printf("C: populate_stack: ss_sp: %d\n", (int)ss_sp);
+        printf("C: populate_stack: ss_flags: %d\n", (int)ss_flags);
+        printf("C: populate_stack: ss_size: %u\n", (unsigned int)ss_size);
+    }
+
+    stack_t s;
+    s.ss_sp = ss_sp;
+    s.ss_flags = ss_flags;
+    s.ss_size = ss_size;
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&s,
+                                          sizeof(s));
+    Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_cpu_set(PyObject* self,
                                               PyObject* args) {
     // unused
@@ -1487,6 +1525,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate getdents64 structure"},
     {"populate_cpu_set", tracereplay_populate_cpu_set,
      METH_VARARGS, "populate cpu_set"},
+    {"populate_stack_structure", tracereplay_populate_stack_structure,
+     METH_VARARGS, "populate_stack_structure"},
     {NULL, NULL, 0, NULL}
 };
 

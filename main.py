@@ -157,6 +157,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (265, True): clock_gettime_entry_handler,
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
+        (186, True): sigaltstack_entry_handler,
         (207, True): fchown_entry_handler,
         (207, False): check_return_value_entry_handler,
         (220, True): getdents64_entry_handler,

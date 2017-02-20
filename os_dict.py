@@ -286,3 +286,10 @@ SOCKTYPE_INT_TO_TYPE = {
 }
 
 SOCKTYPE_TYPE_TO_INT = {y: x for x, y in SOCKTYPE_INT_TO_TYPE.iteritems()}
+
+STACK_INT_TO_SS = {
+    1: 'SS_ONSTACK',
+    2: 'SS_DISABLE'
+}
+
+STACK_SS_TO_INT = {y: x for x, y in STACK_INT_TO_SS.iteritems()}
