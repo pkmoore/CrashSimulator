@@ -89,9 +89,11 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
+        # HACK: this if statement is terrible
         if not ('TCGETS' in cmd or 'FIONREAD' in cmd or 'TCSETSW' in cmd or
                 'FIONBIO' in cmd or 'TIOCGWINSZ' in cmd or
-                'TIOCSWINSZ' in cmd or 'TCSETSF' in cmd or 'TCSETS' in cmd):
+                'TIOCSWINSZ' in cmd or 'TCSETSF' in cmd or 'TCSETS' in cmd or
+                'FIOCLEX' in cmd):
             raise NotImplementedError('Unsupported ioctl command')
         if 'TIOCGWINSZ' in cmd:
             ws_row = syscall_object.args[2].value
