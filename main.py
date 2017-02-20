@@ -113,7 +113,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (30, True): syscall_return_success_handler,
         (38, True): rename_entry_handler,
         (38, False): check_return_value_exit_handler,
-        # (15, True): syscall_return_success_handler,
+        (15, True): syscall_return_success_handler,
         (78, True): gettimeofday_entry_handler,
         (13, True): time_entry_handler,
         (27, True): syscall_return_success_handler,
