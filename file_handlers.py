@@ -367,6 +367,7 @@ def getcwd_entry_handler(syscall_id, syscall_object, pid):
     if data_length != 0:
         logging.debug('Got successful getcwd call')
         logging.debug('Data: %s', data)
+        data = data + '\0'
         logging.debug('Data length: %s', data_length)
         logging.debug('Populating character array')
         cint.populate_char_buffer(pid,
