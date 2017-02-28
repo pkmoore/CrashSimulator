@@ -1421,8 +1421,14 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
     if should_replay_based_on_fd(trace_fd):
         operation = syscall_object.args[1].value[0].strip('[]\'')
         noop_current_syscall(pid)
-        if operation == 'F_GETFL' or operation == 'F_SETFL':
+        if (operation == 'F_GETFL' or operation == 'F_SETFL'
+           or operation == 'F_SETFD'):
             apply_return_conditions(pid, syscall_object)
+        elif (operation == 'F_GETFD'):
+            if syscall_object.ret[0] == 'FD_CLOEXEC':
+                cint.poke_register(pid, cint.EAX, 0x1)
+            else:
+                cint.poke_register(pid, cint.EAX, int(syscall_object.ret[0]))
         else:
             raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                       .format(operation))

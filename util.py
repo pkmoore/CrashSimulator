@@ -205,7 +205,12 @@ def list_of_flags_to_int(lof):
 def apply_return_conditions(pid, syscall_object):
     logging.debug('Applying return conditions')
     ret_val = syscall_object.ret[0]
-    if syscall_object.ret[0] == -1 and syscall_object.ret[1] is not None:
+    # HACK: deal with the way strace reports flags in return values for fcntl
+    if (syscall_object.name == 'fcntl64'
+       and syscall_object.ret[0] == 'FD_CLOEXEC'):
+        logging.debug('Got fcntl64 call, real return value is in ret[0]')
+        ret_val = 0x1
+    elif syscall_object.ret[0] == -1 and syscall_object.ret[1] is not None:
         logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
         error_code = ERRNO_CODES[syscall_object.ret[1]]
         logging.debug('Looked up error number: %s', error_code)

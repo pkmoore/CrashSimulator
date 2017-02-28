@@ -1,6 +1,10 @@
 OS_CONST = {
     # asm-generic/fcntl.h
+    'O_RDONLY': 00000000,
+    'O_WRONLY': 00000001,
+    'O_APPEND': 00002000,
     'O_RDWR': 00000002,
+    'O_LARGEFILE': 00100000,
     'SOL_SOCKET': 1,
     'SO_ERROR': 4,
     # asm-generic/fcntl.h
