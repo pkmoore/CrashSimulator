@@ -1,0 +1,133 @@
+8878  execve("/bin/mv", ["mv", "/mnt/b/test.txt", "/mnt/c/test.txt"], ["LANG=en_US.UTF-8", "LC_CTYPE=en_US.UTF-8", "USER=preston", "LOGNAME=preston", "HOME=/home/preston", "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games", "MAIL=/var/mail/preston", "SHELL=/usr/bin/zsh", "SSH_CLIENT=172.16.48.1 63088 22", "SSH_CONNECTION=172.16.48.1 63088 172.16.48.140 22", "SSH_TTY=/dev/pts/1", "TERM=xterm-256color", "XDG_SESSION_COOKIE=497f848f94f4485badd97209c59c1e68-1487873357.377760-966847967", "XDG_SESSION_ID=39", "XDG_RUNTIME_DIR=/run/user/1000", "SHLVL=1", "PWD=/mnt/hgfs/NYU/CrashSimulator", "OLDPWD=/mnt/hgfs/NYU/CrashSimulator/sample_programs", "ZSH=/home/preston/.oh-my-zsh", "PAGER=less", "LESS=-R", "LSCOLORS=Gxfxcxdxbxegedabagacad", "LS_COLORS=rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.axa=00;36:*.oga=00;36:*.spx=00;36:*.xspf=00;36:", "_=/usr/bin/strace"]) = 0
+8878  brk(0)                            = 0x806a000
+8878  uname({sysname="Linux", nodename="dev.local", release="3.19.0-49-generic", version="#55-Ubuntu SMP Fri Jan 22 02:09:44 UTC 2016", machine="i686", domainname="(none)"}) = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  mmap2(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fda000
+8878  access("/etc/ld.so.preload", R_OK) = -1 ENOENT (No such file or directory)
+8878  open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1053007, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=200, st_size=99369, st_atime=2017/02/23-18:07:58, st_mtime=2016/11/06-21:09:32, st_ctime=2016/11/06-21:09:32}) = 0
+8878  mmap2(NULL, 99369, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7fc1000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libselinux.so.1", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\0G\0\0004\0\0\0PS\2\0\0\0\0\0004\0 \0\10\0(\0\35\0\34\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\334>\2\0\334>\2\0\5\0\0\0\0\20\0\0\1\0\0\0 N\2\0 N\2\0 N\2\0\374\3\0\0d\36\0\0\6\0\0\0\0\20\0\0\2\0\0\0lN\2\0lN\2\0lN\2\0\0\1\0\0\0\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0004\1\0\0004\1\0\0004\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0\7\0\0\0 N\2\0 N\2\0 N\2\0\24\0\0\0x\0\0\0\4\0\0\0\4\0\0\0P\345tdL\265\1\0L\265\1\0L\265\1\0\374\t\0\0\374\t\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td N\2\0 N\2\0 N\2\0\340\1\0\0\340\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\226\356\372\212\2671(T\3017\0n\304Q?\37\3259\273!\305\0\0\0|\0\0\0@\0\0\0\v\0\0\0\270 \4\200\0H\0\3\"\30@JU\0\356\320\2\4h\nT\26\0\4\20\210\4\0\0\305@\1\0\16\1\20P&\30hH \220+\30\10\22\t\0\4!\4\21(\217\7\240\340@Q\10\30\0\20\0B\24\234\4\21\1\6\33\1\23\r \20\v\302\10\1H\220\n\2\0\1j\207D\201\"\10\340\202\200\2*\204\202@\200\0\0\0Q\10\4\0\2\220:\0!\246\10\5\1\236\204\4\0@\0\24\0F\n\0\240\0\0`\20t\1@\204\0\20\0\340\24\20\234\10\204\0@\0\200", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1052017, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=304, st_size=153560, st_atime=2017/02/23-18:07:58, st_mtime=2014/10/25-06:58:38, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 158852, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f9a000
+8878  mmap2(0xb7fbe000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x24000) = 0xb7fbe000
+8878  mmap2(0xb7fc0000, 3204, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7fc0000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libacl.so.1", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\360\24\0\0004\0\0\0P\202\0\0\0\0\0\0004\0 \0\7\0(\0\33\0\32\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\234x\0\0\234x\0\0\5\0\0\0\0\20\0\0\1\0\0\0\314~\0\0\314\216\0\0\314\216\0\0X\2\0\0p\2\0\0\6\0\0\0\0\20\0\0\2\0\0\0\330~\0\0\330\216\0\0\330\216\0\0\0\1\0\0\0\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345td\334[\0\0\334[\0\0\334[\0\0004\2\0\0004\2\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\314~\0\0\314\216\0\0\314\216\0\0004\1\0\0004\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0\34\245.\234#\303\367D\3612\10\202\225{\206\241\301*|\f%\0\0\0.\0\0\0\20\0\0\0\t\0\0\0\301\302(\240\202\0$\1\10T'\200\210\20\202\20\1\0000\1\200\200@\200\"B\30 \0\0\0\0\4\2\2\"\0\0\0\0\16\10\37\3008\1\203\0\6\"\2042@\230\n\t\23\10\0=\25\6!`.\0\0\0000\0\0\0002\0\0\0004\0\0\0006\0\0\0007\0\0\0008\0\0\0<\0\0\0\0\0\0\0>\0\0\0?\0\0\0\0\0\0\0@\0\0\0E\0\0\0H\0\0\0J\0\0\0K\0\0\0\0\0\0\0\0\0\0\0L\0\0\0M\0\0\0N\0\0\0Q\0\0\0\0\0\0\0S\0\0\0T\0\0\0V\0\0\0W\0\0\0X\0\0\0Y\0\0\0", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1051863, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=72, st_size=34440, st_atime=2017/02/23-18:07:58, st_mtime=2014/10/24-07:55:28, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 37180, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f90000
+8878  mmap2(0xb7f98000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x7000) = 0xb7f98000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libattr.so.1", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\240\f\0\0004\0\0\0\224A\0\0\0\0\0\0004\0 \0\7\0(\0\33\0\32\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0x;\0\0x;\0\0\5\0\0\0\0\20\0\0\1\0\0\0\344>\0\0\344N\0\0\344N\0\0\204\1\0\0\214\1\0\0\6\0\0\0\0\20\0\0\2\0\0\0\360>\0\0\360N\0\0\360N\0\0\370\0\0\0\370\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345td\354/\0\0\354/\0\0\354/\0\0\4\1\0\0\4\1\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\344>\0\0\344N\0\0\344N\0\0\34\1\0\0\34\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0g\230\206\234<\374\30\305F\262\3505\236\273\310\317!\2\300\232\21\0\0\0\32\0\0\0\10\0\0\0\10\0\0\0* \20\0\10\300\215\0208\4A\"D \30@\0\0#\1\17\271\10\311\20\231\2\r\0\4\f\204\32\0\0\0\33\0\0\0 \0\0\0$\0\0\0(\0\0\0\0\0\0\0*\0\0\0,\0\0\0/\0\0\0001\0\0\0\0\0\0\0002\0\0\0\0\0\0\0005\0\0\0006\0\0\0008\0\0\0;\0\0\0\241\213\315\300\4\301X\25\352\323\357\16\276\250\343\370\2-^\203m42\350\352\32\346\300X\235\235\323\276B1\340\271\215\361\16\24\345N\251f\336\10`\330qX\34Q\3431\256\272\343\222|s\302x\356.cx\204\221U_\25J=G\363BE\325\354/cx\204", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1051873, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=40, st_size=17868, st_atime=2017/02/23-18:07:58, st_mtime=2014/09/09-10:14:59, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7f8f000
+8878  mmap2(NULL, 20592, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7f89000
+8878  mmap2(0xb7f8d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3000) = 0xb7f8d000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220\210\1\0004\0\0\0\300\211\33\0\0\0\0\0004\0 \0\n\0(\0E\0D\0\6\0\0\0004\0\0\0004\0\0\0004\0\0\0@\1\0\0@\1\0\0\5\0\0\0\4\0\0\0\3\0\0\0\245\241\26\0\245\241\26\0\245\241\26\0\23\0\0\0\23\0\0\0\4\0\0\0\1\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\2303\33\0\2303\33\0\5\0\0\0\0\20\0\0\1\0\0\0\\?\33\0\\O\33\0\\O\33\0\2700\0\0\200_\0\0\6\0\0\0\0\20\0\0\2\0\0\0\244]\33\0\244m\33\0\244m\33\0\360\0\0\0\360\0\0\0\6\0\0\0\4\0\0\0\4\0\0\0t\1\0\0t\1\0\0t\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0\7\0\0\0\\?\33\0\\O\33\0\\O\33\0\10\0\0\0L\0\0\0\4\0\0\0\4\0\0\0P\345td\270\241\26\0\270\241\26\0\270\241\26\0\244`\0\0\244`\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\\?\33\0\\O\33\0\\O\33\0\244 \0\0\244 \0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0%\335B\217\264\303P\301m\376\342\4\221\361\240d\204\242\277\243\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\363\3\0\0\n\0\0\0\0\2\0\0\16\0\0\0\2400\20D\200 \2\1\214\3\346\220AE\210\0\204\0\10\0E\200\0`\300\200\0\f\212\f\0\0010\0\10@2\10\256\4\210H6l\240\0268\0&\204\200\216\4\10B$", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1051883, st_mode=S_IFREG|0755, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=3536, st_size=1807496, st_atime=2017/02/23-18:07:58, st_mtime=2015/03/26-07:01:21, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 1814236, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7dce000
+8878  mmap2(0xb7f82000, 20480, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x1b3000) = 0xb7f82000
+8878  mmap2(0xb7f87000, 7900, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7f87000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libpcre.so.3", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0`\17\0\0004\0\0\0$\1\7\0\0\0\0\0004\0 \0\7\0(\0\32\0\31\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\34\374\6\0\34\374\6\0\5\0\0\0\0\20\0\0\1\0\0\0\254\375\6\0\254\r\7\0\254\r\7\0t\2\0\0\214\3\0\0\6\0\0\0\0\20\0\0\2\0\0\0H\376\6\0H\16\7\0H\16\7\0\0\1\0\0\0\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0$\0\0\0$\0\0\0\4\0\0\0\4\0\0\0P\345td\200%\6\0\200%\6\0\200%\6\0\304\4\0\0\304\4\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\254\375\6\0\254\r\7\0\254\r\7\0T\2\0\0T\2\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0=v\333\36\3537H\204[\272\266\313!\207\301\2S\247!\266%\0\0\0\33\0\0\0\10\0\0\0\10\0\0\0\2\0\t\200\302\245\30 (\0\0\1\304\320\201\32\0\202XH\32 E\17\200\10\2\1\242>\234\2\33\0\0\0\35\0\0\0\0\0\0\0\0\0\0\0\37\0\0\0 \0\0\0\0\0\0\0!\0\0\0\0\0\0\0\"\0\0\0\0\0\0\0$\0\0\0%\0\0\0'\0\0\0\0\0\0\0\0\0\0\0)\0\0\0+\0\0\0-\0\0\0.\0\0\0\0\0\0\0\0\0\0\0/\0\0\0001\0\0\0002\0\0\0004\0\0\0007\0\0\0\0\0\0\0\0\0\0\0008\0\0\0:\0\0\0<\0\0\0\0\0\0\0=\0\0\0\0\0\0\0>\0\0\0?\0\0\0&\206t\200", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1051876, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=904, st_size=460084, st_atime=2017/02/23-18:07:58, st_mtime=2015/07/23-13:22:02, st_ctime=2015/09/26-02:03:02}) = 0
+8878  mmap2(NULL, 463160, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7d5c000
+8878  mmap2(0xb7dcc000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x6f000) = 0xb7dcc000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\0\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220\n\0\0004\0\0\0h1\0\0\0\0\0\0004\0 \0\7\0(\0\35\0\34\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@$\0\0@$\0\0\5\0\0\0\0\20\0\0\1\0\0\0\260.\0\0\260>\0\0\260>\0\0\240\1\0\0\320\1\0\0\6\0\0\0\0\20\0\0\2\0\0\0\304.\0\0\304>\0\0\304>\0\0\10\1\0\0\10\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0P\345td\254\31\0\0\254\31\0\0\254\31\0\0\324\0\0\0\324\0\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\260.\0\0\260>\0\0\260>\0\0P\1\0\0P\1\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0?\357\26lo\307y\212\\u\270\302\33\326\361{\345\251S\254\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\26\0\0\0\32\0\0\0\4\0\0\0\7\0\0\0\230\0\21\0\0B\0\0\202\0`\10\223(\10\336\32\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\33\0\0\0\0\0\0\0\34\0\0\0\35\0\0\0\0\0\0\0\37\0\0\0\0\0\0\0\0\0\0\0 \0\0\0\"\0\0\0#\0\0\0\0\0\0\0\0\0\0\0$\0\0\0&\0\0\0'\0\0\0\0\0\0\0)\0\0\0\221!\374\370\225\263_\31\5\350\7\371\6\2\4\371\7\2\4\371\301S\200\30`\242\222\6\257\304M\17\325=l\366\327=l\366\352\26\251\30\371\31sB", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1051898, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=32, st_size=13808, st_atime=2017/02/23-18:07:58, st_mtime=2015/03/26-07:01:21, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 16512, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7d57000
+8878  mmap2(0xb7d5a000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x2000) = 0xb7d5a000
+8878  close(3)                          = 0
+8878  access("/etc/ld.so.nohwcap", F_OK) = -1 ENOENT (No such file or directory)
+8878  open("/lib/i386-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3
+8878  read(3, "\177ELF\1\1\1\3\0\0\0\0\0\0\0\0\3\0\3\0\1\0\0\0\220O\0\0004\0\0\0\24\21\2\0\0\0\0\0004\0 \0\7\0(\0(\0%\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0X\204\1\0X\204\1\0\5\0\0\0\0\20\0\0\1\0\0\0\200\215\1\0\200\235\1\0\200\235\1\0\370\3\0\0L%\0\0\6\0\0\0\0\20\0\0\2\0\0\0\230\216\1\0\230\236\1\0\230\236\1\0\30\1\0\0\30\1\0\0\6\0\0\0\4\0\0\0\4\0\0\0\24\1\0\0\24\1\0\0\24\1\0\0D\0\0\0D\0\0\0\4\0\0\0\4\0\0\0P\345td`-\1\0`-\1\0`-\1\0\34\t\0\0\34\t\0\0\4\0\0\0\4\0\0\0Q\345td\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\6\0\0\0\20\0\0\0R\345td\200\215\1\0\200\235\1\0\200\235\1\0\200\2\0\0\200\2\0\0\4\0\0\0\1\0\0\0\4\0\0\0\24\0\0\0\3\0\0\0GNU\0M\5\223vK\35\332Hm\214\322\315\311\346\272\341\r\300\326\306\4\0\0\0\20\0\0\0\1\0\0\0GNU\0\0\0\0\0\2\0\0\0\6\0\0\0 \0\0\0\4\2\0\0Z\0\0\0@\0\0\0\v\0\0\0\31!\2\221\1\n\20\"@H \331\3\0I4\200\0\0@\0 \200\200\221Q`\300@\22\213\0020D\0\0\20\1\0\n\0\1\r\0\204\n\360\1X\260\r\240\200\10 $\204\20B\242)m\10G\234V\20\0\224 \204$H\0X(\1\222\34\301B\240\220\22\10\f \2\30dA\245c\4@\n\32\3\0\0)\t(\314D\204\210\314\22\10\241\0\4\0\10\0\300Q\0\2009\4C\300\2248@\20\31\20\0\265\0 \0\200`\0\20 \0\vA\22!-\0P\10\211\22G", 512) = 512
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=1052007, st_mode=S_IFREG|0755, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=272, st_size=137044, st_atime=2017/02/23-18:07:58, st_mtime=2015/03/26-07:01:24, st_ctime=2015/09/26-01:26:32}) = 0
+8878  mmap2(NULL, 115404, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0xb7d3a000
+8878  mmap2(0xb7d53000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x18000) = 0xb7d53000
+8878  mmap2(0xb7d55000, 4812, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0) = 0xb7d55000
+8878  close(3)                          = 0
+8878  mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7d39000
+8878  mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7d38000
+8878  set_thread_area({entry_number:-1 -> 6, base_addr:0xb7d38780, limit:1048575, seg_32bit:1, contents:0, read_exec_only:0, limit_in_pages:1, seg_not_present:0, useable:1}) = 0
+8878  mprotect(0xb7f82000, 12288, PROT_READ) = 0
+8878  mprotect(0xb7d53000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7d5a000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7dcc000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7f8d000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7f98000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7fbe000, 4096, PROT_READ) = 0
+8878  mprotect(0x8068000, 4096, PROT_READ) = 0
+8878  mprotect(0xb7ffe000, 4096, PROT_READ) = 0
+8878  munmap(0xb7fc1000, 99369)         = 0
+8878  set_tid_address(0xb7d387e8)       = 8878
+8878  set_robust_list(0xb7d387f0, 12)   = 0
+8878  rt_sigaction(SIGRTMIN, {0xb7d3ea10, [], SA_RESTORER|SA_SIGINFO, 0xb7d49b90}, NULL, 8) = 0
+8878  rt_sigaction(SIGRT_1, {0xb7d3ea90, [], SA_RESTORER|SA_RESTART|SA_SIGINFO, 0xb7d49b90}, NULL, 8) = 0
+8878  rt_sigprocmask(SIG_UNBLOCK, [RTMIN RT_1], NULL, 8) = 0
+8878  getrlimit(RLIMIT_STACK, {rlim_cur=8192*1024, rlim_max=RLIM_INFINITY}) = 0
+8878  uname({sysname="Linux", nodename="dev.local", release="3.19.0-49-generic", version="#55-Ubuntu SMP Fri Jan 22 02:09:44 UTC 2016", machine="i686", domainname="(none)"}) = 0
+8878  statfs64("/sys/fs/selinux", 84, 0xbffff4e8) = -1 ENOENT (No such file or directory)
+8878  statfs64("/selinux", 84, 0xbffff4e8) = -1 ENOENT (No such file or directory)
+8878  brk(0)                            = 0x806a000
+8878  brk(0x808b000)                    = 0x808b000
+8878  open("/proc/filesystems", O_RDONLY|O_LARGEFILE) = 3
+8878  fstat64(3, {st_dev=makedev(0, 4), st_ino=4026532036, st_mode=S_IFREG|0444, st_nlink=1, st_uid=0, st_gid=0, st_blksize=1024, st_blocks=0, st_size=0, st_atime=2017/02/23-21:06:39, st_mtime=2017/02/23-21:06:39, st_ctime=2017/02/23-21:06:39}) = 0
+8878  mmap2(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7fd9000
+8878  read(3, "nodev\tsysfs\nnodev\trootfs\nnodev\tramfs\nnodev\tbdev\nnodev\tproc\nnodev\tcgroup\nnodev\tcpuset\nnodev\ttmpfs\nnodev\tdevtmpfs\nnodev\tdebugfs\nnodev\tsecurityfs\nnodev\tsockfs\nnodev\tpipefs\nnodev\tdevpts\n\text3\n\text2\n\text4\nnodev\thugetlbfs\n\tvfat\nnodev\tecryptfs\n\tfuseblk\nnodev\tfuse\nnodev\tfusectl\nnodev\tpstore\nnodev\tmqueue\nnodev\tautofs\nnodev\tvmhgfs\n", 1024) = 323
+8878  read(3, "", 1024)                 = 0
+8878  close(3)                          = 0
+8878  munmap(0xb7fd9000, 4096)          = 0
+8878  open("/usr/lib/locale/locale-archive", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+8878  fstat64(3, {st_dev=makedev(8, 1), st_ino=661168, st_mode=S_IFREG|0644, st_nlink=1, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=5704, st_size=2919792, st_atime=2017/02/23-18:07:58, st_mtime=2015/09/26-01:34:29, st_ctime=2015/09/26-01:34:29}) = 0
+8878  mmap2(NULL, 2097152, PROT_READ, MAP_PRIVATE, 3, 0) = 0xb7b38000
+8878  mmap2(NULL, 4096, PROT_READ, MAP_PRIVATE, 3, 0x2c5000) = 0xb7fd9000
+8878  close(3)                          = 0
+8878  geteuid32()                       = 1000
+8878  ioctl(0, SNDCTL_TMR_TIMEBASE or SNDRV_TIMER_IOCTL_NEXT_DEVICE or TCGETS, {c_iflags=0x2d00, c_oflags=0x5, c_cflags=0xbf, c_lflags=0xca3b, c_line=0, c_cc="\x03\x1c\x7f\x15\x04\x00\x01\x00\x11\x13\x1a\xff\x12\x0f\x17\x16\xff\x00\x00"}) = 0
+8878  stat64("/mnt/c/test.txt", 0xbffff55c) = -1 ENOENT (No such file or directory)
+8878  lstat64("/mnt/b/test.txt", {st_dev=makedev(8, 17), st_ino=349, st_mode=S_IFREG|0664, st_nlink=1, st_uid=1000, st_gid=1000, st_blksize=4096, st_blocks=8, st_size=18, st_atime=2017/02/23-21:05:27, st_mtime=2017/02/23-21:05:27, st_ctime=2017/02/23-21:05:27}) = 0
+8878  lstat64("/mnt/c/test.txt", 0xbffff2d8) = -1 ENOENT (No such file or directory)
+8878  rename("/mnt/b/test.txt", "/mnt/c/test.txt") = -1 EXDEV (Invalid cross-device link)
+8878  unlink("/mnt/c/test.txt")         = -1 ENOENT (No such file or directory)
+8878  open("/mnt/b/test.txt", O_RDONLY|O_LARGEFILE|O_NOFOLLOW) = 3
+8878  fstat64(3, {st_dev=makedev(8, 17), st_ino=349, st_mode=S_IFREG|0664, st_nlink=1, st_uid=1000, st_gid=1000, st_blksize=4096, st_blocks=8, st_size=18, st_atime=2017/02/23-21:05:27, st_mtime=2017/02/23-21:05:27, st_ctime=2017/02/23-21:05:27}) = 0
+8878  open("/mnt/c/test.txt", O_WRONLY|O_CREAT|O_EXCL|O_LARGEFILE, 0600) = 4
+8878  fstat64(4, {st_dev=makedev(8, 33), st_ino=13, st_mode=S_IFREG|0600, st_nlink=1, st_uid=1000, st_gid=1000, st_blksize=4096, st_blocks=0, st_size=0, st_atime=2017/02/23-21:06:39, st_mtime=2017/02/23-21:06:39, st_ctime=2017/02/23-21:06:39}) = 0
+8878  fadvise64_64(3, 0, 0, POSIX_FADV_SEQUENTIAL) = 0
+8878  mmap2(NULL, 139264, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0xb7b16000
+8878  read(3, "This is test data\n", 131072) = 18
+8878  write(4, "This is test data\n", 18) = 18
+8878  read(3, "", 131072)               = 0
+8878  utimensat(4, NULL, {{1487883927, 876275622}, {1487883927, 876275622}}, 0) = 0
+8878  flistxattr(3, NULL, 0)            = 0
+8878  flistxattr(3, "", 0)              = 0
+8878  fgetxattr(3, "system.posix_acl_access", 0xbfffefe0, 132) = -1 ENODATA (No data available)
+8878  fstat64(3, {st_dev=makedev(8, 17), st_ino=349, st_mode=S_IFREG|0664, st_nlink=1, st_uid=1000, st_gid=1000, st_blksize=4096, st_blocks=8, st_size=18, st_atime=2017/02/23-21:06:39, st_mtime=2017/02/23-21:05:27, st_ctime=2017/02/23-21:05:27}) = 0
+8878  fsetxattr(4, "system.posix_acl_access", "\x02\x00\x00\x00\x01\x00\x06\x00\xff\xff\xff\xff\x04\x00\x06\x00\xff\xff\xff\xff \x00\x04\x00\xff\xff\xff\xff", 28, 0) = 0
+8878  close(4)                          = 0
+8878  close(3)                          = 0
+8878  munmap(0xb7b16000, 139264)        = 0
+8878  lstat64("/", {st_dev=makedev(8, 1), st_ino=2, st_mode=S_IFDIR|0755, st_nlink=25, st_uid=0, st_gid=0, st_blksize=4096, st_blocks=8, st_size=4096, st_atime=2017/02/23-19:09:55, st_mtime=2016/11/06-19:43:05, st_ctime=2016/11/06-19:43:05}) = 0
+8878  fstatat64(AT_FDCWD, "/mnt/b/test.txt", {st_dev=makedev(8, 17), st_ino=349, st_mode=S_IFREG|0664, st_nlink=1, st_uid=1000, st_gid=1000, st_blksize=4096, st_blocks=8, st_size=18, st_atime=2017/02/23-21:06:39, st_mtime=2017/02/23-21:05:27, st_ctime=2017/02/23-21:05:27}, AT_SYMLINK_NOFOLLOW) = 0
+8878  unlinkat(AT_FDCWD, "/mnt/b/test.txt", 0) = 0
+8878  _llseek(0, 0, 0xbffff408, SEEK_CUR) = -1 ESPIPE (Illegal seek)
+8878  close(0)                          = 0
+8878  close(1)                          = 0
+8878  close(2)                          = 0
+8878  exit_group(0)                     = ?
+8878  +++ exited with 0 +++
