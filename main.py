@@ -238,7 +238,7 @@ if __name__ == '__main__':
                 and args.get('trace') is not None):
             parser.error('Command and trace switches must be specified '
                          'together')
-        command = args['command'].split(' ')
+        command = args['command']
         trace = args['trace']
     # At this point we're not using switches so we MUST use a config file
     elif args.get('config_file') is not None:
@@ -246,7 +246,6 @@ if __name__ == '__main__':
         config = ConfigParser.ConfigParser()
         config.readfp(open(config_file))
         command = config.get('Replay', 'command')
-        command = command.split(' ')
         trace = config.get('Replay', 'trace')
     else:
         parser.error('Neither switches nor config file specified')
@@ -269,6 +268,8 @@ if __name__ == '__main__':
         checker = args['checker']
         logging.debug('Checker string: %s', checker)
         checker = eval('tracereplay.checker.' + checker)
+    # Evaluate what is hopefully a list literal into an actual list we can use
+    command = eval(command)
     pid = os.fork()
     if pid == 0:
         cint.traceme()
