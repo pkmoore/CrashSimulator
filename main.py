@@ -75,23 +75,29 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     logging.debug('Checking syscall against execution')
     validate_syscall(orig_eax, syscall_object)
     ignore_list = [
+        77,   # sys_getrusage
         162,  # sys_nanosleep
         125,  # sys_mprotect
-        243,  # sys_set_thread_area
         174,  # sys_rt_sigaction
         175,  # sys_rt_sigprocmask
+        116,  # sys_sysinfo
         119,  # sys_sigreturn
         126,  # sys_sigprocmask
-        311,  # set_robust_list
-        258,  # set_tid_address
+        186,  # sys_sigaltstack
         266,  # set_clock_getres
         240,  # sys_futex
+        242,  # sys_sched_getaffinity
+        243,  # sys_set_thread_area
+        258,  # sys_set_tid_address
+        311,  # sys_set_robust_list
+        340,  # sys_prlimit64
         191,  # !!!!!!!!! sys_getrlimit
         ]
     handlers = {
         # These calls just get their return values checked ####
         # (9, True): check_return_value_entry_handler,
         # (9, False): check_return_value_exit_handler,
+        (12, True): syscall_return_success_handler,
         # (195, True): check_return_value_entry_handler,
         # (195, False): check_return_value_exit_handler,
         (39, True): check_return_value_entry_handler,
@@ -147,6 +153,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (6, False): close_exit_handler,
         (168, True): poll_entry_handler,
         (54, True): ioctl_entry_handler,
+        (54, False): ioctl_exit_handler,
         (195, True): stat64_entry_handler,
         (195, False): check_return_value_exit_handler,
         (142, True): select_entry_handler,
@@ -157,6 +164,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (265, True): clock_gettime_entry_handler,
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
+        (150, True): syscall_return_success_handler,
         (186, True): sigaltstack_entry_handler,
         (207, True): fchown_entry_handler,
         (207, False): check_return_value_entry_handler,
@@ -169,6 +177,9 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (234, True): flistxattr_entry_handler,
         (234, False): flistxattr_entry_handler,
         (242, True): sched_getaffinity_entry_handler,
+        (243, True): syscall_return_success_handler,
+        (258, True): syscall_return_success_handler,
+        (271, True): syscall_return_success_handler,
         (272, True): fadvise64_64_entry_handler,
         (272, False): check_return_value_exit_handler,
         (295, True): openat_entry_handler,
@@ -177,6 +188,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (300, False): check_return_value_exit_handler,
         (301, True): unlinkat_entry_handler,
         (301, False): check_return_value_exit_handler,
+        (311, True): syscall_return_success_handler,
         (320, True): utimensat_entry_handler,
         (320, False): check_return_value_exit_handler,
         (340, True): prlimit64_entry_handler,

@@ -159,6 +159,10 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
 
 
+def ioctl_exit_handler(syscall_id, syscall_object, pid):
+    pass
+
+
 def prlimit64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering prlimit64 entry handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
