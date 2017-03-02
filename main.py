@@ -23,6 +23,13 @@ import Trace
 
 
 def socketcall_handler(syscall_id, syscall_object, entering, pid):
+    ''' Validate the subcall (NOT SYSCALL!) id of the socket subcall against
+    the subcall name we expect based on the current system call object.  Then,
+    hand off responsibility to the appropriate subcall handler.
+
+    TODO: rename to handle_socketcall and correct references as needed
+
+    '''
     subcall_handlers = {
         ('socket', True): socket_subcall_entry_handler,
         ('socket', False): socket_exit_handler,
@@ -50,6 +57,8 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
         ('getsockname', False): getsockname_exit_handler,
         ('getpeername', True): getpeername_entry_handler
     }
+    # The subcall id of the socket subcall is located in the EBX register
+    # according to our Linux's convention.
     subcall_id = cint.peek_register(pid, cint.EBX)
     validate_subcall(subcall_id, syscall_object)
     try:
@@ -63,17 +72,39 @@ def socketcall_handler(syscall_id, syscall_object, entering, pid):
 
 
 def handle_syscall(syscall_id, syscall_object, entering, pid):
+    ''' Validate the id of the system call against the name of the system call
+    we are expecting based on the current system call object.  Then hand off
+    responsiblity to the appropriate subcall handler.
+    TODO: cosmetic - Reorder handler entrys numerically
+    
+
+    '''
     logging.debug('Handling syscall')
+    # If we are entering a system call, update the number of system calls we
+    # have handled
     if entering:
         tracereplay.handled_syscalls += 1
+    # System call id 102 corresponds to 'socket subcall'.  This system call is
+    # the entry point for code calls the appropriate socket code based on the
+    # subcall id in EBX.
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
+        # TODO: delete this logging
         ebx = cint.peek_register(pid, cint.EBX)
         logging.debug('Socketcall id from EBX is: %s', ebx)
+
+        # Hand off to code that deals with socket calls and return once that is
+        # complete.  Exceptions will be thrown if something is unsuccessful
+        # that end.  Return immediately after because we don't want our system
+        # call handler code double-handling the already handled socket subcall
         socketcall_handler(syscall_id, syscall_object, entering, pid)
         return
     logging.debug('Checking syscall against execution')
     validate_syscall(orig_eax, syscall_object)
+    # We ignore these system calls because they have to do with aspecs of
+    # execution that we don't want to try to replay and, at the same time,
+    # don't have interesting information that we want to validate with a
+    # handler.
     ignore_list = [
         77,   # sys_getrusage
         162,  # sys_nanosleep
@@ -270,11 +301,24 @@ if __name__ == '__main__':
         checker = eval('tracereplay.checker.' + checker)
     # Evaluate what is hopefully a list literal into an actual list we can use
     command = eval(command)
+
+    # At this point, we have parsed our arguments and are ready to start the
+    # replay process.  We must fork a new process in which to launch the target
+    # process.
     pid = os.fork()
+    # If we are the child process (i.e. pid returned form fork() == 0)
     if pid == 0:
+        # Request that some other process trace the current process
         cint.traceme()
+        # Replace the image old image of the process (our code) with the image
+        # of the target application and execute it (with the provided
+        # parameters)
         os.execvp(command[0], command)
+    # Else, we are not the child process and should configure ourselves to
+    # begin monitoring with ptrace in order to perform the replay process
     else:
+        # This definition needs to be elsewhere to clarify this code.  It's
+        # here right now mostly out of laziness.
         debug_printers = {
             5: open_entry_debug_printer,
             6: close_entry_debug_printer,
@@ -297,11 +341,24 @@ if __name__ == '__main__':
             197: fstat64_entry_debug_printer,
             221: fcntl64_entry_debug_printer
         }
+        # Open our trace (specified as either a command line argument with -t
+        # or as specified in a replay config file.  Then pass it to the
+        # posix-omni-parser so that it can turned into a set of objects.
         t = Trace.Trace(trace)
         tracereplay.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
         logging.info('Entering syscall handling loop')
+
+        # Loop until we are no longer receiving syscall notifications from our
+        # ptrace session with the child process.
         while next_syscall():
+            # Get the system call id of the current system call.  Convention in
+            # our flavor of Linux is for this to be passed in the EAX
+            # register (ORIG_EAX, in ptrace terms).  Ptrace does not inform us
+            # of whether the current system call action we have been notified
+            # of is an entry or exit so we operate on the assumption that the
+            # first notification we receive is an entry, the next is an exit,
+            # the next is an entry etc.
             orig_eax = cint.peek_register(pid, cint.ORIG_EAX)
             logging.info('===')
             logging.info('Advanced to next system call')
@@ -309,7 +366,12 @@ if __name__ == '__main__':
             logging.info('Looked up system call name: %s', SYSCALLS[orig_eax])
             logging.info('This is a system call %s',
                          'entry' if tracereplay.entering_syscall else 'exit')
-            # This if statement is an ugly hack
+            # This if statement is an ugly hack.  We skip these system calls
+            # out of sequence because they do not result in a corresponding
+            # 'system call exit' notification from ptrace meaning they throw
+            # off the pattern of 'entry', 'exit', 'entry', 'exit'... that we
+            # rely on for determining whether the ptrace message we have
+            # received is a system call entry or exit.
             if SYSCALLS[orig_eax] == 'sys_exit_group' or \
                SYSCALLS[orig_eax] == 'sys_execve' or \
                SYSCALLS[orig_eax] == 'sys_exit':
@@ -317,34 +379,64 @@ if __name__ == '__main__':
                 advance_trace()
                 cint.syscall(pid)
                 continue
+            # Check the flip-flip flag to determine whether we are entering a
+            # system call or exiting one.
             if tracereplay.entering_syscall:
+                # If we're entering one, we need to get the next system call
+                # object from our list of objects.
                 syscall_object = advance_trace()
                 logging.info('System call name from trace: %s',
                              syscall_object.name)
                 logging.debug('System call object contents:\n%s',
                               syscall_object)
+            # Try to handle the system call by first validating that the system
+            # call id we read from EAX corresponds with the system call name
+            # from the trace (i.e. the application is making system call X,
+            # ensure that we are expecting system call X at this point based on
+            # the trace).  Then we hand control (and the system call object
+            # from the trace) off to the appropriate handler function that
+            # deals with the specifics of the particular system call.
             try:
                 handle_syscall(orig_eax, syscall_object,
                                tracereplay.entering_syscall,
                                pid)
             except:
+                # Replay failed for some reason while trying to handle this
+                # system call.  Print out relevant information including
+                # informatin gathered by a system call specific 'debug printer'
+                # if one has been written
                 traceback.print_exc()
                 try:
                     debug_printers[orig_eax](pid, orig_eax, syscall_object)
                 except KeyError:
                     logging.warning('This system call ({}) has no debug '
                                     'printer'.format(orig_eax))
+                # Replay has failed, so kill the child process.  We've printed
+                # all the useful information we have available so exit our own
+                # process as well.
                 os.kill(pid, signal.SIGKILL)
                 sys.exit(1)
 
+            # We have successfully handled the system call.  If we are running
+            # with a checker, pass the system call object to the checker so it
+            # can advance its internal state appropriately
             if checker:
                 logging.debug('Transitioning checker')
                 checker.transition(syscall_object)
             logging.info('# of System Calls Handled: %d',
                          tracereplay.handled_syscalls)
+
+            # Flip the flip-flop flag that tracks whether we are the next
+            # notification we receive is for a system call entry or exit
             tracereplay.entering_syscall = not tracereplay.entering_syscall
             logging.debug('Requesting next syscall')
+
+            # Allow the child process to execute until it tries to enter or
+            # exit another system call.
             cint.syscall(pid)
+
+        # We have successfully completed our replay execution, did the checker
+        # we specified exit in an accepting state?
         if checker:
             logging.info('Exited with checker in accepting state: %s',
                          checker.is_accepting())
