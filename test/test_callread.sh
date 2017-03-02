@@ -3,7 +3,7 @@ cd ../sample_programs > /dev/null;
 echo "asdfasdf" | strace -f -s 9999 -vvvvv -o callread.strace ./callread;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/callread \
+       -c "['sample_programs/callread']" \
        -t sample_programs/callread.strace);
 RET=$?;
 echo $OUTPUT | grep -q "asdfasd";
