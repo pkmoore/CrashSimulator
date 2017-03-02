@@ -26,3 +26,5 @@ network_speedtest
 filesystem_speedtest
 setsockoptchristmas
 callrecvfrom
+calllstat64
+callmkstemp
