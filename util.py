@@ -1,3 +1,8 @@
+'''This is the standard 'kitchen sink' file for this project.  Essentially, its
+a lazy place for me to put code that needs to be called from many other
+places.  Intiailly, a lot of these functions were copy-pasted around in
+different handler modules so we're at least better than that at this point...
+'''
 import binascii
 import logging
 import os
@@ -13,6 +18,12 @@ from syscall_dict import SYSCALLS
 
 
 def advance_trace():
+    '''Move the global index that tracks our place in the list of system call
+    objects forward one system call object and return the object it now points
+    to.
+
+    TODO: Fix WTF formatting...
+    '''
     obj = None
     if tracereplay.system_call_index < len(
             tracereplay.system_calls):
@@ -22,21 +33,52 @@ def advance_trace():
     return obj
 
 
-# This function leaves the child process in a state of waiting at the point
-# just before execution returns to user code.
 def noop_current_syscall(pid):
+    ''''No-op' out the current system call the child process is trying to
+    execute by replacing it with a call to getpid() (a system call that takes
+    no parameters and has no side effects).  Then, configure ptrace to allow
+    the child process to run until it exits this call to getpid() and tell our
+    own process to wait for this notification.  Set the entering flip-flip flag
+    to to show that we are exiting a system call (because the child application
+    now believes the system call it tried to make completed successfully).
+
+    When this function is called from a handler, the handler needs to deal with
+    setting up the output buffers and return value that the system call would
+    have done itself had we allowed it to run normally.
+
+    Note: This function leaves the child process in a state of waiting at the
+    point just before execution returns to userspace code.
+
+    '''
     logging.debug('Nooping the current system call in pid: %s', pid)
+    # Transform the current system call in the child process into a call to
+    # getpid() by poking 20 into ORIG_EAX
     cint.poke_register(pid, cint.ORIG_EAX, 20)
+    # Tell ptrace we want the child process to stop at the next system call
+    # event and restart its execution.
     cint.syscall(pid)
+    # Have our process monitor the execution of the child process until it
+    # receives a system call event notification.  The notification we receive
+    # at this point (if all goes according to plan) is the EXIT notification
+    # for the getpid() call we forced the application to make.
     next_syscall()
+    # Take a look at the current system call (i.e. the one that triggered the
+    # notification we just received from ptrace).  It should be getpid().  If
+    # it isnt, something has gone horribly wrong and we must bail out.
     skipping = cint.peek_register(pid, cint.ORIG_EAX)
     if skipping != 20:
         raise Exception('Nooping did not result in getpid exit. Got {}'
                         .format(skipping))
+    # Because we are exiting the getpid() call so we need to set the entering
+    # flip-flop flag to reflect this.  This allows later code (in main.py) to
+    # set it BACK to entering before we begin processing the entry for the next
+    # system call.
     tracereplay.entering_syscall = False
 
 
 def next_syscall():
+    '''Wait for the child process to pause at the next system call entry/exit
+    '''
     s = os.wait()
     if os.WIFEXITED(s[1]):
         return False
@@ -44,11 +86,22 @@ def next_syscall():
 
 
 def offset_file_descriptor(fd):
+    '''Account for stdin, stdout, and stderr when we are predicting what file
+    descriptor the OS will try to hand to our child process.
+
+    TODO: IS THIS CODE NEEDED ANYMORE?  IF NOT, REMOVE IT.
+    '''
     # The -3 is to account for stdin, stdout, stderr
     return fd - (len(tracereplay.REPLAY_FILE_DESCRIPTORS) - 3)
 
 
 def peek_bytes(pid, address, num_bytes):
+    '''Peek a num_bytes bytes out of the child process's memory starting at
+    address.
+
+    TODO: THIS IS DEPRECATED. USAGES SHOULD BE REPLACED WITH THE C FUNCTION
+    THAT DOESN'T SUCK SO MUCH
+    '''
     reads = num_bytes // 4
     remainder = num_bytes % 4
     data = ''
@@ -62,6 +115,11 @@ def peek_bytes(pid, address, num_bytes):
 
 
 def peek_string(pid, address):
+    '''Peek a null terminated string out of the memory of a chid process.  This
+    is a spectacularly bad idea but I've done it all over the place.  This code
+    needs to be replaced with safer code, probably implemented on the C side of
+    things.
+    '''
     data = ''
     while True:
         data = data + pack('<i', cint.peek_address(pid, address))
@@ -73,6 +131,11 @@ def peek_string(pid, address):
 
 
 def extract_socketcall_parameters(pid, address, num):
+    '''Socket subcall parameters are passed as an array of integers of some
+    length pointed to by the address in ECX at the time the socket_subcall
+    system call is made.  This code picks them out and returns them as a list
+    of integers.
+    '''
     params = []
     for i in range(num):
         params += [cint.peek_address(pid, address)]
@@ -82,6 +145,11 @@ def extract_socketcall_parameters(pid, address, num):
 
 
 def fix_character_literals(string):
+    '''Honesty time:  I don't know why this exists.  Delete it if it is no
+    longer used.
+
+    TODO: EVALUATE FOR DELETION.
+    '''
     logging.debug('Cleaning up string')
     string = string.replace('\\n', '\n')
     string = string.replace('\\r', '\r')
@@ -92,6 +160,13 @@ def fix_character_literals(string):
 
 
 def validate_syscall(syscall_id, syscall_object):
+    '''Validate a system call id to make sure it matches the name in the system
+    call object.  This is essentially a fancy dictionary lookup made horrible
+    by discrepencies in the way strace names system calls and the way our Linux
+    kernel names them.
+    
+    TODO: reduce the number of hacks for name discrepancies somehow.
+    '''
     if syscall_id == 192 and 'mmap' in syscall_object.name:
         return
     if syscall_id == 140 and 'llseek' in syscall_object.name:
@@ -127,6 +202,9 @@ def validate_syscall(syscall_id, syscall_object):
 
 
 def validate_subcall(subcall_id, syscall_object):
+    '''Validate the socket subcall id against the name in the system call
+    object. Notice how there's no horrible hacks in here.
+    '''
     if syscall_object.name not in SOCKET_SUBCALLS[subcall_id][4:]:
         raise ReplayDeltaError('Subcall validation failed: from '
                                'execution: {0}({1}) is not from '
@@ -136,8 +214,16 @@ def validate_subcall(subcall_id, syscall_object):
                                        syscall_object.name))
 
 
-# Just for the record, this function is a monstrosity.
 def write_buffer(pid, address, value, buffer_length):
+    '''This function is an old way of poking a buffer of data into a target
+    address in the child process's memory space.  It is a monstrosity and
+    should be destroyed if it is no longer in use.  If it IS in use, those
+    usages should be replaced by the better functions that exist on the C side
+    of things.
+    (i.e. copy_char_buffer... etc.)
+
+    TODO: Eliminate references, kill this thing with fire
+    '''
     writes = [value[i:i+4] for i in range(0, len(value), 4)]
     trailing = len(value) % 4
     if trailing != 0:
@@ -156,6 +242,11 @@ def write_buffer(pid, address, value, buffer_length):
 
 
 def cleanup_return_value(val):
+    '''Strace does some weird things with return values.  This function
+    attempts to account for any weird things I've encountered.  Its purpose is
+    to tranform whatever weird stuff strace gave us into an integer return
+    value that can be poked into EAX at the end of a handler.
+    '''
     if val == '?':
         logging.debug('Heads up! We\'re going to -1 for a "?" value')
         return -1
@@ -182,6 +273,11 @@ def cleanup_return_value(val):
 
 
 def list_of_flags_to_int(lof):
+    '''Convert a list of flags (flags separated by |'s) into an integer value.
+    This is accomplished by looking up the values given to the flag in our
+    version of Linux and OR'ing them together (including any unnamed octal
+    values)
+    '''
     logging.debug('Parsing list of flags into an int')
     int_val = 0
     for i in lof:
@@ -197,12 +293,19 @@ def list_of_flags_to_int(lof):
     return int_val
 
 
-# Applies the return conditions from the specified syscall object to the
-# syscall currently being executed by the process identified by PID. Return
-# conditions at this point are: setting the return value appropriately. Setting
-# the value of errno by suppling -ERROR in the eax register. This function
-# should only be called in exit handlers.
 def apply_return_conditions(pid, syscall_object):
+    '''Apply the return conditions described in the system call object to the
+    current system call the child process is paused in.  This involves turning
+    whatever madness strace gave as a return value into a suitable integer,
+    transforming that integer to induce the correct errno value (if required),
+    and poking that value into EAX.
+
+    Note: For our Linux and glibc version, we return a value of the form:
+        (-1 * <intended errno value>)
+    in EAX.  Glibc recognizes this situation, sets errno to (-1 * EAX) and sets
+        EAX to -1 thereby producing the "returns -1 on error with errno set
+        correctly" behavior we know and love.
+    '''
     logging.debug('Applying return conditions')
     ret_val = syscall_object.ret[0]
     # HACK: deal with the way strace reports flags in return values for fcntl
@@ -229,6 +332,17 @@ def apply_return_conditions(pid, syscall_object):
 # Currently used by send, listen
 # TODO: check this guy for required parameter checking
 def subcall_return_success_handler(syscall_id, syscall_object, pid):
+    '''This probably should be here.  This badly named handler simply takes a
+    socket subcall situation, validates the file descriptor involved, no-ops
+    the call, and applies the return conditions from the system call object.
+    For several socket calls, this is all that's required so we don't need to
+    write individual handlers that all do the same thing.
+
+    TODO: Move this to generic_handlers module
+    TODO: Replace parameter extraction with call to
+    extract_socketcall_parameters
+
+    '''
     logging.debug('Entering subcall return success handler')
     if syscall_object.ret[0] == -1:
         logging.debug('Handling unsuccessful call')
@@ -250,7 +364,16 @@ def subcall_return_success_handler(syscall_id, syscall_object, pid):
 
 
 class ReplayDeltaError(Exception):
+    '''Rename Exception to ReplayDeltaError so we can be more descriptive when
+    we need to raise an exception of this variety.
+    '''
     pass
+
+
+'''Below this point lies dragons... Beware! I'll get around to documenting this
+   stuff eventually.  Ideally before I forget how all of it works!
+   TODO: move file descriptor management stuff into its own module.
+'''
 
 
 def validate_integer_argument(pid,
