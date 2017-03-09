@@ -119,7 +119,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         240,  # sys_futex
         242,  # sys_sched_getaffinity
         243,  # sys_set_thread_area
-        258,  # sys_set_tid_address
         311,  # sys_set_robust_list
         340,  # sys_prlimit64
         191,  # !!!!!!!!! sys_getrlimit
@@ -209,7 +208,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (234, False): flistxattr_entry_handler,
         (242, True): sched_getaffinity_entry_handler,
         (243, True): syscall_return_success_handler,
-        (258, True): syscall_return_success_handler,
+        (258, True): set_tid_address_entry_handler,
+        (258, False): set_tid_address_exit_handler,
         (271, True): syscall_return_success_handler,
         (272, True): fadvise64_64_entry_handler,
         (272, False): check_return_value_exit_handler,

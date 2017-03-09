@@ -16,6 +16,35 @@ from util import(validate_integer_argument,
                  ReplayDeltaError,)
 
 
+def set_tid_address_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering set_tid_address_entry_handler')
+    # POSIX-omni-parser treats this argument as a hex string with no 0x
+    # We have to do manual cleanup here
+    addr_from_trace = int('0x' + syscall_object.args[0].value, 16)
+    addr_from_execution = cint.peek_register(pid, cint.EBX) & 0xffffffff
+    logging.debug('Address from trace: %x', addr_from_trace)
+    logging.debug('Address from execution: %x', addr_from_execution)
+    if addr_from_trace != addr_from_execution:
+        raise ReplayDeltaError('Address from trace ({}) does not match '
+                               'address from execution ({})'
+                               .format(addr_from_trace,
+                                       addr_from_execution))
+
+
+def set_tid_address_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering set_tid_address_exit_handler')
+    addr_from_trace = int('0x' + syscall_object.args[0].value, 16)
+    tid_from_trace = int(syscall_object.ret[0])
+    # We have to use the address from the trace here for two reasons:
+    #  1. We already confirmed at the traces matches execution in this regard
+    #  in the entry handler
+    #  2. Registers have been trashed by this point so we don't have any choice
+    logging.debug('Address from trace: %x', addr_from_trace)
+    logging.debug('TID from trace: %d', tid_from_trace)
+    cint.populate_int(pid, addr_from_trace, tid_from_trace)
+    apply_return_conditions(pid, syscall_object)
+
+
 def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering fadvise_64_64 entry handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
