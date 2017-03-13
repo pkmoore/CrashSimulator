@@ -27,6 +27,25 @@ from util import (cleanup_quotes,
                   offset_file_descriptor,)
 
 
+def creat_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering creat entry handler')
+    filename_from_trace = cleanup_quotes(syscall_object.args[0].value)
+    filename_from_execution = peek_string(pid, cint.peek_register(pid,
+                                                                  cint.EBX))
+    logging.debug('Filename from trace: %s', filename_from_trace)
+    logging.debug('Filename from execution: %s', filename_from_execution)
+    if filename_from_trace != filename_from_execution:
+        raise ReplayDeltaError('Filename from trace ({}) does not match '
+                               'filename from execution ({})'
+                               .format(filename_from_trace,
+                                       filename_from_execution))
+    if not is_file_mmapd_at_any_time(filename_from_trace):
+        logging.debug('File is not mmapped at any time, will replay')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+        add_replay_fd(syscall_object.ret[0])
+
+
 def unlinkat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering unlinkat entry handler')
     name_from_execution = peek_string(pid,

@@ -124,6 +124,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         191,  # !!!!!!!!! sys_getrlimit
         ]
     handlers = {
+        (8, True): creat_entry_handler,
+        (8, False): check_return_value_exit_handler,
         # These calls just get their return values checked ####
         # (9, True): check_return_value_entry_handler,
         # (9, False): check_return_value_exit_handler,
