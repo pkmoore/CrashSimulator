@@ -756,11 +756,21 @@ static PyObject* tracereplay_populate_int(PyObject* self,
     pid_t child;
     void* addr;
     int data;
-    PyArg_ParseTuple(args, "iii", (int*)&child, (int*)&addr, &data);
+    if(!PyArg_ParseTuple(args, "iii", &child, &addr, &data)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_int arg parse failed");
+    }
     if(DEBUG) {
-        printf("C: pop_char_buf: child: %d\n", child);
-        printf("C: pop_char_buf: addr: %d\n", (int)addr);
-        printf("C: pop_char_buf: data: %d\n", data);
+        printf("C: pop_int: child: %d\n", child);
+        printf("C: pop_int: addr: %p\n", addr);
+        printf("C: pop_int: data: %d\n", data);
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&data,
+                                          sizeof(int));
+    Py_RETURN_NONE;
+}
 
 static PyObject* tracereplay_populate_unsigned_int(PyObject* self,
                                           PyObject* args) {
