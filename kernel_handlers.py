@@ -41,8 +41,34 @@ def set_tid_address_exit_handler(syscall_id, syscall_object, pid):
     #  2. Registers have been trashed by this point so we don't have any choice
     logging.debug('Address from trace: %x', addr_from_trace)
     logging.debug('TID from trace: %d', tid_from_trace)
-    cint.populate_int(pid, addr_from_trace, tid_from_trace)
+    # We place the TID from the trace into the appropriate memory location
+    # so future references are correct
+    cint.populate_unsigned_int(pid, addr_from_trace, tid_from_trace)
     apply_return_conditions(pid, syscall_object)
+
+
+def futex_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering futex entry handler')
+    addr_from_trace = int('0x' + syscall_object.args[0].value, 16)
+    addr_from_execution = cint.peek_register(pid, cint.EBX) & 0xffffffff
+    logging.debug('Address from trace: %x', addr_from_trace)
+    logging.debug('Address from execution: %x', addr_from_execution)
+    if addr_from_trace != addr_from_execution:
+        raise ReplayDeltaError('Address from trace ({}) does not match '
+                               'address from execution ({})'
+                               .format(addr_from_trace,
+                                       addr_from_execution))
+
+
+def futex_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering futex exit handler')
+    ret_val_from_trace = syscall_object.ret[0]
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX) & 0xffffffff
+    if ret_val_from_trace != ret_val_from_execution:
+        raise ReplayDeltaError('Return value from trace ({}) does not match '
+                               'return value from execution ({})'
+                               .format(ret_val_from_trace,
+                                       ret_val_from_execution))
 
 
 def fadvise64_64_entry_handler(syscall_id, syscall_object, pid):

@@ -761,6 +761,22 @@ static PyObject* tracereplay_populate_int(PyObject* self,
         printf("C: pop_char_buf: child: %d\n", child);
         printf("C: pop_char_buf: addr: %d\n", (int)addr);
         printf("C: pop_char_buf: data: %d\n", data);
+
+static PyObject* tracereplay_populate_unsigned_int(PyObject* self,
+                                          PyObject* args) {
+    // unused
+    self = self;
+    pid_t child;
+    void* addr;
+    int data;
+    if(!PyArg_ParseTuple(args, "III", &child, &addr, &data)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_int arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: pop_unsigned_int: child: %d\n", child);
+        printf("C: pop_unsigned_int: addr: %p\n", addr);
+        printf("C: pop_unsigned_int: data: %d\n", data);
     }
     copy_buffer_into_child_process_memory(child,
                                           addr,
@@ -1493,6 +1509,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate char buffer"},
     {"populate_int", tracereplay_populate_int,
      METH_VARARGS, "populate int"},
+    {"populate_unsigned_int", tracereplay_populate_unsigned_int,
+     METH_VARARGS, "populate unsigned int"},
     {"populate_uname_structure", tracereplay_populate_uname_structure,
      METH_VARARGS, "populate uname structure"},
     {"populate_rlimit_structure", tracereplay_populate_rlimit_structure,
