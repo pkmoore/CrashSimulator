@@ -289,7 +289,7 @@ class DontModifyFileAutomaton:
             if 'open' in syscall_object.name:
                 if self.filename in syscall_object.args[0].value:
                     self.fd_register = int(syscall_object.ret[0])
-                    if self._bad_flags(syscall_object.args[2]):
+                    if self._bad_flags(syscall_object.args[1].value):
                         self.current_state = self.states[2]
             elif 'write' in syscall_object.name:
                 if self.fd_register == syscall_object.args[0].value:
@@ -297,8 +297,8 @@ class DontModifyFileAutomaton:
 
 
     def _bad_flags(self, flags):
-        append = 'O_APPEND' in flags
-        trunc = 'O_APPEND' in flags
+        append = True if 'O_APPEND' in flags else False
+        trunc = True if 'O_TRUNC' in flags else False
         if append and trunc:
             raise NotImplementedError('Weird flag combination %s', flags)
         elif not append:
