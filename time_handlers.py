@@ -7,15 +7,14 @@ def time_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.ret[0] == -1:
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
+        addr = cint.peek_register(pid, cint.EBX)
         noop_current_syscall(pid)
-        variable_from_trace = syscall_object.args[0].value
         logging.debug('Got successful time call')
-        logging.debug(variable_from_trace)
-        if variable_from_trace != 'NULL':
-            raise NotImplementedError('time calls with out parameter not '
-                                      'supported')
         t = int(syscall_object.ret[0])
         logging.debug('time: %d', t)
+        logging.debug('addr: %d', addr)
+        if syscall_object.args[0].value != 'NULL':
+            cint.populate_unsigned_int(pid, addr, t)
         apply_return_conditions(pid, syscall_object)
 
 
