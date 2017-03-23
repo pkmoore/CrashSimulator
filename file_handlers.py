@@ -1483,7 +1483,7 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
         operation = syscall_object.args[1].value[0].strip('[]\'')
         noop_current_syscall(pid)
         if (operation == 'F_GETFL' or operation == 'F_SETFL'
-           or operation == 'F_SETFD'):
+            or operation == 'F_SETFD' or operation == 'F_SETLKW'):
             apply_return_conditions(pid, syscall_object)
         elif (operation == 'F_GETFD'):
             if syscall_object.ret[0] == 'FD_CLOEXEC':
