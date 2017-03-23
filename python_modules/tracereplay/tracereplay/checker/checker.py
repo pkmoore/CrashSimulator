@@ -380,6 +380,9 @@ class UrandomReadDuringCopyAutomaton:
                     self.data_register = syscall_object.args[1].value
                     self.current_state = self.states[2]
         if self.current_state['id'] == 2:
+            if 'read' in syscall_object.name:
+                if syscall_object.args[0].value == self.urandom_fd:
+                    self.data_register = syscall_object.args[1].value
             if 'write' in syscall_object.name:
                 if self.data_register in syscall_object.args[1].value:
                     self.current_state = self.states[3]
