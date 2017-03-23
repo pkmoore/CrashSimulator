@@ -27,6 +27,30 @@ from util import (cleanup_quotes,
                   offset_file_descriptor,)
 
 
+def ftruncate_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering ftruncate entry handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    validate_integer_argument(pid, syscall_object, 1, 1)
+    if should_replay_based_on_fd(int(syscall_object.args[0].value)):
+        logging.debug('Replaying this system call')
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def ftruncate_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering ftruncate exit handler')
+    ret_val_from_trace = int(syscall_object.ret[0])
+    ret_val_from_execution = cint.peek_register(pid, cint.EAX)
+    if ret_val_from_trace != ret_val_from_execution:
+        raise ReplayDeltaError('Return value from trace ({}) does not match '
+                               'return value from execution ({})'
+                               .format(ret_val_from_trace,
+                                       ret_val_from_execution))
+
+
 def creat_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering creat entry handler')
     filename_from_trace = cleanup_quotes(syscall_object.args[0].value)
