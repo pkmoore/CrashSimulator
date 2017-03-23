@@ -188,6 +188,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (54, False): ioctl_exit_handler,
         (195, True): stat64_entry_handler,
         (195, False): check_return_value_exit_handler,
+        (141, True): getdents_entry_handler,
+        (142, False): getdents_exit_handler,
         (142, True): select_entry_handler,
         (82, True): select_entry_handler,
         (221, True): fcntl64_entry_handler,

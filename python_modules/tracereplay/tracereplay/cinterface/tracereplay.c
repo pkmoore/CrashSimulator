@@ -188,7 +188,6 @@ static PyObject* tracereplay_populate_getdents64_structure(PyObject* self,
     }
 
     PyObject* iter;
-    Py_ssize_t dents_len;
     PyObject* next;
 
     PyObject* d_ino_obj;
@@ -204,7 +203,6 @@ static PyObject* tracereplay_populate_getdents64_structure(PyObject* self,
     unsigned long d_off;
 
 
-    dents_len = PyList_Size(dents);
 
     unsigned char c_dents[retlen];
     memset(c_dents, 0, sizeof(c_dents));
@@ -292,6 +290,120 @@ static PyObject* tracereplay_populate_getdents64_structure(PyObject* self,
     Py_RETURN_NONE;
 }
 
+static PyObject* tracereplay_populate_getdents_structure(PyObject* self,
+                                                         PyObject* args) {
+    pid_t child;
+    void* addr;
+    PyObject* dents;
+    size_t retlen;
+    if(!PyArg_ParseTuple(args, "IIOI", &child, &addr, &dents, &retlen)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_getdents64_structure arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: populate_getdents: child %d\n", child);
+        printf("C: populate_getdents: addr %p\n", addr);
+    }
+
+    if(!PyList_Check(dents)) {
+        PyErr_SetString(TraceReplayError,
+                        "list of dents is not a list");
+    }
+
+    PyObject* iter;
+    PyObject* next;
+
+    PyObject* d_ino_obj;
+    PyObject* d_name_obj;
+    PyObject* d_reclen_obj;
+    PyObject* d_type_obj;
+    PyObject* d_off_obj;
+
+    unsigned long d_ino;
+    unsigned long d_off;
+    unsigned short d_reclen;
+    char* d_name;
+    char d_type;
+
+
+    unsigned char c_dents[retlen];
+    memset(c_dents, 0, sizeof(c_dents));
+    unsigned char* write_ptr = c_dents;
+    size_t s_offset;
+    iter = PyObject_GetIter(dents);
+    next = PyIter_Next(iter);
+    while(next) {
+        if(!PyDict_Check(next)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-dict object in dents list");
+        }
+        d_ino_obj = PyDict_GetItemString(next, "d_ino");
+        if(!PyInt_Check(d_ino_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_ino");
+        }
+        d_name_obj = PyDict_GetItemString(next, "d_name");
+        if(!PyString_Check(d_name_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-string object in d_name");
+        }
+        d_reclen_obj = PyDict_GetItemString(next, "d_reclen");
+        if(!PyInt_Check(d_reclen_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_reclen");
+        }
+        d_type_obj = PyDict_GetItemString(next, "d_type");
+        if(!PyInt_Check(d_type_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_type");
+        }
+        d_off_obj = PyDict_GetItemString(next, "d_off");
+        if(!PyInt_Check(d_off_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in d_off");
+        }
+        d_ino = (unsigned long)PyInt_AsLong(d_ino_obj);
+        d_name = PyString_AsString(d_name_obj);
+        d_off = (unsigned long)PyInt_AsLong(d_off_obj);
+        d_reclen = (unsigned short)PyInt_AsLong(d_reclen_obj);
+        d_type = (char)PyInt_AsLong(d_type_obj);
+        if(DEBUG) {
+            printf("C: populate_getdents: d_ino: %lu\n", d_ino);
+            printf("C: populate_getdents: d_name: %s\n", d_name);
+            printf("C: populate_getdents: d_off: %lu\n", d_off);
+            printf("C: populate_getdents: d_reclen: %hu\n", d_reclen);
+            printf("C: populate_getdents: d_type: %d\n", (int)d_type);
+            printf("C: populate_getdents: strlen(d_name): %d\n",
+                   strlen(d_name));
+            printf("C: populate_getdents: write_ptr: %p\n", write_ptr);
+        }
+        s_offset = 0;
+        memcpy(write_ptr + s_offset, &d_ino, sizeof(d_ino));
+        s_offset += sizeof(d_ino);
+        memcpy(write_ptr + s_offset, &d_off, sizeof(d_off)); 
+        s_offset += sizeof(d_off);
+        memcpy(write_ptr + s_offset, &d_reclen, sizeof(d_reclen));
+        s_offset += sizeof(d_reclen);
+        strcpy((char*)write_ptr + s_offset, d_name);
+        s_offset += strlen(d_name);
+        s_offset += 1;
+        s_offset += 1;
+        write_ptr[s_offset] = d_type;
+        if(DEBUG) {
+            printf("C: populate_getdents: s_offset: %d\n", s_offset);
+        }
+        next = PyIter_Next(iter);
+        write_ptr += d_reclen;
+        if(DEBUG) {
+            printf("C: populate_getdents: write_ptr: %p\n", write_ptr);
+        }
+    }
+    copy_buffer_into_child_process_memory(child,
+                                          addr,
+                                          (unsigned char*)&c_dents,
+                                          retlen);
+    Py_RETURN_NONE;
+}
 static PyObject* tracereplay_populate_pipefd_array(PyObject* self,
                                                    PyObject* args) {
     pid_t child;
@@ -1551,6 +1663,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "get select fds"},
     {"populate_getdents64_structure", tracereplay_populate_getdents64_structure,
      METH_VARARGS, "populate getdents64 structure"},
+    {"populate_getdents_structure", tracereplay_populate_getdents_structure,
+     METH_VARARGS, "populate getdents structure"},
     {"populate_cpu_set", tracereplay_populate_cpu_set,
      METH_VARARGS, "populate cpu_set"},
     {"populate_stack_structure", tracereplay_populate_stack_structure,

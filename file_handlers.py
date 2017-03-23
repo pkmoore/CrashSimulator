@@ -1,6 +1,6 @@
 from time import strptime, mktime
 
-from getdents64_parser import parse_getdents64_structure
+from getdents_parser import parse_getdents_structure
 from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
 from os_dict import STAT_CONST
@@ -1387,9 +1387,9 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
         addr = cint.peek_register(pid, cint.ECX)
         logging.debug('addr: %x', addr & 0xffffffff)
         retlen = int(syscall_object.ret[0])
-        data = parse_getdents64_structure(syscall_object)
+        data = parse_getdents_structure(syscall_object)
         if len(data) > 0:
-            cint.populate_getdents64_structure(pid, addr, data, retlen)
+            cint.populate_getdents_structure(pid, addr, data, retlen)
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
@@ -1399,6 +1399,48 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
 
 def getdents64_exit_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getdents64 exit handler')
+    ret_val = cint.peek_register(pid, cint.EAX)
+    ret_val_from_trace = int(syscall_object.ret[0])
+    logging.debug('Return value from execution: %d', ret_val)
+    logging.debug('Return value from trace: %d', ret_val_from_trace)
+    if ret_val != ret_val_from_trace:
+        raise ReplayDeltaError('Return value from execution ({}) differed '
+                               'from return value from trace ({})'
+                               .format(ret_val, ret_val_from_trace))
+
+
+def getdents_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getdents entry handler')
+    # Validate file descriptor
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    # We must check the this argument manually because posix-omni-parser
+    # does not split the list of structures up correctly
+    size = cint.peek_register(pid, cint.EDX)
+    size_from_trace = int(syscall_object.args[-1].value)
+    if size != size_from_trace:
+        raise ReplayDeltaError('Size from execution ({}) did not match size '
+                               'from trace ({})'
+                               .format(size, size_from_trace))
+
+    fd = int(syscall_object.args[0].value)
+    if should_replay_based_on_fd(fd):
+        logging.debug('Replaying this system call')
+        logging.debug('PID: %d', pid)
+        addr = cint.peek_register(pid, cint.ECX)
+        logging.debug('addr: %x', addr & 0xffffffff)
+        retlen = int(syscall_object.ret[0])
+        data = parse_getdents_structure(syscall_object)
+        if len(data) > 0:
+            cint.populate_getdents_structure(pid, addr, data, retlen)
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        logging.debug('Not replaying this system call')
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def getdents_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getdents exit handler')
     ret_val = cint.peek_register(pid, cint.EAX)
     ret_val_from_trace = int(syscall_object.ret[0])
     logging.debug('Return value from execution: %d', ret_val)

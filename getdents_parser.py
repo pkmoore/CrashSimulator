@@ -11,9 +11,10 @@ DIRENT_TYPES = {
 }
 
 
-def parse_getdents64_structure(syscall_object):
-    if syscall_object.name != 'getdents64':
-        raise ValueError('Received argument is not a getdents64 syscall object')
+def parse_getdents_structure(syscall_object):
+    if 'getdents' not in syscall_object.name:
+        raise ValueError('Received argument is not a getdents(64) syscall '
+                         'object')
     if syscall_object.args[1].value == '{}':
         return []
     left_brace = syscall_object.original_line.find('{')
