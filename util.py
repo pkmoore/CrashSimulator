@@ -315,7 +315,11 @@ def apply_return_conditions(pid, syscall_object):
         ret_val = 0x1
     elif syscall_object.ret[0] == -1 and syscall_object.ret[1] is not None:
         logging.debug('Got non-None errno value: %s', syscall_object.ret[1])
-        error_code = ERRNO_CODES[syscall_object.ret[1]]
+        try:
+            error_code = ERRNO_CODES[syscall_object.ret[1]]
+        except KeyError:
+            raise NotImplementedError('Unrecognized errno code: {}'
+                                      .format(syscall_object.ret[1]))
         logging.debug('Looked up error number: %s', error_code)
         ret_val = -error_code
         logging.debug('Will return: %s instead of %s',
