@@ -2,6 +2,10 @@ import logging
 import re
 
 from util import *
+from poll_parser import (
+    parse_poll_results,
+    parse_poll_input,
+)
 
 
 # A lot of the parsing in this function needs to be moved into the
@@ -94,48 +98,32 @@ def poll_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.ret[0] == 0:
         logging.debug('Poll call timed out')
     else:
-        ol = syscall_object.original_line
-        ret_struct = ol[ol.rfind('('):]
-        logging.debug('Poll return structure: %s', ret_struct)
-        fd = int(ret_struct[ret_struct.find('=') + 1:ret_struct.find(',')])
-        logging.debug('Returned file descriptor: %s', fd)
-        ret_struct = ret_struct[ret_struct.find(' '):]
-        revent = ret_struct[ret_struct.find('=') + 1: ret_struct.find('}')]
-        if syscall_object.ret[0] != 1:
-            raise NotImplementedError('Cannot handle poll calls that return '
-                                      'more than one pollfd structure')
-        if revent not in ['POLLIN', 'POLLOUT']:
-            raise NotImplementedError('Encountered unimplemented revent in '
-                                      'poll')
-        logging.debug('Returned file descriptor: %d', fd)
-        logging.debug('Returned event: %s', revent)
+        in_pollfds = parse_poll_input(syscall_object)
+        out_pollfds = parse_poll_results(syscall_object)
+        logging.debug('Input pollfds: %s', in_pollfds)
+        logging.debug('Returned event: %s', out_pollfds)
         logging.debug('Pollfd array address: %s', array_address)
         logging.debug('Child PID: %s', pid)
-        if revent == 'POLLIN':
-            r = cint.POLLIN
-        else:
-            r = cint.POLLOUT
-        found_returned_fd = False
-        for index, obj in enumerate(syscall_object.args[0].value):
+        index = 0
+        for i in in_pollfds:
             array_address = array_address + (index * cint.POLLFDSIZE)
-            obj_fd = syscall_object.args[0].value[index].value[0]
-            if obj_fd == fd:
-                cint.write_poll_result(pid,
-                                              array_address,
-                                              fd,
-                                              r)
-                found_returned_fd = True
-            else:
+            found = False
+            for o in out_pollfds:
+                if i['fd'] == o['fd']:
+                    cint.write_poll_result(pid,
+                                           array_address,
+                                           o['fd'],
+                                           o['revents'])
+                    found = True
+
+            if not found:
                 # For applications that re-use the pollfd array, we must clear
                 # the revents field in case they don't do it themselves.
                 cint.write_poll_result(pid,
-                                              array_address,
-                                              obj_fd,
-                                              0)
-        if not found_returned_fd:
-            raise ReplayDeltaError('File descriptor from trace return value '
-                                   'was not found in trace polled file '
-                                   'descriptor structures')
+                                       array_address,
+                                       i['fd'],
+                                       0)
+            index += 1
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
 
