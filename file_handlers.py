@@ -1413,7 +1413,7 @@ def getdents64_entry_handler(syscall_id, syscall_object, pid):
         retlen = int(syscall_object.ret[0])
         data = parse_getdents_structure(syscall_object)
         if len(data) > 0:
-            cint.populate_getdents_structure(pid, addr, data, retlen)
+            cint.populate_getdents64_structure(pid, addr, data, retlen)
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
