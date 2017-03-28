@@ -230,6 +230,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (311, True): syscall_return_success_handler,
         (320, True): utimensat_entry_handler,
         (320, False): check_return_value_exit_handler,
+        (328, True): eventfd2_entry_handler,
         (340, True): prlimit64_entry_handler,
         (345, True): sendmmsg_entry_handler,
         (345, False): sendmmsg_exit_handler
