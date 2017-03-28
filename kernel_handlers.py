@@ -16,6 +16,54 @@ from util import(validate_integer_argument,
                  ReplayDeltaError,)
 
 
+def getresuid_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getresuid entry handler')
+    ruid = int(syscall_object.args[0].value.strip('[]'))
+    euid = int(syscall_object.args[0].value.strip('[]'))
+    suid = int(syscall_object.args[0].value.strip('[]'))
+    ruid_addr = cint.peek_register(pid, cint.EBX)
+    euid_addr = cint.peek_register(pid, cint.ECX)
+    suid_addr = cint.peek_register(pid, cint.EDX)
+
+    logging.debug('ruid: %d', ruid)
+    logging.debug('euid: %d', euid)
+    logging.debug('suid: %d', suid)
+
+    logging.debug('ruid addr: %x', ruid_addr & 0xffffffff)
+    logging.debug('ruid addr: %x', euid_addr & 0xffffffff)
+    logging.debug('ruid addr: %x', suid_addr & 0xffffffff)
+    noop_current_syscall(pid)
+
+    cint.populate_unsigned_int(pid, ruid_addr, ruid)
+    cint.populate_unsigned_int(pid, euid_addr, euid)
+    cint.populate_unsigned_int(pid, suid_addr, suid)
+    apply_return_conditions(pid, syscall_object)
+
+
+def getresgid_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering getresgid entry handler')
+    ruid = int(syscall_object.args[0].value.strip('[]'))
+    euid = int(syscall_object.args[0].value.strip('[]'))
+    suid = int(syscall_object.args[0].value.strip('[]'))
+    ruid_addr = cint.peek_register(pid, cint.EBX)
+    euid_addr = cint.peek_register(pid, cint.ECX)
+    suid_addr = cint.peek_register(pid, cint.EDX)
+
+    logging.debug('ruid: %d', ruid)
+    logging.debug('euid: %d', euid)
+    logging.debug('suid: %d', suid)
+
+    logging.debug('ruid addr: %x', ruid_addr & 0xffffffff)
+    logging.debug('ruid addr: %x', euid_addr & 0xffffffff)
+    logging.debug('ruid addr: %x', suid_addr & 0xffffffff)
+    noop_current_syscall(pid)
+
+    cint.populate_unsigned_int(pid, ruid_addr, ruid)
+    cint.populate_unsigned_int(pid, euid_addr, euid)
+    cint.populate_unsigned_int(pid, suid_addr, suid)
+    apply_return_conditions(pid, syscall_object)
+
+
 def set_tid_address_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering set_tid_address_entry_handler')
     # POSIX-omni-parser treats this argument as a hex string with no 0x

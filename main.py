@@ -204,6 +204,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (186, True): sigaltstack_entry_handler,
         (207, True): fchown_entry_handler,
         (207, False): check_return_value_entry_handler,
+        (209, True): getresuid_entry_handler,
+        (211, True): getresgid_entry_handler,
         (220, True): getdents64_entry_handler,
         (220, False): getdents64_exit_handler,
         (228, True): fsetxattr_entry_handler,
