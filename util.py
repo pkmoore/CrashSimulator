@@ -418,6 +418,41 @@ def validate_integer_argument(pid,
                                        arg_from_trace))
 
 
+def validate_address_argument(pid,
+                              syscall_object,
+                              trace_arg,
+                              exec_arg,
+                              params=None):
+    logging.debug('Validating address argument (trace position: %d '
+                  'execution position: %d)',
+                  trace_arg,
+                  exec_arg)
+    if not params:
+        arg = cint.peek_register(pid, _pos_to_reg(exec_arg))
+    else:
+        arg = params[exec_arg]
+    # Convert signed interpretation from peek register to unsigned
+    arg = arg & 0xffffffff
+    arg_from_trace = int(syscall_object.args[trace_arg].value, 16)
+    if arg_from_trace != arg:
+        raise ReplayDeltaError('Argument value at trace position: {}, '
+                               'execution position: {} from execution  ({}) '
+                               'differs argument value from trace ({})'
+                               .format(trace_arg,
+                                       exec_arg,
+                                       arg,
+                                       arg_from_trace))
+
+
+def _pos_to_reg(pos):
+    POS_TO_REG = {0: cint.EBX,
+                  1: cint.ECX,
+                  2: cint.EDX,
+                  3: cint.ESI,
+                  4: cint.EDI}
+    return POS_TO_REG[pos]
+
+
 def add_os_fd_mapping(os_fd, trace_fd):
     logging.debug('Mappings: {}'.format(
         tracereplay.OS_FILE_DESCRIPTORS))
