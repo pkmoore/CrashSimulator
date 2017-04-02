@@ -8,7 +8,11 @@ OS_CONST = {
     'SOL_SOCKET': 1,
     'SO_ERROR': 4,
     # asm-generic/fcntl.h
-    'O_APPEND': 00002000
+    'O_NONBLOCK': 0004000,
+    'O_APPEND': 00002000,
+    'O_NOFOLLOW': 00400000,
+    'O_DIRECTORY': 00200000
+
 }
 
 SOCK_CONST = {
