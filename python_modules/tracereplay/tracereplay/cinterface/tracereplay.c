@@ -261,9 +261,6 @@ static PyObject* tracereplay_populate_getdents64_structure(PyObject* self,
         strcpy((((struct linux_dirent64*)write_ptr)->d_name),
                d_name);
         next = PyIter_Next(iter);
-        printf("%llu\n", ((struct linux_dirent64*)write_ptr)->d_ino);
-        printf("%lld\n", ((struct linux_dirent64*)write_ptr)->d_off);
-        printf("%hu\n", ((struct linux_dirent64*)write_ptr)->d_reclen);
         if(DEBUG) {
             printf("C: populate_getdents64: d_ino: %llu\n",
                    ((struct linux_dirent64*)write_ptr)->d_ino);
