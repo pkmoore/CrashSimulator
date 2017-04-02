@@ -1568,16 +1568,29 @@ def fcntl64_entry_handler(syscall_id, syscall_object, pid):
             or operation == 'F_SETFD' or operation == 'F_SETLKW'):
             apply_return_conditions(pid, syscall_object)
         elif (operation == 'F_GETFD'):
-            if syscall_object.ret[0] == 'FD_CLOEXEC':
-                cint.poke_register(pid, cint.EAX, 0x1)
-            else:
-                cint.poke_register(pid, cint.EAX, int(syscall_object.ret[0]))
+            _fcntl_f_getfd_handler(pid, syscall_object)
+        elif operation == 'F_DUPFD':
+            _fcntl_f_dupfd_handler(pid, syscall_object)
         else:
             raise NotImplementedError('Unimplemented fcntl64 operation {}'
                                       .format(operation))
     else:
         logging.debug('Not replaying this system call')
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def _fcntl_f_dupfd_handler(pid, syscall_object):
+    logging.debug('Handling fcntl64 F_DUPFD operation')
+    add_replay_fd(int(syscall_object.ret[0]))
+    apply_return_conditions(pid, syscall_object)
+
+
+def _fcntl_f_getfd_handler(pid, syscall_object):
+    logging.debug('Handling fcntl64 F_GETFD operation')
+    if syscall_object.ret[0] == 'FD_CLOEXEC':
+        cint.poke_register(pid, cint.EAX, 0x1)
+    else:
+        cint.poke_register(pid, cint.EAX, int(syscall_object.ret[0]))
 
 
 def open_entry_debug_printer(pid, orig_eax, syscall_object):
