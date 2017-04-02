@@ -4,6 +4,7 @@ from getdents_parser import parse_getdents_structure
 from os_dict import FCNTL64_INT_TO_CMD
 from os_dict import PERM_INT_TO_PERM
 from os_dict import STAT_CONST
+from os_dict import MAGIC_NAME_TO_MAGIC
 from errno_dict import ERRNO_CODES
 
 # from util import *
@@ -470,45 +471,83 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
                   ebx, ecx, edx, edi, esi)
     addr = edx
     noop_current_syscall(pid)
-    if syscall_object.ret[0] != -1:
+    if syscall_object.ret[0] == -1:
+        logging.debug('Got unsuccessful statfs64 call')
+    else:
         logging.debug('Got successful statfs64 call')
-        f_type = syscall_object.args[2].value
-        f_type = int(f_type[f_type.rfind('=')+1:].strip('{}'), 16)
-        f_bsize = syscall_object.args[3].value
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_type')[0]
+        f_type = arg
+        f_type = f_type[f_type.rfind('=')+1:]
+        f_type = f_type.strip('{}')
+        f_type = _cleanup_f_type(f_type)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_bsize')[0]
+        f_bsize = arg
         f_bsize = int(f_bsize[f_bsize.rfind('=')+1:])
-        f_blocks = syscall_object.args[4].value
+        logging.debug('f_bsize: %d', f_bsize)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_blocks')[0]
+        f_blocks = arg
         f_blocks = int(f_blocks[f_blocks.rfind('=')+1:])
-        f_bfree = syscall_object.args[5].value
+        logging.debug('f_blocks: %d', f_blocks)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_bfree')[0]
+        f_bfree = arg
         f_bfree = int(f_bfree[f_bfree.rfind('=')+1:])
-        f_bavail = syscall_object.args[6].value
+        logging.debug('f_bfree: %d', f_bfree)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_bavail')[0]
+        f_bavail = arg
         f_bavail = int(f_bavail[f_bavail.rfind('=')+1:])
-        f_files = syscall_object.args[7].value
+        logging.debug('f_bavail: %d', f_bavail)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_files')[0]
+        f_files = arg
         f_files = int(f_files[f_files.rfind('=')+1:])
-        f_ffree = syscall_object.args[8].value
+        logging.debug('f_files: %d', f_files)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_ffree')[0]
+        f_ffree = arg
         f_ffree = int(f_ffree[f_ffree.rfind('=')+1:])
-        f_fsid1 = syscall_object.args[9].value
-        f_fsid1 = int(f_fsid1[f_fsid1.rfind('=')+1:].strip('{}'))
-        f_fsid2 = int(syscall_object.args[10].value.strip('{}'))
-        f_namelen = syscall_object.args[11].value
+        logging.debug('f_ffree: %d', f_ffree)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_fsid')[0]
+        f_fsid0 = arg
+        f_fsid0 = int(f_fsid0.split('{')[1])
+
+        f_fsid1 = int(syscall_object.args[idx+2].value.rstrip('}'))
+
+        logging.debug('f_fsid1: %s', f_fsid0)
+        logging.debug('f_fsid2: %s', f_fsid1)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_namelen')[0]
+        f_namelen = arg
         f_namelen = int(f_namelen[f_namelen.rfind('=')+1:])
-        f_frsize = syscall_object.args[12].value
+        logging.debug('f_namelen: %d', f_namelen)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_frsize')[0]
+        f_frsize = arg
         f_frsize = int(f_frsize[f_frsize.rfind('=')+1:])
-        f_flags = syscall_object.args[13].value
-        f_flags = int(f_flags[f_flags.rfind('=')+1:].strip('{}'))
+        logging.debug('f_frsize: %d', f_frsize)
+
+        idx, arg = find_arg_matching_string(syscall_object.args[1:],
+                                            'f_flags')[0]
+        f_flags = arg
+        f_flags = int(f_flags[f_flags.rfind('=')+1:].rstrip('}'))
+
+        logging.debug('f_flags: %d', f_flags)
         logging.debug('pid: %d', pid)
         logging.debug('addr: %x', addr & 0xffffffff)
-        logging.debug('f_type: %x', f_type)
-        logging.debug('f_bsize: %s', f_bsize)
-        logging.debug('f_blocks: %s', f_blocks)
-        logging.debug('f_bfree: %s', f_bfree)
-        logging.debug('f_bavail: %s', f_bavail)
-        logging.debug('f_files: %s', f_files)
-        logging.debug('f_ffree: %s', f_ffree)
-        logging.debug('f_fsid1: %s', f_fsid1)
-        logging.debug('f_fsid2: %s', f_fsid2)
-        logging.debug('f_namelen: %s', f_namelen)
-        logging.debug('f_frsize: %s', f_frsize)
-        logging.debug('f_flags: %s', f_flags)
         cint.populate_statfs64_structure(pid,
                                          addr,
                                          f_type,
@@ -518,8 +557,8 @@ def statfs64_entry_handler(syscall_id, syscall_object, pid):
                                          f_bavail,
                                          f_files,
                                          f_ffree,
+                                         f_fsid0,
                                          f_fsid1,
-                                         f_fsid2,
                                          f_namelen,
                                          f_frsize,
                                          f_flags)
@@ -1505,6 +1544,17 @@ def cleanup_st_mode(m):
         logging.debug('New value for tmp: %d', tmp)
     logging.debug('Final value for tmp: %d', tmp)
     return tmp
+
+
+def _cleanup_f_type(t):
+    logging.debug('Cleaning up f_type')
+    try:
+        return int(t, 16)
+    except ValueError:
+        try:
+            return MAGIC_NAME_TO_MAGIC[t.strip('"')]
+        except KeyError:
+            raise ReplayDeltaError('Could not clean up f_type: ({})', t)
 
 
 def fcntl64_entry_handler(syscall_id, syscall_object, pid):
