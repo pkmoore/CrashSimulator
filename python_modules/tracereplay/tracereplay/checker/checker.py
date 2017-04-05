@@ -464,7 +464,7 @@ class AtLeastOnceWithArgAutomaton:
     def transition(self, syscall_object):
         if self.current_state['id'] == 0:
             if self.name in syscall_object.name \
-                    and self.arg in syscall_object.arg[self.pos].value:
+                    and self.arg in syscall_object.args[self.pos].value:
                 self.current_state = self.states[1]
 
     def is_accepting(self):
