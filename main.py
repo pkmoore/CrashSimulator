@@ -202,6 +202,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, False): dup_exit_handler,
         (150, True): syscall_return_success_handler,
         (186, True): sigaltstack_entry_handler,
+        (194, True): ftruncate64_entry_handler,
+        (194, False): ftruncate64_entry_handler,
         (207, True): fchown_entry_handler,
         (207, False): check_return_value_entry_handler,
         (209, True): getresuid_entry_handler,
