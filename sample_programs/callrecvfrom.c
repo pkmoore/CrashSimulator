@@ -55,8 +55,22 @@ int main() {
 
     for(size_t i = 0; i < sizeof(buffer); i++) {
         printf("%02x ", buffer[i]);
+        if((i > 0) && (i % 50 == 0)) {
+            printf("\n");
+        }
     }
-    printf("\n");
+
+    printf("\n=====\n");
+
+    unsigned char* them_idx = (char*)&them;
+    for(size_t i = 0; i < sizeof(them); i++) {
+        printf("%02x ", them_idx[i]);
+        if((i > 0) && (i % 50 == 0)) {
+            printf("\n");
+        }
+    }
+    printf("\n=====\n");
+
                                   
     return 0;
 }
