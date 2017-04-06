@@ -305,7 +305,7 @@ STACK_SS_TO_INT = {y: x for x, y in STACK_INT_TO_SS.iteritems()}
 POLL_INT_TO_EVENT = {
     0x001: 'POLLIN',
     0x002: 'POLLPRI',
-    0x003: 'POLLOUT',
+    0x004: 'POLLOUT',
     0x400: 'POLLMSG',
     0x1000: 'POLLREMOVE',
     0x2000: 'POLLRDHUP',
