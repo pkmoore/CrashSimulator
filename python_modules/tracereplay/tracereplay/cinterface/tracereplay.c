@@ -618,6 +618,7 @@ static PyObject* tracereplay_populate_af_inet_sockaddr(PyObject* self,
     s.sin_family = AF_INET;
     s.sin_port = htons(port);
     inet_aton(ip, &s.sin_addr); 
+    memset(&s.sin_zero, 0, 8);
     copy_buffer_into_child_process_memory(child,
                                           addr,
                                           (unsigned char*)&s,
