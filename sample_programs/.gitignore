@@ -28,3 +28,4 @@ setsockoptchristmas
 callrecvfrom
 calllstat64
 callmkstemp
+callpoll

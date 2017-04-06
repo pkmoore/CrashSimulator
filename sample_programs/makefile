@@ -1,4 +1,7 @@
-all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64 setsockoptchristmas callrecvfrom network_speedtest filesystem_speedtest calllstat64 callmkstemp
+all: callrename opensocket mtu_receiver_good callread callselect callstat64 callllseek callgetcwd calluname callgetrlimit calltcgets callstatfs64 callgetsockname callpoll_null callgetaddrinfo callsetlocale nonblock charactertest callselect_noaction read_known_hosts dropbear_read_calls callreaddir callgetdents64 setsockoptchristmas callrecvfrom network_speedtest filesystem_speedtest calllstat64 callmkstemp callpoll
+
+callpoll: callpoll.c
+	gcc -ggdb -o callpoll -static callpoll.c
 
 callmkstemp: callmkstemp.c
 	gcc -ggdb -o callmkstemp -static callmkstemp.c
