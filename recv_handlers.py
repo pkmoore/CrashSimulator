@@ -1,4 +1,16 @@
-from util import *
+from __future__ import print_function
+import logging
+
+from util import(validate_integer_argument,
+                 should_replay_based_on_fd,
+                 noop_current_syscall,
+                 apply_return_conditions,
+                 cint,
+                 swap_trace_fd_to_execution_fd,
+                 ReplayDeltaError,
+                 extract_socketcall_parameters,
+                 cleanup_quotes)
+
 
 # Bare minimum implementation
 def recvmsg_entry_handler(syscall_id, syscall_object, pid):
@@ -37,8 +49,8 @@ def recv_subcall_entry_handler(syscall_id, syscall_object, pid):
         data = cleanup_quotes(syscall_object.args[1].value)
         data = data.decode('string_escape')
         cint.populate_char_buffer(pid,
-                                         buffer_address,
-                                         data)
+                                  buffer_address,
+                                  data)
         apply_return_conditions(pid, syscall_object)
     else:
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object, params_addr=p)
