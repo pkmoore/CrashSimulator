@@ -180,6 +180,7 @@ def getrlimit_entry_handler(syscall_id, syscall_object, pid):
 
 def ioctl_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering ioctl handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
     trace_fd = int(syscall_object.args[0].value)
     if not should_replay_based_on_fd(trace_fd):
         logging.debug('Not replaying this system call')
@@ -192,6 +193,8 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
     noop_current_syscall(pid)
     if syscall_object.ret[0] != -1:
         cmd = syscall_object.args[1].value
+        cmd_from_exe = cint.peek_register(pid, cint.ECX)
+        _validate_ioctl_cmd(cmd, cmd_from_exe)
         # HACK: this if statement is terrible
         if not ('TCGETS' in cmd or 'FIONREAD' in cmd or 'TCSETSW' in cmd or
                 'FIONBIO' in cmd or 'TIOCGWINSZ' in cmd or
@@ -264,6 +267,29 @@ def ioctl_entry_handler(syscall_id, syscall_object, pid):
 
 def ioctl_exit_handler(syscall_id, syscall_object, pid):
     pass
+
+
+def _ioctl_int_to_flag(i):
+    f = IOCTLS_INT_TO_IOCTL[i]
+    # HACK!
+    if f == 'TIOCINQ':
+        return ('TIOCINQ', 'FBIONREAD')
+    else:
+        return (f,)
+
+
+def _validate_ioctl_cmd(cmd_t, cmd_e):
+    if 'or' in cmd_t:
+        cmd_t = cmd_t.split(' or ')
+    else:
+        cmd_t = [cmd_t]
+    cmd_t = set(cmd_t)
+    cmd_e = _ioctl_int_to_flag(cmd_e)
+    cmd_e = set(cmd_e)
+    if (not (cmd_t <= cmd_e)) and (not (cmd_e <= cmd_t)):
+        raise ReplayDeltaError('Command from trace (one of {}) does not match '
+                               'command from execution (one of {})'
+                               .format(cmd_t, cmd_e))
 
 
 def prlimit64_entry_handler(syscall_id, syscall_object, pid):
