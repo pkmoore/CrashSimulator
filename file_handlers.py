@@ -1562,7 +1562,10 @@ def cleanup_st_mode(m):
             tmp = tmp | val
         else:
             logging.debug('Interpreting part as S_<CONST>')
-            val = STAT_CONST[i]
+            try:
+                val = STAT_CONST[i]
+            except KeyError:
+                raise ReplayDeltaError('Unsupported st_mode {}'.format(i))
             logging.debug('Part value in base 10: %d', val)
             logging.debug('Part value in base 8: %s', oct(val))
             tmp = tmp | val
