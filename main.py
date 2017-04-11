@@ -4,6 +4,7 @@ import ConfigParser
 import argparse
 import signal
 import sys
+import os
 import traceback
 from tracereplay import cinterface as cint
 
@@ -268,6 +269,9 @@ if __name__ == '__main__':
     parser.add_argument('-k',
                         '--checker',
                         help='Specify a checker by Python constructor')
+    parser.add_argument('-m',
+                        '--mutator',
+                        help='Specify a mutator by python constructor')
     args = vars(parser.parse_args())
     # Don't allow switches combined with config file option
     if (args.get('command') is not None or args.get('trace') is not None) \
@@ -310,6 +314,11 @@ if __name__ == '__main__':
         checker = args['checker']
         logging.debug('Checker string: %s', checker)
         checker = eval('tracereplay.checker.' + checker)
+    mutator = None
+    if args.get('mutator'):
+        mutator = args['mutator']
+        logging.debug('Mutator string: $s', mutator)
+        mutator = eval('tracereplay.mutator.' + mutator)
     # Evaluate what is hopefully a list literal into an actual list we can use
     command = eval(command)
 
@@ -355,6 +364,10 @@ if __name__ == '__main__':
         # Open our trace (specified as either a command line argument with -t
         # or as specified in a replay config file.  Then pass it to the
         # posix-omni-parser so that it can turned into a set of objects.
+        if mutator:
+            logging.debug('Mutating trace')
+            trace = mutator.mutate_trace(trace)
+            logging.debug('Mutated trace at: %s', trace)
         t = Trace.Trace(trace)
         tracereplay.system_calls = t.syscalls
         logging.info('Parsed trace with %s syscalls', len(t.syscalls))
@@ -451,3 +464,5 @@ if __name__ == '__main__':
         if checker:
             logging.info('Exited with checker in accepting state: %s',
                          checker.is_accepting())
+        if mutator:
+            os.remove(trace)

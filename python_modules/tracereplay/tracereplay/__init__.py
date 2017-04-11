@@ -1,5 +1,6 @@
 import cinterface
 from checker import checker
+import mutator
 
 system_calls = None
 system_call_index = 0
