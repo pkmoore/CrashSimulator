@@ -5,13 +5,27 @@
 int main(){
     DIR* dirFile = opendir( "." );
     struct dirent* hFile;
+    int i;
+    int c;
+     FILE *fp;
+    fp = fopen("readdir.out", "w+");
     if ( dirFile ) 
     {
     while (( hFile = readdir( dirFile )) != NULL ) 
     {
-        printf("d_name: %s\n", hFile->d_name);
-        printf("d_ino: %llu\n", (unsigned long long)hFile->d_ino);
+        for(i = 0; i < 4; i++) {
+            c = *(((unsigned char*)hFile + i));
+            fprintf(fp, "%02x ", c);
+        }
+        fprintf(fp, "| ");
+        for(i = 4; i < strlen(hFile->d_name); i++){
+            c = *(((unsigned char*)hFile + i));
+            fprintf(fp, "%02x ", c);
+        }
+        fprintf(fp, "\n");
+        fflush(fp);
     }
-  closedir( dirFile );
+    fclose(fp);
+    closedir( dirFile );
  }
 }

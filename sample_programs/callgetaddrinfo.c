@@ -6,16 +6,18 @@
 
 int main() {
     struct  addrinfo* ai;
-    int result = getaddrinfo("http://www.google.com", "80", NULL, &ai);
+    int result = getaddrinfo("http://www.reddit.com", "80", NULL, &ai);
     if(result == -1) {
         perror("Failed: ");
         exit(1);
     }
-    result = getaddrinfo("http://www.toast.com", "80", NULL, &ai);
-    if(result == -1) {
-        perror("Failed: ");
-        exit(1);
+    unsigned char* ai_idx = (unsigned char*)ai;
+    int i;
+    for(i = 0; i < sizeof(struct addrinfo); i++) {
+        printf("%02x ", ai_idx[i]);
     }
+    printf("\n");
+
     printf("Worked\n");
     return 0;
 }

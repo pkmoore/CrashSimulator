@@ -49,7 +49,7 @@ callsetlocale: callsetlocale.c
 	gcc -ggdb -o callsetlocale callsetlocale.c
 
 callgetaddrinfo: callgetaddrinfo.c
-	gcc -ggdb -o callgetaddrinfo callgetaddrinfo.c
+	musl-gcc -static -Os  -o callgetaddrinfo callgetaddrinfo.c
 
 opensocket: opensocket.c
 	gcc -ggdb -o opensocket -static opensocket.c
