@@ -273,7 +273,7 @@ def _ioctl_int_to_flag(i):
     f = IOCTLS_INT_TO_IOCTL[i]
     # HACK!
     if f == 'TIOCINQ':
-        return ('TIOCINQ', 'FBIONREAD')
+        return ('TIOCINQ', 'FIONREAD')
     else:
         return (f,)
 
