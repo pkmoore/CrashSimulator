@@ -3,7 +3,7 @@ cd ../sample_programs > /dev/null;
 strace -f -s 9999 -vvvvv -o callgetsockname.strace ./callgetsockname;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c ./sample_programs/callgetsockname \
+       -c "['./sample_programs/callgetsockname']" \
        -t ./sample_programs/callgetsockname.strace);
 RET=$?
 echo $OUTPUT | grep -q "0.0.0.0:6666"
