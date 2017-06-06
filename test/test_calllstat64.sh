@@ -6,7 +6,7 @@ cd ../sample_programs > /dev/null;
 strace -f -s 9999 -vvvvv -o calllstat64.strace ./calllstat64
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/calllstat64 \
+       -c "['sample_programs/calllstat64']" \
        -t sample_programs/calllstat64.strace \
        -l DEBUG);
 RET=$?
