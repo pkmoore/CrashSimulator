@@ -4,7 +4,8 @@ strace -f -s 9999 -vvvvv -o callgetcwd.strace ./callgetcwd;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
        -c ./sample_programs/callgetcwd \
-       -t ./sample_programs/callgetcwd.strace);
+       -t ./sample_programs/callgetcwd.strace \
+       -l debug);
 RET=$?
 echo $OUTPUT | grep -q "CrashSimulator/sample_programs"
 FOUND=$?
