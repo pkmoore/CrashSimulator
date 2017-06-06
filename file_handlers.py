@@ -365,6 +365,47 @@ def read_entry_handler(syscall_id, syscall_object, pid):
         swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
 
 
+def readv_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug('Entering readv entry handler')
+    validate_integer_argument(pid, syscall_object, 0, 0)
+    if syscall_object.ret[0] != -1:
+        addr = cint.peek_register(pid, cint.ECX)
+        logging.debug('Addr: %x', addr & 0xffffffff)
+        iovs = _collect_readv_iovs(syscall_object)
+        print(len(iovs[1]['iov_data']))
+        print(iovs)
+        noop_current_syscall(pid)
+        cint.populate_readv_vectors(pid,
+                                    addr,
+                                    iovs)
+        apply_return_conditions(pid, syscall_object)
+    else:
+        swap_trace_fd_to_execution_fd(pid, 0, syscall_object)
+
+
+def _collect_readv_iovs(syscall_object):
+    iov_count = int(syscall_object.args[-1].value)
+    tmp = []
+    for i in range(1, len(syscall_object.args)-1, 2):
+        iov_data = syscall_object.args[i].value.split('"', 1)[1]
+        iov_data = iov_data.rsplit('"', 1)[0].decode('string-escape')
+        iov_len = syscall_object.args[i+1].value
+        if isinstance(iov_len, list):
+            iov_len = iov_len[0]
+        iov_len = int(iov_len.strip('\'[]{}'))
+        if len(iov_data) != iov_len:
+            raise ReplayDeltaError('Length of parsed iov_data ({}) does not '
+                                   'match specified length ({})'
+                                   .format(len(iov_data),
+                                           iov_len))
+        tmp += [{'iov_data': iov_data, 'iov_len': iov_len}]
+    if len(tmp) != iov_count:
+        raise ReplayDeltaError('Number of iovs parsed ({}) does not match'
+                               'specified number ({})'.format(len(tmp),
+                                                              iov_count))
+    return tmp
+
+
 # Note: This handler only takes action on syscalls made to file descriptors we
 # are tracking. Otherwise it simply does any required debug-printing and lets
 # it execute

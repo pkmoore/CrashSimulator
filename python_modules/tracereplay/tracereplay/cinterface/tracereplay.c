@@ -28,6 +28,7 @@
 #include <dirent.h>
 #include <sched.h>
 #include <signal.h>
+#include <sys/uio.h>
 
 static PyObject* TraceReplayError;
 
@@ -158,6 +159,75 @@ int copy_buffer_into_child_process_memory(pid_t child,
     }
     return 0;
 }
+
+static PyObject* tracereplay_populate_readv_vectors(PyObject* self,
+                                                    PyObject* args) {
+    pid_t child;
+    void* addr;
+    PyObject* iovs;
+    if(!PyArg_ParseTuple(args, "IIO", &child, &addr, &iovs)) {
+        PyErr_SetString(TraceReplayError,
+                        "populate_readv_vectors arg parse failed");
+    }
+    if(DEBUG) {
+        printf("C: readv: pid: %d\n", child);
+        printf("C: readv: addr: %p\n", addr);
+    }
+    if(!PyList_Check(iovs)) {
+        PyErr_SetString(TraceReplayError,
+                        "list of iovs is not a list");
+    }
+    PyObject* iter;
+    PyObject* next;
+    PyObject* iov_data_obj;
+    PyObject* iov_len_obj;
+    char* iov_data;
+    unsigned int iov_struct_idx = 0;
+    void* iov_base_ptr;
+    unsigned int iov_len;
+    size_t len_from_struct;
+    
+    iter = PyObject_GetIter(iovs);
+    next = PyIter_Next(iter);
+
+    while(next){
+        if(!PyDict_Check(next)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-dict object in iovs list");
+        }
+        iov_data_obj = PyDict_GetItemString(next, "iov_data");
+        if(!PyString_Check(iov_data_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-string object in iov_data");
+        }
+        iov_len_obj = PyDict_GetItemString(next, "iov_len");
+        if(!PyInt_Check(iov_len_obj)) {
+            PyErr_SetString(TraceReplayError,
+                            "Encountered non-int object in iov_len");
+        }
+        
+        iov_data = PyString_AsString(iov_data_obj);
+        iov_base_ptr = ((struct iovec*)addr)[iov_struct_idx].iov_base;
+        len_from_struct = ((struct iovec*)addr)[iov_struct_idx].iov_len;
+        iov_len = PyInt_AS_LONG(iov_len_obj);
+        if(DEBUG) {
+            printf("C: readv: iov_struct_idx: %d\n", iov_struct_idx);
+            printf("C: readv: iov_base_ptr: %p\n", iov_base_ptr);
+            printf("C: readv: iov_len: %d\n", iov_len);
+            printf("C: readv: len_from_struct: %d\n", len_from_struct);
+        }
+        if(iov_len != 0) {
+            copy_buffer_into_child_process_memory(child,
+                                                  iov_base_ptr,
+                                                  (unsigned char*)iov_data,
+                                                  iov_len);
+        }
+        next = PyIter_Next(iter);
+        iov_struct_idx++;
+    }
+    Py_RETURN_NONE;
+}
+
 
 struct linux_dirent64 {
     unsigned long long d_ino;
@@ -1667,6 +1737,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "populate cpu_set"},
     {"populate_stack_structure", tracereplay_populate_stack_structure,
      METH_VARARGS, "populate_stack_structure"},
+    {"populate_readv_vectors", tracereplay_populate_readv_vectors,
+    METH_VARARGS, "populate_readv_vectors"},
     {NULL, NULL, 0, NULL}
 };
 

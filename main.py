@@ -164,6 +164,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (93, False): ftruncate_exit_handler,
         (94, True): fchmod_entry_handler,
         (94, False): check_return_value_entry_handler,
+        (145, True): readv_entry_handler,
+        (145, False): check_return_value_exit_handler,
         (146, True): writev_entry_handler,
         (146, False): writev_exit_handler,
         (197, True): fstat64_entry_handler,
