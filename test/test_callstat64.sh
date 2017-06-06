@@ -6,7 +6,7 @@ echo "asdfasdf" > test.txt;
 strace -f -s 9999 -vvvvv -o callstat64.strace ./callstat64
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/callstat64 \
+       -c "['sample_programs/callstat64']" \
        -t sample_programs/callstat64.strace);
 RET=$?
 echo $OUTPUT | grep -q "st_size: 9"
