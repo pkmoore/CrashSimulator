@@ -8,7 +8,7 @@
 cd ..> /dev/null;
 strace -f -s 9999 -vvvvv -o netcat_send_noconnect.strace netcat -v localhost 6666;
 OUTPUT=$(python main.py \
-       -c "netcat -v localhost 6666" \
+       -c "['netcat -v localhost 6666']" \
        -t netcat_send_noconnect.strace 2>&1);
 RET=$?;
 echo $OUTPUT | grep -q "Connection refused";

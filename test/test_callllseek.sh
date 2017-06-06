@@ -8,8 +8,9 @@ echo "asdfasdf" > test.txt
 strace -f -s 9999 -vvvvv -o callllseek.strace ./callllseek;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/callllseek \
-       -t sample_programs/callllseek.strace);
+       -c "['sample_programs/callllseek']" \
+       -t sample_programs/callllseek.strace \
+       -l debug);
 RET=$?
 echo $OUTPUT | grep -q "result: 2"
 FOUND=$?

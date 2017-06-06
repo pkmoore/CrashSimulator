@@ -10,7 +10,7 @@ sleep 5s;
 echo "asdfawefasdf1234123412341234" | nc localhost 8888
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-         -c sample_programs/mtu_receiver_good \
+         -c "['sample_programs/mtu_receiver_good']" \
          -t sample_programs/mtu_receiver_good.strace);
 RET=$?
 echo $OUTPUT | grep -q "asdf";

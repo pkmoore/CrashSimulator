@@ -6,6 +6,7 @@ cs
 python_modules/tracereplay/build/
 python_modules/posix-omni-parser/
 python_modules/parse-syscall-definitions/
+hello_test
 *.pickle
 *.swo
 *.swp

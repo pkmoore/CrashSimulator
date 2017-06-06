@@ -3,7 +3,7 @@ cd ../sample_programs > /dev/null;
 strace -f -s 9999 -vvvvv -o callgetaddrinfo.strace ./callgetaddrinfo;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/callgetaddrinfo \
+       -c "['sample_programs/callgetaddrinfo']" \
        -t sample_programs/callgetaddrinfo.strace);
 RET=$?;
 echo $OUTPUT | grep -q "Worked";
