@@ -3,7 +3,7 @@ cd ../sample_programs > /dev/null;
 strace -f -s 9999 -vvvvv -o charactertest.strace ./charactertest;
 cd .. > /dev/null;
 OUTPUT=$(python main.py \
-       -c sample_programs/charactertest \
+       -c "['sample_programs/charactertest']" \
        -t sample_programs/charactertest.strace);
 RET=$?;
 echo $OUTPUT | grep -q "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
