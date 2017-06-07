@@ -7,8 +7,7 @@ cd .. > /dev/null;
 #OUTPUT=$(python main.py -f ./sample_traces/telnet_google.ini);
 OUTPUT=$(python main.py \
        -c "['telnet', 'www.google.com', '80']"  \
-       -t sample_programs/$trace_name \
-       -l DEBUG);
+       -t sample_programs/$trace_name);
 RET=$?
 echo $OUTPUT | grep -q "HTTP/1.0 200 OK"
 FOUND=$?
