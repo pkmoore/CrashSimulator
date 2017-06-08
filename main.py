@@ -86,7 +86,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
     if entering:
         tracereplay.handled_syscalls += 1
     # System call id 102 corresponds to 'socket subcall'.  This system call is
-    # the entry point for code calls the appropriate socket code based on the
+    # the entry point for code calls the appropriate socketf code based on the
     # subcall id in EBX.
     if syscall_id == 102:
         logging.debug('This is a socket subcall')
@@ -110,7 +110,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         77,   # sys_getrusage
         162,  # sys_nanosleep
         125,  # sys_mprotect
-        174,  # sys_rt_sigaction
+       # 174,  # sys_rt_sigaction
         175,  # sys_rt_sigprocmask
         116,  # sys_sysinfo
         119,  # sys_sigreturn
@@ -204,6 +204,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
         (150, True): syscall_return_success_handler,
+        (174, True):  rt_sigaction_entry_handler, # sys_rt_sigaction
+        (174, False): rt_sigaction_exit_handler, # sys_rt_sigaction
         (186, True): sigaltstack_entry_handler,
         (194, True): ftruncate64_entry_handler,
         (194, False): ftruncate64_entry_handler,
