@@ -16,6 +16,14 @@ from util import(validate_integer_argument,
                  ReplayDeltaError,)
 
 
+
+def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering rt_sigaction entry handler");
+
+def rt_sigaction_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering rt_sigaction exit handler");
+
+
 def getresuid_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getresuid entry handler')
     ruid = int(syscall_object.args[0].value.strip('[]'))
