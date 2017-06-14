@@ -117,14 +117,6 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     apply_return_conditions(pid, syscall_object)
                                       
 
-
-
-    
-    
-def rt_sigaction_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug("Entering rt_sigaction exit handler");
-
-
 def getresuid_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getresuid entry handler')
     ruid = int(syscall_object.args[0].value.strip('[]'))
