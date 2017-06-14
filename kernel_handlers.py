@@ -4,6 +4,9 @@ from os_dict import IOCTLS_INT_TO_IOCTL
 from os_dict import SIGNAL_INT_TO_SIG
 from os_dict import SIGPROCMASK_INT_TO_CMD
 from os_dict import STACK_SS_TO_INT
+from os_dict import SIGNAL_SIG_TO_INT
+from os_dict import SIGNAL_DFLT_HANDLER_TO_INT
+from os_dict import SIGNAL_FLAG_TO_INT
 
 # from util import *
 from util import(validate_integer_argument,
@@ -16,10 +19,108 @@ from util import(validate_integer_argument,
                  ReplayDeltaError,)
 
 
-
 def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
-    logging.debug("Entering rt_sigaction entry handler");
+    logging.debug("Entering rt_sigaction entry handler")
 
+    # we don't need to do anything when we see a new function being added
+    new_action_found = syscall_object.args[1].value != "NULL"
+    if (new_action_found):
+        logging.debug("rt_sigaction write intercepted")
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+        return
+
+    # we need there to be a new or old sigaction
+    # should this throw an error?
+    old_action_not_found = syscall_object.args[2].value == "NULL"
+    if (old_action_not_found):
+        logging.debug("No new or old sigaction found!")
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+        return
+
+    logging.debug("rt_sigaction read intercepted")
+    
+
+    # struct sigaction 'oldact' parts:
+    # old_sa_restorer = 0    # void used if sa_flags include SIG_INFO
+    # old_sa_sigaction = 0   # void (int, siginfo_t*, void*) USE not implemented yet
+    old_sa_handler = 0
+    old_sa_mask = 0
+    old_sa_flags = 0
+
+
+    logging.debug("ARGUMENTS BEGIN")
+    old_action_addr = cint.peek_register(pid, cint.EDX)
+    logging.debug("Old Action Address: %x" % (old_action_addr & 0xffffffff))
+
+    old_action_args = syscall_object.args[2:5]
+
+    # start with flags because theoretically effects whether use sa_handler or sa_sigaction
+    old_flags = old_action_args[2].value[:-1]
+    old_sa_flags = 0
+    if (old_flags != '0'):
+        #logging.debug("Flags list: " + str(old_flags))
+        old_flags = old_flags.split('|')
+        #logging.debug("Split flags list: " + str(old_flags))        
+    
+        for flag in old_flags:
+            flag_int = SIGNAL_FLAG_TO_INT.get(flag)
+            if (flag_int == None):
+                raise LookupError("The flag " + str(flag) + "  was not found")
+            old_sa_flags += flag_int
+
+        #logging.debug("Flags Int: " + str(old_sa_flags))
+            
+    logging.debug("Old Flags: " + str(old_sa_flags))
+
+    # if flags include SA_SIGINFO should use old_sa_sigaction instead of old_sa_handler
+    should_use_sigaction = (old_sa_flags & 4) == 4
+    if (should_use_sigaction):
+        raise NotImplementedError("rt_sigaction should use sa_sigaction instead of sa_handler but this functionality is not yet implemented")
+
+    
+    # get handler
+    old_sa_handler = old_action_args[0].value[1:]
+    # if one of 3 default handlers, strace gives a name instead of a pointer
+    default_handler_int = SIGNAL_DFLT_HANDLER_TO_INT.get(old_sa_handler)
+    if (default_handler_int == None):
+        # need to use the address in default_handler_int and handle interaction with c
+        raise NotImplementedError("Program has chosen to override default sigaction handlers, and this functionality is not yet implemented")
+    else:
+        old_sa_handler = default_handler_int
+    logging.debug("Old Handler: " + str(old_sa_handler))
+
+
+    # create mask
+    old_mask_list_str = old_action_args[1].value
+    old_mask_list = old_mask_list_str[1:-1].split(' ')
+    old_mask_list = [SIGNAL_SIG_TO_INT[sig] for sig in old_mask_list if sig != '']
+    logging.debug("Mask Signals: " + str(old_mask_list))
+    # combine signal bits to make mask
+    for sig in old_mask_list:
+        old_sa_mask += int(sig)
+
+    logging.debug("Old Masks: " + str(old_sa_mask))
+
+    logging.debug("ARGUMENTS END")
+
+
+    cint.populate_rt_sigaction_struct(pid,
+                                      old_action_addr,
+                                      old_sa_handler,
+                                      old_sa_mask,
+                                      old_sa_flags,
+    )
+
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
+                                      
+
+
+
+    
+    
 def rt_sigaction_exit_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering rt_sigaction exit handler");
 
