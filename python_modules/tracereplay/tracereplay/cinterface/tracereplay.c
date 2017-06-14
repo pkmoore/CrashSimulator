@@ -1059,6 +1059,80 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
     Py_RETURN_NONE;
 }
 
+
+/* void print_sigset_t(sigset_t *set) */
+/* { */
+/*   int i; */
+
+/*   i = SIGRTMAX; */
+/*   do { */
+/*     int x = 0; */
+/*     i -= 4; */
+/*     if (sigismember(set, i+1)) x |= 1; */
+/*     if (sigismember(set, i+2)) x |= 2; */
+/*     if (sigismember(set, i+3)) x |= 4; */
+/*     if (sigismember(set, i+4)) x |= 8; */
+/*     printf("%x", x); */
+/*   } while (i >= 4); */
+/*   printf("\n"); */
+/* } */
+
+
+static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
+		 					  PyObject* args) {
+
+  printf("C: Entering populate rt_sigaction_struct\n");
+
+  self = self;
+  pid_t child;
+
+  struct sigaction oldact;
+  void*     oldact_addr; 
+  int       old_sa_handler; // this could also be void * but not yet implemented
+  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
+  sigset_t  old_sa_mask;
+  int       old_sa_flags;
+  void*     old_sa_restorer = NULL;  // no longer used, but in sigaction struct
+
+  bool argument_population_failed = !PyArg_ParseTuple(args,
+  						      "iiiki",
+  						      &child,
+    						      &oldact_addr,
+    						      &old_sa_handler,
+  						      &old_sa_mask,
+   						      &old_sa_flags);
+  
+  if (true) {
+    printf("C: populate_sigaction: child %d\n", child);
+    
+    printf("C: populate_sigaction: old action address %p\n", oldact_addr);
+    printf("C: populate_sigaction: old_sa_handler %d\n", old_sa_handler);
+    printf("C: populate_sigaction: old_sa_mask %lu\n", old_sa_mask);
+    printf("C: populate_sigaction: old_sa_flags %d\n", old_sa_flags);
+    fflush(stdout);
+   }
+
+  //PyErr_SetString(TraceReplayError, "dont want to scroll up");
+  
+  if (argument_population_failed) {
+    PyErr_SetString(TraceReplayError, "populate rt_sigaction data failed");
+  }
+
+  
+  // copy oldact into memory
+  copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
+  
+  oldact.sa_handler = (void*) old_sa_handler;
+  oldact.sa_sigaction = old_sa_sigaction;
+  oldact.sa_mask = old_sa_mask;
+  oldact.sa_flags = old_sa_flags;
+  oldact.sa_restorer = old_sa_restorer;
+
+  copy_buffer_into_child_process_memory(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
+
+  Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
                                                     PyObject* args) {
     // unused
@@ -1151,6 +1225,7 @@ static PyObject* tracereplay_populate_stat64_struct(PyObject* self,
         strftime(buffer, 20, "%Y/%m/%d %H:%M:%S", localtime(&s.st_atime));
         printf("s.st_atime: %s\n", buffer);
     }
+    
     copy_buffer_into_child_process_memory(child,
                                           addr,
                                           (unsigned char*)&s,
@@ -1691,6 +1766,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "write poll result"},
     {"populate_select_bitmaps", tracereplay_populate_select_bitmaps,
      METH_VARARGS, "populate select bitmaps"},
+    {"populate_rt_sigaction_struct", tracereplay_populate_rt_sigaction_struct,
+     METH_VARARGS, "populate rt_sigaction struct"},
     {"populate_stat64_struct", tracereplay_populate_stat64_struct,
      METH_VARARGS, "populate stat64 struct"},
     {"populate_llseek_result", tracereplay_populate_llseek_result,

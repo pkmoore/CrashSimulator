@@ -110,7 +110,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         77,   # sys_getrusage
         162,  # sys_nanosleep
         125,  # sys_mprotect
-       # 174,  # sys_rt_sigaction
         175,  # sys_rt_sigprocmask
         116,  # sys_sysinfo
         119,  # sys_sigreturn
@@ -205,7 +204,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, False): dup_exit_handler,
         (150, True): syscall_return_success_handler,
         (174, True):  rt_sigaction_entry_handler, # sys_rt_sigaction
-        (174, False): rt_sigaction_exit_handler, # sys_rt_sigaction
         (186, True): sigaltstack_entry_handler,
         (194, True): ftruncate64_entry_handler,
         (194, False): ftruncate64_entry_handler,

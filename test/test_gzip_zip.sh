@@ -1,6 +1,6 @@
 #!/bin/sh
 cd ../sample_programs > /dev/null;
-mk zippee.txt;
+touch zippee.txt;
 cd .. > /dev/null;
 
 #strace -f -s 9999 -vvvvv -o sample_programs/gzip.strace gzip sample_programs/zippee.txt;

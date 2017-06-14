@@ -57,6 +57,22 @@ FCNTL64_CMD_TO_INT = {
 
 FCNTL64_INT_TO_CMD = {y: x for x, y in FCNTL64_CMD_TO_INT.iteritems()}
 
+SIGNAL_DFLT_HANDLER_TO_INT = {
+    'SIG_DFL': 0,
+    'SIG_ERR': -1,
+    'SIG_IGN': 1
+}
+
+SIGNAL_INT_TO_DFLT_HANDLER = {y: x for x, y in SIGNAL_DFLT_HANDLER_TO_INT.iteritems()}
+
+SIGNAL_FLAG_TO_INT = {
+    'SA_NOCLDSTOP': 1,
+    'SA_NOCLDWAIT': 2,
+    'SA_SIGINFO': 4
+}
+
+SIGNAL_INT_TO_FLAG = {y: x for x, y in SIGNAL_FLAG_TO_INT.iteritems()}
+
 SIGNAL_SIG_TO_INT = {
     'SIGHUP': 1,
     'SIGINT': 2,
