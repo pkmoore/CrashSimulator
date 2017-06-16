@@ -1133,9 +1133,6 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
   if (DEBUG) {
     printf("C: populate_sigaction: child %d\n", child);
     
-    printf("C: populate_sigaction: old action address %p \n", oldact_addr);
-    printf("C: populate_sigaction: old_sa_handler %d \n", old_sa_handler);
-    printf("C: populate_sigaction: old_sa_handler %p \n", (void*)old_sa_handler);
     printf("C: populate_sigaction: old_sa_mask %lu at %p \n", old_sa_mask, &old_sa_mask);
     printf("C: populate_sigaction: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
     fflush(stdout);
@@ -1165,7 +1162,7 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
      printf("C: Read sigaction: sa_handler %p at %p \n",  test.sa_handler, &(test.sa_handler));
      printf("C: Read sigaction: sa_other %p at %p \n",  test.sa_sigaction, &(test.sa_sigaction));
      printf("C: Read sigaction: sa_mask %lu at %p \n", test.sa_mask, &(test.sa_mask));
-     printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_mask));
+     printf("C: Read sigaction: sa_mask located at %p \n", &(test.sa_mask));
      printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
      printf("C: Read sigaction: sa_restorer %lu at %p \n", test.sa_restorer, &(test.sa_restorer));
      

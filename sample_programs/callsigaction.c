@@ -4,11 +4,8 @@
 void print_sigaction(struct sigaction act) {
   printf("Sigaction address: %p \n", &act);
   printf("Handler: %p at %p \n", act.sa_handler, &(act.sa_handler));
-  //  printf("Other Handler: %p at %p \n", act.sa_sigaction, &(act.sa_sigaction));
-  //  unsigned long* m = (unsigned long*) (&(act.sa_handler) & 0x4);
-  //printf("Mask?: %lu at %p \n", (*m), m);
-  printf("Mask: %lu at %p \n", act.sa_mask, (void *)(act.sa_mask));
-  printf("Flags: %d at %p \n", act.sa_flags, &(act.sa_flags));
+  printf("Mask: %lu at %p  Flags: %d at %p \n", act.sa_mask, &(act.sa_mask), act.sa_flags, &(act.sa_flags));
+  //  printf("Flags: %d at %p \n", act.sa_flags, &(act.sa_flags));
   printf("Restorer: %p \n", act.sa_restorer);
 }
 
