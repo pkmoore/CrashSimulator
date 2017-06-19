@@ -15,6 +15,10 @@ void print_sigaction(struct sigaction* act) {
   //printf("Restorer: %p \n", act.sa_restorer);
 }
 
+void sig_handler(int sig) {
+
+}
+
 int main(void) {
   int signum = 13;
 
@@ -30,7 +34,7 @@ int main(void) {
 
 
   struct sigaction act2;
-  act2.sa_handler = (void*) -1;
+  act2.sa_handler = (void*)sig_handler;
   act2.sa_flags = 1;
   
   sigemptyset(&(act2.sa_mask));
