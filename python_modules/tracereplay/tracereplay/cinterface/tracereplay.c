@@ -1084,22 +1084,29 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
 /* } */
 
 
+struct kernel_sigaction {
+  __sighandler_t k_sa_handler;
+  unsigned int sa_flags;
+  sigset_t sa_mask;
+};
+
+
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
 
-  printf("C: Entering populate rt_sigaction_struct\n");
+  if (DEBUG) printf("C: Entering populate rt_sigaction_struct\n");
 
   self = self;
   pid_t child;
 
-  struct sigaction oldact;
+  struct kernel_sigaction oldact;
   void*     oldact_addr; 
   int       old_sa_handler; // this could also be void * but not yet implemented
-  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
+  //  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
   PyObject* mask_sig_list;
   sigset_t  old_sa_mask;
   int       old_sa_flags;
-  void*     old_sa_restorer = NULL;  // no longer used, but in sigaction struct
+  //  void*     old_sa_restorer = NULL;  // no longer used, but in sigaction struct
 
   bool argument_population_failed = !PyArg_ParseTuple(args,
   						      "iiIOi",
@@ -1113,27 +1120,27 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
     PyErr_SetString(TraceReplayError, "populate rt_sigaction data failed");
   }
 
-  // create sa_mask sigset_t from mask_sig_list
-  sigemptyset(&old_sa_mask);
+  /* // create sa_mask sigset_t from mask_sig_list */
+  /* sigemptyset(&old_sa_mask); */
   
-  PyObject* iter = PyObject_GetIter(mask_sig_list);
-  PyObject* next = PyIter_Next(iter);
-  while (next) {
-    if (!PyInt_Check(next)) {
-      PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list");
-    }
+  /* PyObject* iter = PyObject_GetIter(mask_sig_list); */
+  /* PyObject* next = PyIter_Next(iter); */
+  /* while (next) { */
+  /*   if (!PyInt_Check(next)) { */
+  /*     PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list"); */
+  /*   } */
 
-    int sig = (int)PyInt_AsLong(next);
-    //printf("Mask Sig: %d\n", sig);
-    sigaddset(&old_sa_mask, sig);
+  /*   int sig = (int)PyInt_AsLong(next); */
+  /*   //printf("Mask Sig: %d\n", sig); */
+  /*   sigaddset(&old_sa_mask, sig); */
     
-    next = PyIter_Next(iter);
-  }
+  /*   next = PyIter_Next(iter); */
+  /* } */
 
   if (DEBUG) {
     printf("C: populate_sigaction: child %d\n", child);
     
-    printf("C: populate_sigaction: old_sa_mask %lu at %p \n", old_sa_mask, &old_sa_mask);
+    //printf("C: populate_sigaction: old_sa_mask %lu at %p \n", old_sa_mask, &old_sa_mask);
     printf("C: populate_sigaction: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
     fflush(stdout);
    }
@@ -1144,27 +1151,47 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
   copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
   // Note: cant set handler and sigaction at same time as use same memory
-  oldact.sa_handler = (void*) old_sa_handler;
+  oldact.k_sa_handler = (void*) old_sa_handler;
   //  oldact.sa_sigaction = ; //old_sa_sigaction;
-  memcpy(&oldact.sa_mask, &old_sa_mask, sizeof(old_sa_mask));
+   memcpy(&oldact.sa_mask, &old_sa_mask, sizeof(old_sa_mask));
+   //oldact.sa_mask = old_sa_mask;
   oldact.sa_flags = old_sa_flags;
   //  oldact.sa_restorer = old_sa_restorer;
 
+
+  // copy sa_mask sigset_t from mask_sig_list
+  sigset_t* oldact_sa_mask = &oldact.sa_mask;
+  sigemptyset(oldact_sa_mask);
+  
+  PyObject* iter = PyObject_GetIter(mask_sig_list);
+  PyObject* next = PyIter_Next(iter);
+  while (next) {
+    if (!PyInt_Check(next)) {
+      PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list");
+    }
+
+    int sig = (int)PyInt_AsLong(next);
+    sigaddset(oldact_sa_mask, sig);
+    
+    next = PyIter_Next(iter);
+  }
+
   copy_buffer_into_child_process_memory(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
-  struct sigaction test;
+  struct kernel_sigaction test;
 
   // copy from memory again so can test
   copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&test, sizeof(test));
 
 
    if (DEBUG) {
-     printf("C: Read sigaction: sa_handler %p at %p \n",  test.sa_handler, &(test.sa_handler));
-     printf("C: Read sigaction: sa_other %p at %p \n",  test.sa_sigaction, &(test.sa_sigaction));
-     printf("C: Read sigaction: sa_mask %lu at %p \n", test.sa_mask, &(test.sa_mask));
+     printf("C: Read sigaction: sa_handler %p at %p \n",  test.k_sa_handler, &(test.k_sa_handler));
+     //printf("C: Read sigaction: sa_other %p at %p \n",  test.sa_sigaction, &(test.sa_sigaction));
+      printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
+      // printf("C: Read sigaction: sa_mask %lu at %p \n", test.sa_mask, &(test.sa_mask));
      printf("C: Read sigaction: sa_mask located at %p \n", &(test.sa_mask));
-     printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
-     printf("C: Read sigaction: sa_restorer %lu at %p \n", test.sa_restorer, &(test.sa_restorer));
+    
+     //printf("C: Read sigaction: sa_restorer %lu at %p \n", test.sa_restorer, &(test.sa_restorer));
      
         
      fflush(stdout);
