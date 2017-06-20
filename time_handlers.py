@@ -2,6 +2,19 @@ import logging
 from util import *
 
 
+def timer_create_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_create entry handler")
+
+def timer_create_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_create exit handler")    
+
+def timer_settime_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_settime entry handler")
+
+def timer_settime_exit_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_settime exit handler")    
+
+
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')
     if syscall_object.ret[0] == -1:
