@@ -223,10 +223,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (243, True): syscall_return_success_handler,
         (258, True): set_tid_address_entry_handler,
         (258, False): set_tid_address_exit_handler,
-        (259, True): timer_create_entry_handler,
-        (259, False): timer_create_exit_handler,
-        (260, True): timer_settime_entry_handler,
-        (260, False): timer_settime_exit_handler,
         (265, True): clock_gettime_entry_handler,        
         (271, True): syscall_return_success_handler,
         (272, True): fadvise64_64_entry_handler,
@@ -367,8 +363,6 @@ if __name__ == '__main__':
             196: lstat64_entry_debug_printer,
             197: fstat64_entry_debug_printer,
             221: fcntl64_entry_debug_printer,
-            259: timer_create_entry_handler,
-            #260: timer_settime_entry_handler
         }
         # Open our trace (specified as either a command line argument with -t
         # or as specified in a replay config file.  Then pass it to the
