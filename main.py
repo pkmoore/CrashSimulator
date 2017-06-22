@@ -118,7 +118,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         266,  # set_clock_getres
         240,  # sys_futex
         242,  # sys_sched_getaffinity
-        #174,
+        174,  # rt_sigaction
         243,  # sys_set_thread_area
         311,  # sys_set_robust_list
         340,  # sys_prlimit64
@@ -203,7 +203,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
         (150, True): syscall_return_success_handler,
-        (174, True):  rt_sigaction_entry_handler,
         (186, True): sigaltstack_entry_handler,
         (194, True): ftruncate64_entry_handler,
         (194, False): ftruncate64_entry_handler,
@@ -226,7 +225,8 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (259, True): timer_create_entry_handler,
         (259, False): timer_create_exit_handler,
         (260, True): timer_settime_entry_handler,
-        (260, False): timer_settime_exit_handler,
+        (261, True): timer_gettime_entry_handler,
+        (263, True): timer_delete_entry_handler,
         (265, True): clock_gettime_entry_handler,        
         (271, True): syscall_return_success_handler,
         (272, True): fadvise64_64_entry_handler,
@@ -360,7 +360,6 @@ if __name__ == '__main__':
             91: munmap_entry_debug_printer,
             102: socketcall_debug_printer,
             142: select_entry_debug_printer,
-            174: rt_sigaction_entry_debug_printer,
             175: rt_sigprocmask_entry_debug_printer,
             192: mmap2_entry_debug_printer,
             195: stat64_entry_debug_printer,
