@@ -1084,16 +1084,82 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
 /* } */
 
 
+
+
+#ifdef __i386__
+# define _NSIG_BPW      32
+#else
+# define _NSIG_BPW      64
+#endif
+
+#define _NSIG_WORDS     (_NSIG / _NSIG_BPW)
+
+
+typedef struct {
+  unsigned long sig[_NSIG_WORDS];
+} kernel_sigset_t;
+
+static inline void __const_sigaddset(kernel_sigset_t *set, int _sig)
+{
+  unsigned long sig = _sig - 1;
+  set->sig[sig / _NSIG_BPW] |= 1 << (sig % _NSIG_BPW);
+}
+
+static inline void __gen_sigaddset(kernel_sigset_t *set, int _sig)
+{
+  asm("btsl %1,%0" : "+m"(*set) : "Ir"(_sig - 1) : "cc");
+}
+
+
+#define kernel_sigaddset(set,sig)	     \
+  (__builtin_constant_p(sig)         \
+  ? __const_sigaddset((set), (sig))  \
+   : __gen_sigaddset((set), (sig)))
+
+
 struct kernel_sigaction {
   __sighandler_t k_sa_handler;
   unsigned int sa_flags;
-  sigset_t sa_mask;
+  kernel_sigset_t sa_mask;
 };
+
+
+static PyObject* tracereplay_build_rt_sigaction_struct(PyObject* self,
+					   PyObject* args) {
+  /* self = self; */
+  /* pid_t child; */
+  /* void* addr; */
+  /* bool argument_population_failed = !PyArg_ParseTuple(args, */
+  /* 						      "II", */
+  /* 						      &child, */
+  /* 						      (void *) &addr); */
+  /* if (argument_population_failed) { */
+  /*   PyErr_SetString(TraceReplayError, "build rt_sigaction struct failed"); */
+  /* } */
+  /* if (DEBUG) { */
+  /*   printf("C: Entering build rt_sigaction struct"); */
+  /*   printf("C: sigaction address: %p \n", addr); */
+  /* } */
+  /* struct kernel_sigaction act; */
+  /* copy_child_process_memory_into_buffer(child, addr,(unsigned char*)&act, sizeof(act)); */
+
+  /* void* handler = act.k_sa_handler; */
+  /* int flags = act.sa_flags; */
+  /* sigset_t mask = act.sa_mask; */
+
+  /* if (DEBUG) { */
+  /*   //printf("C Sigaction: { %p, {%d}, {%d} } \n", handler, mask, flags); */
+  /* } */
+  
+  /* PyObject* result = Py_BuildValue("iii", handler,  mask, flags); */
+  /* //free(act); */
+  /* return result; */
+  Py_RETURN_NONE;
+}
 
 
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
-
   if (DEBUG) printf("C: Entering populate rt_sigaction_struct\n");
 
   self = self;
@@ -1109,7 +1175,7 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
   //  void*     old_sa_restorer = NULL;  // no longer used, but in sigaction struct
 
   bool argument_population_failed = !PyArg_ParseTuple(args,
-  						      "iiiOI",
+  						      "IIIOI",
   						      &child,
     						      &oldact_addr,
     						      &old_sa_handler,
@@ -1124,37 +1190,75 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
     //printf("C: populate_sigaction: child %d\n", child);
     
     //printf("C: populate_sigaction: old_sa_mask %lu at %p \n", old_sa_mask, &old_sa_mask);
-    printf("C: populate_sigaction: sa_handler %d \n",  old_sa_handler);
-    printf("C: populate_sigaction: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
+    printf("C: populate_sigaction: read arguments: sa_handler %d \n",  old_sa_handler);
+    printf("C: populate_sigaction: read arguments: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
     fflush(stdout);
    }
-
-  // create sa_mask sigset_t from mask_sig_list
-  sigset_t* oldact_sa_mask = &old_sa_mask;
-  sigemptyset(oldact_sa_mask);
-  
-  PyObject* iter = PyObject_GetIter(mask_sig_list);
-  PyObject* next = PyIter_Next(iter);
-  while (next) {
-    if (!PyInt_Check(next)) {
-      PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list");
-    }
-
-    int sig = (int)PyInt_AsLong(next);
-    sigaddset(oldact_sa_mask, sig);
-    
-    next = PyIter_Next(iter);
-  }
   
   
   // copy oldact into memory
-  copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
+    copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
   // Note: cant set handler and sigaction at same time as use same memory
   oldact.k_sa_handler = (void*) old_sa_handler;
   oldact.sa_flags = old_sa_flags;
-  memcpy(&oldact.sa_mask, &old_sa_mask, sizeof(old_sa_mask));
   // oldact.sa_restorer = old_sa_restorer;
+
+  /* unsigned long bits = ((1 << 7) | (1 << 13)); */
+  /* memcpy(&oldact.sa_mask, &bits, sizeof(bits)); */
+
+
+  
+  // create sa_mask sigset_t from mask_sig_list
+  kernel_sigset_t* oldact_sa_mask = &oldact.sa_mask;
+  sigset_t set;
+
+
+  printf("C: Mask: Kernel \n");  
+  memset (oldact_sa_mask, 0x11111111, sizeof (kernel_sigset_t));
+  printf("C: Mask: filled: %x \n", *oldact_sa_mask);  
+  //memset (oldact_sa_mask, 0, sizeof (kernel_sigset_t));
+  printf("C: Mask: cleared: %x \n", *oldact_sa_mask);
+
+  //kernel_sigaddset(oldact_sa_mask, 8);
+  // *oldact_sa_mask = (kernel_sigset_t) ((unsigned long)*oldact_sa_mask | 0x80);
+  printf("C: Mask: 8 added: %x \n", *oldact_sa_mask);
+  //kernel_sigaddset(oldact_sa_mask, 14);
+  printf("C: Mask: 14 added: %x \n", *oldact_sa_mask);
+
+  
+  printf("C: Mask: Regular \n");
+  sigfillset(&set);
+  printf("C: Mask: filled: %x \n", set);  
+  sigemptyset(&set);
+  printf("C: Mask: cleared: %x \n", set);
+  sigaddset(&set, 8);
+  printf("C: Mask: 8 added: %x \n", set);
+  sigaddset(&set, 14);
+  printf("C: Mask: 14 added: %x \n", set);
+  
+  
+  /* sigemptyset(oldact_sa_mask); */
+  /* //sigfillset(oldact_sa_mask); */
+  /* // memset (oldact_sa_mask, 0, sizeof (sigset_t)); */
+
+  /* sigaddset(oldact_sa_mask, 8); */
+  /* sigaddset(oldact_sa_mask, 14); */
+  
+  /* PyObject* iter = PyObject_GetIter(mask_sig_list); */
+  /* PyObject* next = PyIter_Next(iter); */
+  /* while (next) { */
+  /*   if (!PyInt_Check(next)) { */
+  /*     PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list"); */
+  /*   } */
+
+  /*   int sig = (int)PyInt_AsLong(next); */
+  /*   sigaddset(oldact_sa_mask, sig); */
+
+  /*   if (DEBUG) printf("C: populate rt_sigation: signal %d added to mask \n", sig); */
+    
+  /*   next = PyIter_Next(iter); */
+  /* } */
 
   copy_buffer_into_child_process_memory(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
@@ -1165,11 +1269,19 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 
 
    if (DEBUG) {
+     printf("C: Read sigaction: sigaction at %p \n", &test);
      printf("C: Read sigaction: sa_handler %d at %p \n", (int) test.k_sa_handler, &(test.k_sa_handler));
-     //printf("C: Read sigaction: sa_other %p at %p \n",  test.sa_sigaction, &(test.sa_sigaction));
       printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
-      // printf("C: Read sigaction: sa_mask %lu at %p \n", test.sa_mask, &(test.sa_mask));
-     printf("C: Read sigaction: sa_mask located at %p \n", &(test.sa_mask));
+      printf("C: Read sigaction: sa_mask %x at %p \n", &(test.sa_mask), test.sa_mask);
+
+     /* int i; */
+     /* for(i = 1; i < 33; i++) { */
+     /*   int containsSignal = sigismember(&(test.sa_mask), i); */
+     /*   //printf("Signal %d check returns %d \n", i, containsSignal); */
+     /*   if (containsSignal == 1) { */
+     /* 	 printf("C: Read sigaction: Mask Contains Signal %d \n", i); */
+     /*   }  */
+     /* } */
     
      //printf("C: Read sigaction: sa_restorer %lu at %p \n", test.sa_restorer, &(test.sa_restorer));
      
@@ -1813,6 +1925,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "write poll result"},
     {"populate_select_bitmaps", tracereplay_populate_select_bitmaps,
      METH_VARARGS, "populate select bitmaps"},
+    {"build_rt_sigaction_struct", tracereplay_build_rt_sigaction_struct,
+     METH_VARARGS, "build rt_sigaction struct"},
     {"populate_rt_sigaction_struct", tracereplay_populate_rt_sigaction_struct,
      METH_VARARGS, "populate rt_sigaction struct"},
     {"populate_stat64_struct", tracereplay_populate_stat64_struct,

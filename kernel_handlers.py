@@ -583,9 +583,31 @@ def ioctl_entry_debug_printer(pid, orig_eax, syscall_object):
 
 
 def rt_sigaction_entry_debug_printer(pid, orig_eax, syscall_object):
-    logging.debug('This call use signum: %s',
-                  SIGNAL_INT_TO_SIG[
-                      cint.peek_register(pid, cint.EBX)])
+    signum = cint.peek_register(pid, cint.EBX)
+    newact_addr = cint.peek_register(pid, cint.ECX)
+    oldact_addr = cint.peek_register(pid, cint.EDX)
+    ret = cint.peek_register(pid, cint.EAX)
+    logging.debug("This call has signum: %s", SIGNAL_INT_TO_SIG[signum])
+    logging.debug("New act address: 0x%x", newact_addr & 0xffffffff)
+    logging.debug("Old act address: 0x%x", oldact_addr & 0xffffffff)
+    logging.debug("Return value: %d, ret")
+
+    # newact = 'NULL'
+    # if (newact_addr != 0):
+    #     logging.debug("Attempting to extract new action")
+    #     newact = cint.build_rt_sigaction_struct(pid, newact_addr)
+    #     newact = "{0x%x, [%s], [%d]}" % (newact[0], newact[1], newact[2]) 
+
+    # oldact = 'NULL'
+    # if (oldact_addr != 0):
+    #     logging.debug("Attempting to extract old action")
+    #     oldact = cint.build_rt_sigaction_struct(pid, oldact_addr)
+    #     oldact = "{0x%x, [%s], [%d]}" % ((oldact[0] & 0xffffffff), oldact[1], oldact[2])
+
+    
+    # logging.debug("Call: (%d, %s, %s)" % (signum, newact, oldact)) 
+    # logging.debug("Call: (%d, {%s}, {%s})" % (signum, newact_addr, oldact_addr)) 
+
 
 
 def rt_sigprocmask_entry_debug_printer(pid, orig_eax, syscall_object):

@@ -2,16 +2,31 @@
 #include <signal.h>
 
 void print_sigaction(struct sigaction* act) {
-  printf("Sigaction address: %p \n", act);
-  //printf("Sigaction handler address: %p\n" &(act->sa_handler));
+  //printf("Sigaction address: %p \n", act);
+    
+  printf("Handler: %p \n", act->sa_handler);
+  printf("Flags: %d \n", act->sa_flags);
 
+  printf("Mask: %x \n", (act->sa_mask));
+  //  printf("%p -> %p -> %p -> %p \n", act, &(act->sa_handler), &(act->sa_mask), &(act->sa_flags));
   
-  printf("Handler: %p at %p \n", act->sa_handler, &(act->sa_handler));
-  printf("Flags: %d at %p \n", act->sa_flags, &(act->sa_flags));
-  printf("Mask: at %p \n", &(act->sa_mask));
-  printf("Contains Signal 14 %d \n", sigismember(&(act->sa_mask), 14));
-  printf("Contains Signal 8 %d \n", sigismember(&(act->sa_mask), 8));
-  // printf("Mask: %lu \n", act->sa_mask);
+  int containsSignal = sigismember(&(act->sa_mask), 8);
+  printf("Signal %d check returns %d \n", 8, containsSignal);
+  containsSignal = sigismember(&(act->sa_mask), 14);
+  printf("Signal %d check returns %d \n", 14, containsSignal);
+  
+  /* int i; */
+  /* for(i = 1; i < 33; i++) { */
+  /*   int containsSignal = sigismember(&(act->sa_mask), i); */
+  /*   printf("Signal %d check returns %d \n", i, containsSignal); */
+  /*   //printf("%d \n", containsSignal); */
+  /*   if (containsSignal == 1) { */
+  /*     //  printf("Mask Contains Signal %d \n", i); */
+  /*   } else { */
+  /*     // printf("Doesn't Contain Signal %d \n", i); */
+  /*   } */
+  /* } */
+  
   //printf("Restorer: %p \n", act.sa_restorer);
 }
 
@@ -21,8 +36,6 @@ void sig_handler(int sig) {
 
 int main(void) {
   int signum = 13;
-
-
 
   struct sigaction act;
   act.sa_handler = (void*) -1;
@@ -47,9 +60,7 @@ int main(void) {
 
   sigemptyset(&(act.sa_mask));
   sigaddset(&(act.sa_mask), 14);
-  sigaddset(&(act.sa_mask), 8);
-  
-  
+  sigaddset(&(act.sa_mask), 8);  
 
   struct sigaction empty_oldact;
 
@@ -58,20 +69,19 @@ int main(void) {
   sigaction(signum, 0, &empty_oldact);
   print_sigaction(&empty_oldact);
   
-  printf("Test 2\n");
-  sigaction(signum, 0, &oldact);
-  print_sigaction(&oldact);
+  /* printf("Test 2 \n"); */
+  /* sigaction(signum, 0, &oldact); */
+  /* print_sigaction(&oldact); */
   
-  printf("Test 3\n");
-  sigaction(signum, &act2, &oldact);
-  sigaction(signum, 0, &empty_oldact);
-  print_sigaction(&empty_oldact);
+  /* printf("Test 3 \n"); */
+  /* sigaction(signum, &act2, &oldact); */
+  /* sigaction(signum, 0, &empty_oldact); */
+  /* print_sigaction(&empty_oldact); */
   
-  printf("Test 4\n");
-  sigaction(signum, 0, 0);
-  sigaction(signum, 0, &empty_oldact);
-  print_sigaction(&empty_oldact);
-  
+  /* printf("Test 4 \n"); */
+  /* sigaction(signum, 0, 0); */
+  /* sigaction(signum, 0, &empty_oldact); */
+  /* print_sigaction(&empty_oldact); */
   
   return 0;
 }
