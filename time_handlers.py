@@ -7,6 +7,8 @@ def timer_create_entry_handler(syscall_id, syscall_object, pid):
     if syscall_object.ret[0] == -1:
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
+        # not all types of sigevents are supported
+        logging.debug("Need to figure out which sigevents can actually support and write checks for that here")
         addr = cint.peek_register(pid, cint.EDX)
         logging.debug('timerid address: %x', addr)
 
@@ -27,6 +29,7 @@ def timer_settime_entry_handler(syscall_id, syscall_object, pid):
         raise NotImplementedError('Unsuccessful calls not implemented')
     else:
         logging.debug(str(syscall_object.args[-1]))
+        
         old_value_present = syscall_object.args[-1].value != 'NULL'
         if old_value_present:
             logging.debug("Old value present, have to copy it into memory")
