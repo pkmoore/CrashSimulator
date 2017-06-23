@@ -54,8 +54,8 @@ def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Replaying this system call')
 
         # these should be the same probably?
-        timer_id_from_trace = syscall_object.args[0].value
-        timer_id_from_execution = cint.peek_register(pid, cint.EBX)
+        timer_id_from_trace = int(syscall_object.args[0].value[0].strip('0x'))
+        timer_id_from_execution = int(cint.peek_register(pid, cint.EBX))
 
         if timer_id_from_trace != timer_id_from_execution:
             raise ReplayDeltaError("Timer id ({}) from execution "

@@ -80,12 +80,12 @@ make_timer_simple(timer_t *timerid, int interval_s) {
 
 void test_use_simple() {
   timer_t   timerid;
-  int       interval = 5;
+  int       interval = 2;
 
   printf("Starting timer test: simple \n");
   make_timer_simple(&timerid, interval);
 
-  sleep(3);
+  sleep(1);
 
   struct itimerspec   time_results;
 
@@ -104,19 +104,30 @@ void test_timer_create() {
   //timer_create(CLOCK_REALTIME, &sigev, timerid);
 
   timer_t good_id;
-  const timer_t bad_id;
   struct sigevent good_sigev;
-  good_sigev.sigev_notify = SIGEV_NONE;
-  struct sigevent bad_sigev;
-  bad_sigev.sigev_notify = SIGEV_SIGNAL;
-  bad_sigev.sigev_signo = -1;
-  bad_sigev.sigev_value.sival_ptr = (void *)0;
   
-  // try invalid arguments
-  // first two work, 3rd is irrelevant
-  //timer_create(0, 0, 0);
-  //timer_create(CLOCK_REALTIME, &bad_sigev, good_id);
-  timer_create(CLOCK_REALTIME, &good_sigev, bad_id);
+  //memset(&good_sigev, 0, sizeof(good_sigev));
+  good_sigev.sigev_notify = SIGEV_NONE;
+
+  
+  // try different clock types
+  //  printf("timer_create test: CLOCK_REALTIME \n");
+  timer_create(CLOCK_REALTIME, &good_sigev, &good_id);
+  timer_delete(good_id);
+  timer_create(CLOCK_MONOTONIC, &good_sigev, &good_id);
+  timer_delete(good_id);
+  timer_create(CLOCK_PROCESS_CPUTIME_ID, &good_sigev, &good_id);
+  timer_delete(good_id);
+  timer_create(CLOCK_THREAD_CPUTIME_ID, &good_sigev, &good_id);
+  timer_delete(good_id);
+  timer_create(CLOCK_BOOTTIME, &good_sigev, &good_id);
+  timer_delete(good_id);
+
+  // these two externally fail, must have CAP_WAKE_ALARM capability
+  /* timer_create(CLOCK_REALTIME_ALARM, &good_sigev, &good_id); */
+  /* timer_delete(good_id); */
+  /* timer_create(CLOCK_BOOTTIME_ALARM, &good_sigev, &good_id); */
+  /* timer_delete(good_id); */
 
   
   printf("Ending timer test: timer_create \n");
@@ -126,8 +137,9 @@ void test_timer_create() {
 
 int main(void) {
 
-  //test_use_simple();
-  //test_timer_create();
+  test_timer_create();
+
+  test_use_simple();
   //test_use_attach_to_signal();
   
   return 0;
