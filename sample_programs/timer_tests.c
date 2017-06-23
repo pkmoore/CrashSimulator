@@ -47,7 +47,7 @@ make_timer_signal(timer_t *timerid, int interval_s) {
 }
 
 
-void test_attach_to_signal() {
+void test_use_attach_to_signal() {
   timer_t    timerid;
   int        interval = 1;
 
@@ -64,8 +64,9 @@ void test_attach_to_signal() {
 
 static int
 make_timer_simple(timer_t *timerid, int interval_s) {
-  struct sigevent         sigev;
-  struct itimerspec       timerspec;
+  struct sigevent     sigev;
+  struct itimerspec   timerspec;
+  struct itimerspec   old_value;
 
   sigev.sigev_notify = SIGEV_NONE;
 
@@ -77,7 +78,7 @@ make_timer_simple(timer_t *timerid, int interval_s) {
   timer_settime(*timerid, 0, &timerspec, NULL);
 }
 
-void test_simple() {
+void test_use_simple() {
   timer_t   timerid;
   int       interval = 5;
 
@@ -97,11 +98,37 @@ void test_simple() {
 }
 
 
+void test_timer_create() {
+  printf("Starting timer test: timer_create \n");
+  
+  //timer_create(CLOCK_REALTIME, &sigev, timerid);
+
+  timer_t good_id;
+  const timer_t bad_id;
+  struct sigevent good_sigev;
+  good_sigev.sigev_notify = SIGEV_NONE;
+  struct sigevent bad_sigev;
+  bad_sigev.sigev_notify = SIGEV_SIGNAL;
+  bad_sigev.sigev_signo = -1;
+  bad_sigev.sigev_value.sival_ptr = (void *)0;
+  
+  // try invalid arguments
+  // first two work, 3rd is irrelevant
+  //timer_create(0, 0, 0);
+  //timer_create(CLOCK_REALTIME, &bad_sigev, good_id);
+  timer_create(CLOCK_REALTIME, &good_sigev, bad_id);
+
+  
+  printf("Ending timer test: timer_create \n");
+}
+
+
 
 int main(void) {
 
-  test_simple();
-  //test_attach_to_signal();
+  //test_use_simple();
+  //test_timer_create();
+  //test_use_attach_to_signal();
   
   return 0;
 }

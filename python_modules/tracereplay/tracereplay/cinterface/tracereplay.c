@@ -601,14 +601,45 @@ static PyObject* tracereplay_populate_itimerspec_structure(PyObject* self,
     t.it_value.tv_nsec = value_nanoseconds;
     
     if(DEBUG) {
-        printf("C: itimerspec: interval tv_sec: %d\n", (int)t.it_interval.tv_sec);
-        printf("C: itimerspec: interval tv_nsec: %ld\n", t.it_interval.tv_nsec);
-        printf("C: itimerspec: value tv_sec: %d\n", (int)t.it_value.tv_sec);
-        printf("C: itimerspec: value tv_nsec: %ld\n", t.it_value.tv_nsec);	
+        printf("C: check itimerspec: interval tv_sec: %d\n", (int)t.it_interval.tv_sec);
+        printf("C: check itimerspec: interval tv_nsec: %ld\n", t.it_interval.tv_nsec);
+        printf("C: check itimerspec: value tv_sec: %d\n", (int)t.it_value.tv_sec);
+        printf("C: check itimerspec: value tv_nsec: %ld\n", t.it_value.tv_nsec);	
     }
     copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&t, sizeof(t));
     
     Py_RETURN_NONE;
+}
+
+
+static PyObject* tracereplay_populate_timer_t_structure(PyObject* self,
+                                                        PyObject* args) {
+  self = self;
+  pid_t child;
+
+  void*  addr;
+  int    timerid;
+
+  if(!PyArg_ParseTuple(args, "iIi", &child, &addr, &timerid)) {
+    PyErr_SetString(TraceReplayError,
+		    "copy_bytes failed parse failed");
+  }
+
+  if(DEBUG) {
+    printf("C: timer_t: child: %d \n", child);
+    printf("C: timer_t: addr: %p \n", addr);
+    printf("C: timer_t: timerid: %d \n", timerid);
+  }
+
+  timer_t id = (timer_t)timerid;
+
+  if (DEBUG) {
+    printf("C: check timer_t: timerid: %d \n", (int)id);
+  }
+  
+  copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&id, sizeof(id));
+    
+  Py_RETURN_NONE;
 }
 
 static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
@@ -1890,6 +1921,8 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "copy bytes into child process"},
     {"populate_timespec_structure", tracereplay_populate_timespec_structure,
      METH_VARARGS, "populate timespec structure"},
+    {"populate_timer_t_structure", tracereplay_populate_timer_t_structure,
+     METH_VARARGS, "populate timer_t structure"},
     {"populate_itimerspec_structure", tracereplay_populate_itimerspec_structure,
      METH_VARARGS, "populate itimerspec structure"},    
     {"populate_timeval_structure", tracereplay_populate_timeval_structure,

@@ -4,15 +4,46 @@ from util import *
 
 def timer_create_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering the timer_create entry handler")
+    if syscall_object.ret[0] == -1:
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        addr = cint.peek_register(pid, cint.EDX)
+        logging.debug('timerid address: %x', addr)
 
-def timer_create_exit_handler(syscall_id, syscall_object, pid):
-    logging.debug("Entering the timer_create exit handler")    
+        logging.debug(str(syscall_object.args[-1]))
+
+        timerid = int(syscall_object.args[-1].value.strip('{}'))
+        logging.debug(str(timerid))
+
+        cint.populate_timer_t_structure(pid, addr, timerid);
+        
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+        
 
 def timer_settime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering the timer_settime entry handler")
+    if syscall_object.ret[0] == -1:
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        logging.debug(str(syscall_object.args[-1]))
+        old_value_present = syscall_object.args[-1].value != 'NULL'
+        if old_value_present:
+            logging.debug("Old value present, have to copy it into memory")
+            raise NotImplementedError('Filling struct with previous values not implemented')
 
-    noop_current_syscall(pid)
-    apply_return_conditions(pid, syscall_object)
+            addr = cint.peek_register(pid, cint.ESI)
+            logging.debug('old_value address: %x', addr)
+        
+            # timerid = int(syscall_object.args[-1].value.strip('{}'))
+            # logging.debug(str(timerid))
+
+            #cint.populate_timer_t_structure(pid, addr, timerid);
+        
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+    
+
 
 def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering the timer_gettime entry handler")
@@ -34,10 +65,10 @@ def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
         addr = cint.peek_register(pid, cint.ECX)
         logging.debug('Itimerspec Address: %x', addr)
 
-        logging.debug( "|| " + str(syscall_object.args[1].value) + " \n || "
-                      + str(syscall_object.args[2].value) + "\n || "
-                      + str(syscall_object.args[3].value) + "\n || "                   
-                      + str(syscall_object.args[4].value))
+        # logging.debug( "|| " + str(syscall_object.args[1].value) + " \n || "
+        #               + str(syscall_object.args[2].value) + "\n || "
+        #               + str(syscall_object.args[3].value) + "\n || "                   
+        #               + str(syscall_object.args[4].value))
         
         interval_seconds = int(syscall_object.args[1].value.split("{")[2].strip())
         interval_nanoseconds = int(syscall_object.args[2].value.strip('{}'))        
@@ -49,7 +80,7 @@ def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
         logging.debug('Value Seconds: %d', value_seconds)
         logging.debug('Value Nanoseconds: %d', value_nanoseconds)
 
-        logging.debug('Populating itimerspec strucutre')
+        logging.debug('Populating itimerspec structure')
         cint.populate_itimerspec_structure(pid, addr,
                                          interval_seconds, interval_nanoseconds,
                                          value_seconds, value_nanoseconds)
