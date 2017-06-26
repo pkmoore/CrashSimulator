@@ -26,7 +26,8 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     if (new_action_found):
         logging.debug("rt_sigaction write intercepted")
 
-    old_action_start_pos = 4 if new_action_found else 2
+    # this bceomes 4 if VDSO is not on
+    old_action_start_pos = 5 if new_action_found else 2
     
     old_action_not_found = syscall_object.args[old_action_start_pos].value == "NULL"
     if (old_action_not_found):
@@ -48,8 +49,10 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     old_action_addr = cint.peek_register(pid, cint.EDX)
     logging.debug("Old Action Address: 0x%x" % (old_action_addr & 0xffffffff))
 
+    noop_current_syscall(pid)
+
     # old_sa_flags
-    old_flags = old_action_args[2].value[:-1]
+    old_flags = old_action_args[2].value
     old_sa_flags = 0
     if (old_flags != '0'):
         old_flags = old_flags.split('|')    
@@ -107,9 +110,11 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
 
     logging.debug("Old Masks: " + str(old_sa_mask))
 
+
+    # restorer
+
     logging.debug("ARGUMENTS END")
-
-
+    
     cint.populate_rt_sigaction_struct(pid,
                                       old_action_addr,
                                       old_sa_handler,
@@ -117,7 +122,6 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
                                       old_sa_flags,
     )
 
-    noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
                                       
 

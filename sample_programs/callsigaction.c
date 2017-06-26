@@ -27,7 +27,7 @@ void print_sigaction(struct sigaction* act) {
     }
   }
   
-  //printf("Restorer: %p \n", act.sa_restorer);
+  printf("Restorer: %p \n", act->sa_restorer);
 }
 
 void sig_handler(int sig) {

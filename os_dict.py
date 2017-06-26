@@ -68,7 +68,8 @@ SIGNAL_INT_TO_DFLT_HANDLER = {y: x for x, y in SIGNAL_DFLT_HANDLER_TO_INT.iterit
 SIGNAL_FLAG_TO_INT = {
     'SA_NOCLDSTOP': 1,
     'SA_NOCLDWAIT': 2,
-    'SA_SIGINFO': 4
+    'SA_SIGINFO': 4,
+    'SA_RESTORER':67108864
 }
 
 SIGNAL_INT_TO_FLAG = {y: x for x, y in SIGNAL_FLAG_TO_INT.iteritems()}
