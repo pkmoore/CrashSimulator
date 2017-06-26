@@ -77,7 +77,6 @@ make_timer_simple(timer_t *timerid, int interval_s) {
   timer_settime(*timerid, 0, &timerspec, NULL);
 
   struct itimerspec   old_value;
-  timer_settime(*timerid, 0, &timerspec, NULL);
   timer_settime(*timerid, 0, &timerspec, &old_value);
 
   printf("Old itimerspec value: it_interval: {%d, %d} \n", old_value.it_interval.tv_sec, old_value.it_interval.tv_nsec);
