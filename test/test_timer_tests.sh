@@ -1,4 +1,5 @@
 #!/bin/sh
+
 cd ../sample_programs > /dev/null;
 strace -f -s 9999 -vvvvv -o ../sample_programs/timer_tests.strace ./timer_tests
 cd .. > /dev/null;
