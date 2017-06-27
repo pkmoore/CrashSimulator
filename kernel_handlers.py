@@ -26,7 +26,7 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     if (new_action_found):
         logging.debug("rt_sigaction write intercepted")
 
-    old_action_start_pos = 4 if new_action_found else 2
+    old_action_start_pos = 5 if new_action_found else 2
     
     old_action_not_found = syscall_object.args[old_action_start_pos].value == "NULL"
     if (old_action_not_found):
@@ -38,7 +38,7 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("rt_sigaction read intercepted")
 
 
-    old_action_end_pos = old_action_start_pos + 3
+    old_action_end_pos = old_action_start_pos + 4
     old_action_args = syscall_object.args[old_action_start_pos:old_action_end_pos]
     
 
@@ -49,10 +49,11 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Old Action Address: 0x%x" % (old_action_addr & 0xffffffff))
 
     # old_sa_flags
-    old_flags = old_action_args[2].value[:-1]
+    old_flags = old_action_args[2].value.strip('{}')
     old_sa_flags = 0
     if (old_flags != '0'):
-        old_flags = old_flags.split('|')    
+        old_flags = old_flags.split('|')
+        logging.debug("FLAGS: " + str(old_flags))
         for flag in old_flags:
             flag_int = SIGNAL_FLAG_TO_INT.get(flag)
             if (flag_int == None):
@@ -88,7 +89,6 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     old_mask_list_str = old_action_args[1].value
     non_empty_list = old_mask_list_str != '[]'
     if (non_empty_list):
-    
         logging.debug("Check in " + str(old_mask_list_str))
         old_mask_list = old_mask_list_str[1:-1].split(' ')
         logging.debug("Check in " + str(old_mask_list))
@@ -107,6 +107,17 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
 
     logging.debug("Old Masks: " + str(old_sa_mask))
 
+    # sa_restorer
+    old_sa_restorer = 0
+    
+    sa_restorer_str = old_action_args[3].value
+    sa_restorer_present = sa_restorer_str.find('}') != -1
+    if sa_restorer_present:
+        sa_restorer_str = sa_restorer_str.strip('}')
+        old_sa_restorer = int(sa_restorer_str, 16)
+        logging.debug("Restorer: 0x%x " % (old_sa_restorer & 0xffffffff))
+    else:
+        logging.debug("No restorer found")
     logging.debug("ARGUMENTS END")
 
 
@@ -115,6 +126,7 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
                                       old_sa_handler,
                                       old_sa_mask_list,
                                       old_sa_flags,
+                                      old_sa_restorer
     )
 
     noop_current_syscall(pid)
