@@ -1066,57 +1066,6 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
 }
 
 
-/* void print_sigset_t(sigset_t *set) */
-/* { */
-/*   int i; */
-
-/*   i = SIGRTMAX; */
-/*   do { */
-/*     int x = 0; */
-/*     i -= 4; */
-/*     if (sigismember(set, i+1)) x |= 1; */
-/*     if (sigismember(set, i+2)) x |= 2; */
-/*     if (sigismember(set, i+3)) x |= 4; */
-/*     if (sigismember(set, i+4)) x |= 8; */
-/*     printf("%x", x); */
-/*   } while (i >= 4); */
-/*   printf("\n"); */
-/* } */
-
-
-
-
-#ifdef __i386__
-# define _NSIG_BPW      32
-#else
-# define _NSIG_BPW      64
-#endif
-
-#define _NSIG_WORDS     (_NSIG / _NSIG_BPW)
-
-
-typedef struct {
-  unsigned long sig[_NSIG_WORDS];
-} kernel_sigset_t;
-
-static inline void __const_sigaddset(kernel_sigset_t *set, int _sig)
-{
-  unsigned long sig = _sig - 1;
-  set->sig[sig / _NSIG_BPW] |= 1 << (sig % _NSIG_BPW);
-}
-
-static inline void __gen_sigaddset(kernel_sigset_t *set, int _sig)
-{
-  asm("btsl %1,%0" : "+m"(*set) : "Ir"(_sig - 1) : "cc");
-}
-
-
-#define kernel_sigaddset(set,sig)	     \
-  (__builtin_constant_p(sig)         \
-  ? __const_sigaddset((set), (sig))  \
-   : __gen_sigaddset((set), (sig)))
-
-
 struct kernel_sigaction {
   __sighandler_t k_sa_handler;
   unsigned int sa_flags;
@@ -1127,6 +1076,9 @@ struct kernel_sigaction {
 
 static PyObject* tracereplay_build_rt_sigaction_struct(PyObject* self,
 					   PyObject* args) {
+
+  // this is commented out because it provides no useful information and so its used / purpose needs to be reevaluated
+  
   /* self = self; */
   /* pid_t child; */
   /* void* addr; */
