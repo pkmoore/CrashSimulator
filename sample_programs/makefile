@@ -120,8 +120,6 @@ clean:
 	- rm filesystem_speedtest
 	- rm calllstat64
 	- rm callmkstemp
-	- rm callsigaction
-	- rm timer_tests
 	- rm callgetaddrinfo
 	- rm callgetdents64
 	- rm callpoll
@@ -131,3 +129,5 @@ clean:
 	- rm dropbear_read_calls
 	- rm nonblock
 	- rm read_known_hosts
+	- rm callsigaction
+	- rm timer_tests
