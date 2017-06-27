@@ -1172,7 +1172,7 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
   PyObject*     mask_sig_list;
   sigset_t      old_sa_mask;
   unsigned int  old_sa_flags;
-  void*         old_sa_restorer = NULL;  // no longer used, but in sigaction struct when VDSO off
+  void*         old_sa_restorer;  // no longer used, but in sigaction struct when VDSO off
   //  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
 
   bool argument_population_failed = !PyArg_ParseTuple(args,
@@ -1189,23 +1189,21 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
   }
 
   if (DEBUG) {
-    //printf("C: populate_sigaction: child %d\n", child);
-    
-    //printf("C: populate_sigaction: old_sa_mask %lu at %p \n", old_sa_mask, &old_sa_mask);
+    printf("C: populate_sigaction: read arguments: child %d \n", child);
+    printf("C: populate_sigaction: read arguments: oldact_addr %p \n", oldact_addr);
     printf("C: populate_sigaction: read arguments: sa_handler %d \n",  old_sa_handler);
     printf("C: populate_sigaction: read arguments: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
-    fflush(stdout);
+    printf("C: populate_sigaction: read arguments: sa_restorer %p \n",  old_sa_restorer);
    }
   
   
-  // copy oldact into memory
+  // setup memory for copying oldact in
     copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
   // Note: cant set handler and sigaction at same time as use same memory
   oldact.k_sa_handler = (void*) old_sa_handler;
   oldact.sa_flags = old_sa_flags;
   oldact.sa_restorer = old_sa_restorer;
-
   
   // create sa_mask sigset_t from mask_sig_list
   sigemptyset(&oldact.sa_mask);
@@ -1228,10 +1226,10 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
     next = PyIter_Next(iter);
   }
 
+  // copy oldact into memory
   copy_buffer_into_child_process_memory(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
 
-
-  // copy back out of memory again to test
+  // copy back out of memory to read / test values
   struct kernel_sigaction test;
   copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&test, sizeof(test));
 
@@ -1240,8 +1238,7 @@ static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
      printf("C: Read sigaction: sigaction at %p \n", &test);
      printf("C: Read sigaction: sa_handler %d at %p \n", (int) test.k_sa_handler, &(test.k_sa_handler));
      printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
-     printf("C: Read sigaction: sa_mask 0x%x at %p \n", test.sa_mask, &test.sa_mask);
-     
+     printf("C: Read sigaction: sa_mask 0x%x at %p \n", test.sa_mask, &test.sa_mask);     
      printf("C: Read sigaction: sa_restorer %p at %p \n", test.sa_restorer, &(test.sa_restorer));    
    }
 

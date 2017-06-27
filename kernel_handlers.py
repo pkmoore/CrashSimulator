@@ -6,7 +6,7 @@ from os_dict import SIGPROCMASK_INT_TO_CMD
 from os_dict import STACK_SS_TO_INT
 from os_dict import SIGNAL_SIG_TO_INT
 from os_dict import SIGNAL_DFLT_HANDLER_TO_INT
-from os_dict import SIGNAL_FLAG_TO_INT
+from os_dict import SIGNAL_FLAG_TO_HEX
 
 # from util import *
 from util import(validate_integer_argument,
@@ -22,116 +22,272 @@ from util import(validate_integer_argument,
 def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering rt_sigaction entry handler")
 
-    new_action_found = syscall_object.args[1].value != "NULL"
-    if (new_action_found):
-        logging.debug("rt_sigaction write intercepted")
-
-    old_action_start_pos = 5 if new_action_found else 2
-    
-    old_action_not_found = syscall_object.args[old_action_start_pos].value == "NULL"
-    if (old_action_not_found):
-        logging.debug("No rt_sigaction read intercepted!")
+    # check if there is an old action. as only need to worry about those
+    old_action_found = syscall_object.args[-2].value.strip() != 'NULL'
+    if not old_action_found:
         noop_current_syscall(pid)
-        apply_return_conditions(pid, syscall_object)
-        return
-            
-    logging.debug("rt_sigaction read intercepted")
-
-
-    old_action_end_pos = old_action_start_pos + 4
-    old_action_args = syscall_object.args[old_action_start_pos:old_action_end_pos]
-    
-
-    logging.debug("ARGUMENTS BEGIN")
-
-    # buffer address
-    old_action_addr = cint.peek_register(pid, cint.EDX)
-    logging.debug("Old Action Address: 0x%x" % (old_action_addr & 0xffffffff))
-
-    # old_sa_flags
-    old_flags = old_action_args[2].value.strip('{}')
-    old_sa_flags = 0
-    if (old_flags != '0'):
-        old_flags = old_flags.split('|')
-        logging.debug("FLAGS: " + str(old_flags))
-        for flag in old_flags:
-            flag_int = SIGNAL_FLAG_TO_INT.get(flag)
-            if (flag_int == None):
-                raise LookupError("The flag " + str(flag) + "  was not found")
-            old_sa_flags += flag_int
-            
-    logging.debug("Old Flags: " + str(old_sa_flags))
-
-    # if flags include SA_SIGINFO should use old_sa_sigaction instead of old_sa_handler
-    should_use_sigaction = (old_sa_flags & 4) == 4
-    if (should_use_sigaction):
-        raise NotImplementedError("rt_sigaction should use sa_sigaction instead of sa_handler but this functionality is not yet implemented")
-
-
-    # old_sa_handler
-    # old_sa_sigaction = 0   # void (int, siginfo_t*, void*) USE not implemented yet
-    old_sa_handler = old_action_args[0].value[1:]
-    logging.debug("Handler Raw: " + str(old_sa_handler));
-    # if one of 3 default handlers, strace gives a name instead of a pointer
-    default_handler_int = SIGNAL_DFLT_HANDLER_TO_INT.get(old_sa_handler)
-    if (default_handler_int != None):
-        old_sa_handler = default_handler_int
+        logging.debug("No rt_sigaction read intercepted!")
     else:
-        old_sa_handler = int(old_sa_handler, 16)
-    
-    logging.debug("Old Handler: 0x%x" % (old_sa_handler & 0xffffffff))
+        logging.debug("rt_sigaction read intercepted")
 
-    
-    # sa_mask
-    old_sa_mask_list = []
-    old_sa_mask = 0
-    
-    old_mask_list_str = old_action_args[1].value
-    non_empty_list = old_mask_list_str != '[]'
-    if (non_empty_list):
-        logging.debug("Check in " + str(old_mask_list_str))
-        old_mask_list = old_mask_list_str[1:-1].split(' ')
-        logging.debug("Check in " + str(old_mask_list))
+        # figure out if there is a new action, and whether strace is showing the sa_restorer value in the actions
+        restorer_value_in_trace = True
+        new_action_found = syscall_object.args[1].value != "NULL"
+        if (new_action_found):
+            logging.debug("rt_sigaction write intercepted")
+            restorer_value_in_trace = syscall_object.args[4].value.find('}') != -1
+        else:
+            restorer_value_in_trace = syscall_object.args[5].value.find('}') != -1
 
-        old_mask_list = ["SIG" + name for name in old_mask_list if not str(name)[0:3] == "SIG"]
-        logging.debug("Check in " + str(old_mask_list))
-        old_mask_list = [SIGNAL_SIG_TO_INT[sig] for sig in old_mask_list]
-        logging.debug("Check in " + str(old_mask_list));
+        logging.debug("Trace %s restorer values" % ('contains'
+                                                    if restorer_value_in_trace
+                                                    else 'does not contain'))
 
-        old_sa_mask_list = old_mask_list
+        # figure out at what indexes the old_action arguments will start and end at    
+        if new_action_found and restorer_value_in_trace:
+            old_action_start_pos = 5
+        elif new_action_found:
+            old_action_start_pos = 4
+        else:
+            old_action_start_pos = 2
+
+        old_action_end_pos = old_action_start_pos + (4 if restorer_value_in_trace
+                                                      else 3)
+        
+        # seperate out the old_action part of the trace    
+        old_action_args = syscall_object.args[old_action_start_pos:old_action_end_pos]
+
+        logging.debug("ARGUMENTS BEGIN")
+
+        # these are the values we need to put into memory
+        old_action_addr = 0
+        old_sa_flags = 0
+        old_sa_handler = 0
+        old_sa_mask_list = []
+        old_sa_restorer = 0
+        # old_sa_sigaction = 0   # void (int, siginfo_t*, void*) Serves as an alternate for old_sa_handler but use not seen or implemented yet
+
+        # buffer address
+        old_action_addr = cint.peek_register(pid, cint.EDX)
+        logging.debug("Old Action Address: 0x%x" % (old_action_addr & 0xffffffff))
+
+        # done with registers so can noop now
+        noop_current_syscall(pid)
 
         
-        # combine signal bits to make mask
-        for sig in old_mask_list:
-            old_sa_mask += int(sig)
+        # old_sa_flags
+        old_flags_str = old_action_args[2].value.strip('{}')
+        if (old_flags_str != '0'):
+            old_flags_list = old_flags_str.split('|')
+            logging.debug("FLAGS: " + str(old_flags_list))
+            for flag in old_flags_list:
+                flag_int = int(SIGNAL_FLAG_TO_HEX.get(flag))
+                if (flag_int == None):
+                    raise LookupError("The flag " + str(flag) + "  was not found")
+                old_sa_flags += flag_int
+            
+        logging.debug("Old Flags: " + str(old_sa_flags))
 
-    logging.debug("Old Masks: " + str(old_sa_mask))
+        
+        # if flags include SA_SIGINFO should use old_sa_sigaction instead of old_sa_handler
+        should_use_sigaction = (old_sa_flags & 4) == 4
+        if (should_use_sigaction):
+            raise NotImplementedError("rt_sigaction should use sa_sigaction instead of sa_handler here but this functionality is not yet implemented")
 
-    # sa_restorer
-    old_sa_restorer = 0
+
+        # old_sa_handler
+        old_sa_handler_str = old_action_args[0].value.strip('{')
+        logging.debug("Handler Raw: " + str(old_sa_handler_str));
+        
+        # handler is either one of 3 default handlers (in which case strace gives a name) or a pointer value
+        default_handler_int = SIGNAL_DFLT_HANDLER_TO_INT.get(old_sa_handler_str)
+        if (default_handler_int != None):
+            old_sa_handler = default_handler_int
+        else:
+            old_sa_handler = int(old_sa_handler_str, 16)
+        logging.debug("Old Handler: 0x%x" % (old_sa_handler & 0xffffffff))
+
+        
+        # sa_mask
+        old_mask_list_str = old_action_args[1].value
+        is_non_empty_list = old_mask_list_str != '[]'
+        if (is_non_empty_list):
+            old_mask_list = old_mask_list_str[1:-1].split(' ')
+
+            # add 'SIG' to say 'PIPE' to make 'SIGPIPE' as strace leaves the beginning off
+            old_mask_list = ["SIG" + name for name in old_mask_list if not str(name)[0:3] == "SIG"]
+            # convert names into ints
+            old_sa_mask_list = [SIGNAL_SIG_TO_INT[sig] for sig in old_mask_list]
+
+        logging.debug("Old Mask List: " + str(old_sa_mask_list))
+
+
+        # sa_restorer
+        if restorer_value_in_trace:
+            restorer_str = old_action_args[3].value.strip('}')
+            old_sa_restorer = int(restorer_str, 16)
+            logging.debug("Restorer: 0x%x " % (old_sa_restorer & 0xffffffff))
+        else:
+            logging.debug("No restorer found")
+
+        logging.debug("ARGUMENTS END")
     
-    sa_restorer_str = old_action_args[3].value
-    sa_restorer_present = sa_restorer_str.find('}') != -1
-    if sa_restorer_present:
-        sa_restorer_str = sa_restorer_str.strip('}')
-        old_sa_restorer = int(sa_restorer_str, 16)
-        logging.debug("Restorer: 0x%x " % (old_sa_restorer & 0xffffffff))
-    else:
-        logging.debug("No restorer found")
-    logging.debug("ARGUMENTS END")
+        cint.populate_rt_sigaction_struct(pid,
+                                          old_action_addr,
+                                          old_sa_handler,
+                                          old_sa_mask_list,
+                                          old_sa_flags,
+                                          old_sa_restorer
+        )
 
-
-    cint.populate_rt_sigaction_struct(pid,
-                                      old_action_addr,
-                                      old_sa_handler,
-                                      old_sa_mask_list,
-                                      old_sa_flags,
-                                      old_sa_restorer
-    )
-
-    noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
-                                      
+
+
+# def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
+#     logging.debug("Entering rt_sigaction entry handler")
+
+#     restorer_value_included = True
+#     new_action_found = syscall_object.args[1].value != "NULL"
+#     if (new_action_found):
+#         logging.debug("rt_sigaction write intercepted")
+#         restorer_value_included = syscall_object.args[4].find('}') != -1
+
+
+#     # this becomes 4 if VDSO is not on
+#     old_action_start_pos = 5 if new_action_found else 2
+    
+#     old_action_not_found = syscall_object.args[old_action_start_pos].value == "NULL"
+#     if (old_action_not_found):
+#         logging.debug("No rt_sigaction read intercepted!")
+#         noop_current_syscall(pid)
+#         apply_return_conditions(pid, syscall_object)
+#         return
+            
+#     logging.debug("rt_sigaction read intercepted")
+
+
+#     old_action_end_pos = old_action_start_pos + 4
+#     old_action_args = syscall_object.args[old_action_start_pos:old_action_end_pos]
+    
+
+#     logging.debug("ARGUMENTS BEGIN")
+
+#     # buffer address
+#     old_action_addr = cint.peek_register(pid, cint.EDX)
+#     logging.debug("Old Action Address: 0x%x" % (old_action_addr & 0xffffffff))
+
+#     noop_current_syscall(pid)
+
+#     # old_sa_flags
+#     old_flags = old_action_args[2].value.strip('{}')
+#     old_sa_flags = 0
+#     if (old_flags != '0'):
+#         old_flags = old_flags.split('|')
+#         logging.debug("FLAGS: " + str(old_flags))
+#         for flag in old_flags:
+#             flag_int = SIGNAL_FLAG_TO_INT.get(flag)
+#             if (flag_int == None):
+#                 raise LookupError("The flag " + str(flag) + "  was not found")
+#             old_sa_flags += flag_int
+            
+#     logging.debug("Old Flags: " + str(old_sa_flags))
+
+#     # if flags include SA_SIGINFO should use old_sa_sigaction instead of old_sa_handler
+#     should_use_sigaction = (old_sa_flags & 4) == 4
+#     if (should_use_sigaction):
+#         raise NotImplementedError("rt_sigaction should use sa_sigaction instead of sa_handler but this functionality is not yet implemented")
+
+
+#     # old_sa_handler
+#     # old_sa_sigaction = 0   # void (int, siginfo_t*, void*) USE not implemented yet
+#     old_sa_handler = old_action_args[0].value[1:]
+#     logging.debug("Handler Raw: " + str(old_sa_handler));
+#     # if one of 3 default handlers, strace gives a name instead of a pointer
+#     default_handler_int = SIGNAL_DFLT_HANDLER_TO_INT.get(old_sa_handler)
+#     if (default_handler_int != None):
+#         old_sa_handler = default_handler_int
+#     else:
+#         old_sa_handler = int(old_sa_handler, 16)
+    
+#     logging.debug("Old Handler: 0x%x" % (old_sa_handler & 0xffffffff))
+
+    
+#     # sa_mask
+#     old_sa_mask_list = []
+#     old_sa_mask = 0
+    
+#     old_mask_list_str = old_action_args[1].value
+#     non_empty_list = old_mask_list_str != '[]'
+#     if (non_empty_list):
+#         logging.debug("Check in " + str(old_mask_list_str))
+#         old_mask_list = old_mask_list_str[1:-1].split(' ')
+#         logging.debug("Check in " + str(old_mask_list))
+
+#         old_mask_list = ["SIG" + name for name in old_mask_list if not str(name)[0:3] == "SIG"]
+#         logging.debug("Check in " + str(old_mask_list))
+#         old_mask_list = [SIGNAL_SIG_TO_INT[sig] for sig in old_mask_list]
+#         logging.debug("Check in " + str(old_mask_list));
+
+#         old_sa_mask_list = old_mask_list
+
+        
+#         # combine signal bits to make mask
+#         for sig in old_mask_list:
+#             old_sa_mask += int(sig)
+
+#     logging.debug("Old Masks: " + str(old_sa_mask))
+
+
+#     # sa_restorer
+#     old_sa_restorer = 0
+    
+#     sa_restorer_str = old_action_args[3].value
+#     sa_restorer_present = sa_restorer_str.find('}') != -1
+#     if sa_restorer_present:
+#         sa_restorer_str = sa_restorer_str.strip('}')
+#         old_sa_restorer = int(sa_restorer_str, 16)
+#         logging.debug("Restorer: 0x%x " % (old_sa_restorer & 0xffffffff))
+#     else:
+#         logging.debug("No restorer found")
+#     logging.debug("ARGUMENTS END")
+
+
+#     logging.debug("ARGUMENTS END")
+    
+#     cint.populate_rt_sigaction_struct(pid,
+#                                       old_action_addr,
+#                                       old_sa_handler,
+#                                       old_sa_mask_list,
+#                                       old_sa_flags,
+#                                       old_sa_restorer
+#     )
+
+#     apply_return_conditions(pid, syscall_object)
+
+
+# def getresuid_entry_handler(syscall_id, syscall_object, pid):
+#     logging.debug('Entering getresuid entry handler')
+#     ruid = int(syscall_object.args[0].value.strip('[]'))
+#     euid = int(syscall_object.args[0].value.strip('[]'))
+#     suid = int(syscall_object.args[0].value.strip('[]'))
+#     ruid_addr = cint.peek_register(pid, cint.EBX)
+#     euid_addr = cint.peek_register(pid, cint.ECX)
+#     suid_addr = cint.peek_register(pid, cint.EDX)
+
+#     logging.debug('ruid: %d', ruid)
+#     logging.debug('euid: %d', euid)
+#     logging.debug('suid: %d', suid)
+
+#     logging.debug('ruid addr: %x', ruid_addr & 0xffffffff)
+#     logging.debug('ruid addr: %x', euid_addr & 0xffffffff)
+#     logging.debug('ruid addr: %x', suid_addr & 0xffffffff)
+#     noop_current_syscall(pid)
+
+#     cint.populate_unsigned_int(pid, ruid_addr, ruid)
+#     cint.populate_unsigned_int(pid, euid_addr, euid)
+#     cint.populate_unsigned_int(pid, suid_addr, suid)
+#     apply_return_conditions(pid, syscall_object)
+
 
 def getresuid_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getresuid entry handler')
@@ -141,21 +297,20 @@ def getresuid_entry_handler(syscall_id, syscall_object, pid):
     ruid_addr = cint.peek_register(pid, cint.EBX)
     euid_addr = cint.peek_register(pid, cint.ECX)
     suid_addr = cint.peek_register(pid, cint.EDX)
-
+    
     logging.debug('ruid: %d', ruid)
     logging.debug('euid: %d', euid)
     logging.debug('suid: %d', suid)
-
+    
     logging.debug('ruid addr: %x', ruid_addr & 0xffffffff)
     logging.debug('ruid addr: %x', euid_addr & 0xffffffff)
     logging.debug('ruid addr: %x', suid_addr & 0xffffffff)
     noop_current_syscall(pid)
-
+    
     cint.populate_unsigned_int(pid, ruid_addr, ruid)
     cint.populate_unsigned_int(pid, euid_addr, euid)
     cint.populate_unsigned_int(pid, suid_addr, suid)
     apply_return_conditions(pid, syscall_object)
-
 
 def getresgid_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getresgid entry handler')
