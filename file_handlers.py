@@ -428,7 +428,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     if should_replay_based_on_fd(fd):
         # Print the bytes if writing to stdout or stderr so output is visible
         if fd == 1 or fd == 2:
-            print(bytes_from_trace, end='')
+            print(bytes_from_trace)
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
     else:
