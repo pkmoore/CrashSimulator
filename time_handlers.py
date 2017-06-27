@@ -26,15 +26,9 @@ def timer_create_entry_handler(syscall_id, syscall_object, pid):
         apply_return_conditions(pid, syscall_object)
 
 
-
 def timer_extract_and_populate_itimerspec(syscall_object, pid, addr, start_index):
     logging.debug('Itimerspec Address: %x', addr)
     logging.debug('Extracting itimerspec')
-    
-    # logging.debug( "|| " + str(syscall_object.args[1].value) + " \n || "
-    #               + str(syscall_object.args[2].value) + "\n || "
-    #               + str(syscall_object.args[3].value) + "\n || "                   
-    #               + str(syscall_object.args[4].value))
 
     i = start_index
     interval_seconds = int(syscall_object.args[i].value.split("{")[2].strip())
@@ -51,8 +45,7 @@ def timer_extract_and_populate_itimerspec(syscall_object, pid, addr, start_index
     cint.populate_itimerspec_structure(pid, addr,
                                        interval_seconds, interval_nanoseconds,
                                        value_seconds, value_nanoseconds)
-    
-        
+
 
 def timer_settime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering the timer_settime entry handler")
@@ -71,14 +64,10 @@ def timer_settime_entry_handler(syscall_id, syscall_object, pid):
             itimerspec_starting_index = 6;
             timer_extract_and_populate_itimerspec(syscall_object, pid, addr, itimerspec_starting_index)
         
-            # timerid = int(syscall_object.args[-1].value.strip('{}'))
-            # logging.debug(str(timerid))
-
         noop_current_syscall(pid)
         apply_return_conditions(pid, syscall_object)
 
 
-    
 def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
     logging.debug("Entering the timer_gettime entry handler")
     if syscall_object.ret[0] == -1:
@@ -108,6 +97,7 @@ def timer_delete_entry_handler(syscall_id, syscall_object, pid):
 
     noop_current_syscall(pid)
     apply_return_conditions(pid, syscall_object)
+
 
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')

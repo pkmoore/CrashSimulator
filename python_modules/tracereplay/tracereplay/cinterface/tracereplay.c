@@ -554,7 +554,6 @@ static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
         printf("C: timespec: tv_nsec: %ld\n", t.tv_nsec);
     }
     copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&t, sizeof(t));
-    
     Py_RETURN_NONE; 
 }
 
