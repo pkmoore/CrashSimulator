@@ -117,3 +117,12 @@ clean:
 	- rm filesystem_speedtest
 	- rm calllstat64
 	- rm callmkstemp
+	- rm callgetaddrinfo
+	- rm callgetdents64
+	- rm callpoll
+	- rm callselect_noaction
+	- rm callsigaction
+	- rm charactertest
+	- rm dropbear_read_calls
+	- rm nonblock
+	- rm read_known_hosts
