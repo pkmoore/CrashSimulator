@@ -1069,7 +1069,9 @@ struct kernel_sigaction {
 
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
-  if (DEBUG) printf("C: Entering populate rt_sigaction_struct\n");
+  if (DEBUG) {
+    printf("C: Entering populate rt_sigaction_struct\n");
+  }
 
   self = self;
   pid_t child;
