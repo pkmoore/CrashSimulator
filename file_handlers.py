@@ -421,7 +421,7 @@ def write_entry_handler(syscall_id, syscall_object, pid):
     bytes_from_trace = bytes_from_trace.decode('string-escape')
     logging.debug(bytes_from_trace.encode('hex'))
     logging.debug(bytes_from_execution.encode('hex'))
-    #if bytes_from_trace != bytes_from_execution:
+    # if bytes_from_trace != bytes_from_execution:
     #    raise ReplayDeltaError('Bytes from trace don\'t match bytes from '
     #                           'execution!')
     fd = int(syscall_object.args[0].value)
