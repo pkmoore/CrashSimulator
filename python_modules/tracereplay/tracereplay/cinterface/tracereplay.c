@@ -102,8 +102,6 @@ int copy_buffer_into_child_process_memory(pid_t child,
                                           void* addr,
                                           const unsigned char* const buffer,
                                           size_t buf_length){
-  bool old_mode = DEBUG;
-  DEBUG = false;
     size_t writes = buf_length - (sizeof(int) - 1 );
     unsigned int i;
     if(DEBUG) {
@@ -160,7 +158,6 @@ int copy_buffer_into_child_process_memory(pid_t child,
             addr++;
         }
     }
-    DEBUG = old_mode;
     return 0;
 }
 
