@@ -557,6 +557,85 @@ static PyObject* tracereplay_populate_timespec_structure(PyObject* self,
     Py_RETURN_NONE; 
 }
 
+static PyObject* tracereplay_populate_itimerspec_structure(PyObject* self,
+							  PyObject* args) {
+
+    // unused
+    self = self;
+    pid_t child;
+    void* addr;
+    time_t  interval_seconds;
+    long    interval_nanoseconds;
+    time_t  value_seconds;
+    long    value_nanoseconds;
+    
+    if(!PyArg_ParseTuple(args, "iiilil", &child, &addr,
+			 &interval_seconds, &interval_nanoseconds,
+			 &value_seconds, &value_nanoseconds)) {
+        PyErr_SetString(TraceReplayError,
+                        "copy_bytes failed parse failed");
+    }
+    if(DEBUG) {
+        printf("C: itimerspec: child: %d\n", child);
+        printf("C: itimerspec: addr: %p\n", addr);
+        printf("C: itimerspec: interval seconds: %d\n", (int)interval_seconds);
+        printf("C: itimerspec: interval nanoseconds: %ld\n", interval_nanoseconds);
+        printf("C: itimerspec: interval sizeof(seconds): %d\n", sizeof(interval_seconds));
+        printf("C: itimerspec: interval sizeof(nanoseconds): %d\n", sizeof(interval_nanoseconds));
+        printf("C: itimerspec: value seconds: %d\n", (int)value_seconds);
+        printf("C: itimerspec: value nanoseconds: %ld\n", value_nanoseconds);
+        printf("C: itimerspec: value sizeof(seconds): %d\n", sizeof(value_seconds));
+        printf("C: itimerspec: value sizeof(nanoseconds): %d\n", sizeof(value_nanoseconds));	
+    }
+
+    struct itimerspec t;
+    t.it_interval.tv_sec = interval_seconds;
+    t.it_interval.tv_nsec = interval_nanoseconds;
+    t.it_value.tv_sec = value_seconds;
+    t.it_value.tv_nsec = value_nanoseconds;
+    
+    if(DEBUG) {
+        printf("C: check itimerspec: interval tv_sec: %d\n", (int)t.it_interval.tv_sec);
+        printf("C: check itimerspec: interval tv_nsec: %ld\n", t.it_interval.tv_nsec);
+        printf("C: check itimerspec: value tv_sec: %d\n", (int)t.it_value.tv_sec);
+        printf("C: check itimerspec: value tv_nsec: %ld\n", t.it_value.tv_nsec);	
+    }
+    copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&t, sizeof(t));
+    
+    Py_RETURN_NONE;
+}
+
+
+static PyObject* tracereplay_populate_timer_t_structure(PyObject* self,
+                                                        PyObject* args) {
+  self = self;
+  pid_t child;
+
+  void*  addr;
+  int    timerid;
+
+  if(!PyArg_ParseTuple(args, "iIi", &child, &addr, &timerid)) {
+    PyErr_SetString(TraceReplayError,
+		    "copy_bytes failed parse failed");
+  }
+
+  if(DEBUG) {
+    printf("C: timer_t: child: %d \n", child);
+    printf("C: timer_t: addr: %p \n", addr);
+    printf("C: timer_t: timerid: %d \n", timerid);
+  }
+
+  timer_t id = (timer_t)timerid;
+
+  if (DEBUG) {
+    printf("C: check timer_t: timerid: %d \n", (int)id);
+  }
+  
+  copy_buffer_into_child_process_memory(child, addr, (unsigned char*)&id, sizeof(id));
+    
+  Py_RETURN_NONE;
+}
+
 static PyObject* tracereplay_populate_timeval_structure(PyObject* self,
                                                         PyObject* args) {
     // unused
@@ -1816,6 +1895,10 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "copy bytes into child process"},
     {"populate_timespec_structure", tracereplay_populate_timespec_structure,
      METH_VARARGS, "populate timespec structure"},
+    {"populate_timer_t_structure", tracereplay_populate_timer_t_structure,
+     METH_VARARGS, "populate timer_t structure"},
+    {"populate_itimerspec_structure", tracereplay_populate_itimerspec_structure,
+     METH_VARARGS, "populate itimerspec structure"},    
     {"populate_timeval_structure", tracereplay_populate_timeval_structure,
      METH_VARARGS, "populate timeval structure"},
     {"populate_winsize_structure", tracereplay_populate_winsize_structure,

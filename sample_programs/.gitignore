@@ -30,3 +30,4 @@ calllstat64
 callmkstemp
 callpoll
 callsigaction
+timer_test

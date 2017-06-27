@@ -2,6 +2,103 @@ import logging
 from util import *
 
 
+def timer_create_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_create entry handler")
+    if syscall_object.ret[0] == -1:
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        # only SIGEV_NONE is supported as other sigevents can't be replicated as of now
+        sigev_type = syscall_object.args[3].value.strip()
+        logging.debug("Sigevent type: " + str(sigev_type))
+
+        if sigev_type != 'SIGEV_NONE':
+            raise NotImplementedError("Sigevent type %s is not supported" % (sigev_type))
+        
+        addr = cint.peek_register(pid, cint.EDX)
+        logging.debug('timerid address: %x', addr)
+
+        timerid = int(syscall_object.args[-1].value.strip('{}'))
+        logging.debug(str(timerid))
+
+        cint.populate_timer_t_structure(pid, addr, timerid);
+        
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+
+def timer_extract_and_populate_itimerspec(syscall_object, pid, addr, start_index):
+    logging.debug('Itimerspec Address: %x', addr)
+    logging.debug('Extracting itimerspec')
+
+    i = start_index
+    interval_seconds = int(syscall_object.args[i].value.split("{")[2].strip())
+    interval_nanoseconds = int(syscall_object.args[i+1].value.strip('{}'))        
+    logging.debug('Interval Seconds: %d', interval_seconds)
+    logging.debug('Interval Nanoseconds: %d', interval_nanoseconds)
+    
+    value_seconds = int(syscall_object.args[i+2].value.split("{")[1].strip())
+    value_nanoseconds = int(syscall_object.args[i+3].value.strip('{}'))
+    logging.debug('Value Seconds: %d', value_seconds)
+    logging.debug('Value Nanoseconds: %d', value_nanoseconds)
+    
+    logging.debug('Populating itimerspec structure')
+    cint.populate_itimerspec_structure(pid, addr,
+                                       interval_seconds, interval_nanoseconds,
+                                       value_seconds, value_nanoseconds)
+
+
+def timer_settime_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_settime entry handler")
+    if syscall_object.ret[0] == -1:
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        logging.debug(str(syscall_object.args[-1]))
+        
+        old_value_present = syscall_object.args[-1].value != 'NULL'
+        if old_value_present:
+            logging.debug("Old value present, have to copy it into memory")
+
+            addr = cint.peek_register(pid, cint.ESI)
+            logging.debug('old_value address: %x', addr)
+
+            itimerspec_starting_index = 6;
+            timer_extract_and_populate_itimerspec(syscall_object, pid, addr, itimerspec_starting_index)
+        
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+
+def timer_gettime_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_gettime entry handler")
+    if syscall_object.ret[0] == -1:
+        raise NotImplementedError('Unsuccessful calls not implemented')
+    else:
+        logging.debug('Got successful timer_gettime call')
+        logging.debug('Replaying this system call')
+
+        # these should be the same probably?
+        timer_id_from_trace = int(syscall_object.args[0].value[0].strip('0x'))
+        timer_id_from_execution = int(cint.peek_register(pid, cint.EBX))
+
+        if timer_id_from_trace != timer_id_from_execution:
+            raise ReplayDeltaError("Timer id ({}) from execution "
+                                    "differs from trace ({})"
+                                   .format(timer_id_from_execution, timer_id_from_trace))
+
+        addr = cint.peek_register(pid, cint.ECX)
+        itimerspec_starting_index = 1;
+        timer_extract_and_populate_itimerspec(syscall_object, pid, addr, itimerspec_starting_index)
+        noop_current_syscall(pid)
+        apply_return_conditions(pid, syscall_object)
+
+
+def timer_delete_entry_handler(syscall_id, syscall_object, pid):
+    logging.debug("Entering the timer_delete entry handler")
+
+    noop_current_syscall(pid)
+    apply_return_conditions(pid, syscall_object)
+
+
 def time_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering time entry handler')
     if syscall_object.ret[0] == -1:
