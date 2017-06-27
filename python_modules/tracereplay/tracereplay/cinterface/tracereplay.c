@@ -1063,14 +1063,12 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
     Py_RETURN_NONE;
 }
 
-
 struct kernel_sigaction {
   __sighandler_t k_sa_handler;
   unsigned int sa_flags;
   void* sa_restorer;
   sigset_t sa_mask;
 };
-
 
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
