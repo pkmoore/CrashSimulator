@@ -118,7 +118,7 @@ def rt_sigaction_entry_handler(syscall_id, syscall_object, pid):
             old_mask_list = ["SIG" + name for name in old_mask_list if not str(name)[0:3] == "SIG"]
             # convert names into ints
             old_sa_mask_list = [SIGNAL_SIG_TO_INT[sig] for sig in old_mask_list]
-
+            
         logging.debug("Old Mask List: " + str(old_sa_mask_list))
 
 
@@ -167,6 +167,7 @@ def getresuid_entry_handler(syscall_id, syscall_object, pid):
     cint.populate_unsigned_int(pid, suid_addr, suid)
     apply_return_conditions(pid, syscall_object)
 
+    
 def getresgid_entry_handler(syscall_id, syscall_object, pid):
     logging.debug('Entering getresgid entry handler')
     ruid = int(syscall_object.args[0].value.strip('[]'))
@@ -613,23 +614,6 @@ def rt_sigaction_entry_debug_printer(pid, orig_eax, syscall_object):
     logging.debug("New act address: 0x%x", newact_addr & 0xffffffff)
     logging.debug("Old act address: 0x%x", oldact_addr & 0xffffffff)
     logging.debug("Return value: %d, ret")
-
-    # newact = 'NULL'
-    # if (newact_addr != 0):
-    #     logging.debug("Attempting to extract new action")
-    #     newact = cint.build_rt_sigaction_struct(pid, newact_addr)
-    #     newact = "{0x%x, [%s], [%d]}" % (newact[0], newact[1], newact[2]) 
-
-    # oldact = 'NULL'
-    # if (oldact_addr != 0):
-    #     logging.debug("Attempting to extract old action")
-    #     oldact = cint.build_rt_sigaction_struct(pid, oldact_addr)
-    #     oldact = "{0x%x, [%s], [%d]}" % ((oldact[0] & 0xffffffff), oldact[1], oldact[2])
-
-    
-    # logging.debug("Call: (%d, %s, %s)" % (signum, newact, oldact)) 
-    # logging.debug("Call: (%d, {%s}, {%s})" % (signum, newact_addr, oldact_addr)) 
-
 
 
 def rt_sigprocmask_entry_debug_printer(pid, orig_eax, syscall_object):

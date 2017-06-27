@@ -118,7 +118,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         266,  # set_clock_getres
         240,  # sys_futex
         242,  # sys_sched_getaffinity
-        #174,
         243,  # sys_set_thread_area
         311,  # sys_set_robust_list
         340,  # sys_prlimit64

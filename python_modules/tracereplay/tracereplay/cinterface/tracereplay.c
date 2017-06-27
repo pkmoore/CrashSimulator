@@ -39,8 +39,6 @@ int copy_child_process_memory_into_buffer(pid_t child,
                                           void* addr,
                                           unsigned char* buffer,
                                           size_t buf_length){
-  bool old_mode = DEBUG;
-  DEBUG = false;
     unsigned char* buf_addr = buffer;
     size_t peeks = buf_length - (sizeof(int) - 1 );
     unsigned int i;
@@ -96,7 +94,7 @@ int copy_child_process_memory_into_buffer(pid_t child,
             addr++;
         }
     }
-    DEBUG = old_mode;
+
     return 0;
 }
 
@@ -1074,43 +1072,6 @@ struct kernel_sigaction {
 };
 
 
-static PyObject* tracereplay_build_rt_sigaction_struct(PyObject* self,
-					   PyObject* args) {
-
-  // this is commented out because it provides no useful information and so its used / purpose needs to be reevaluated
-  
-  /* self = self; */
-  /* pid_t child; */
-  /* void* addr; */
-  /* bool argument_population_failed = !PyArg_ParseTuple(args, */
-  /* 						      "II", */
-  /* 						      &child, */
-  /* 						      (void *) &addr); */
-  /* if (argument_population_failed) { */
-  /*   PyErr_SetString(TraceReplayError, "build rt_sigaction struct failed"); */
-  /* } */
-  /* if (DEBUG) { */
-  /*   printf("C: Entering build rt_sigaction struct"); */
-  /*   printf("C: sigaction address: %p \n", addr); */
-  /* } */
-  /* struct kernel_sigaction act; */
-  /* copy_child_process_memory_into_buffer(child, addr,(unsigned char*)&act, sizeof(act)); */
-
-  /* void* handler = act.k_sa_handler; */
-  /* int flags = act.sa_flags; */
-  /* sigset_t mask = act.sa_mask; */
-
-  /* if (DEBUG) { */
-  /*   //printf("C Sigaction: { %p, {%d}, {%d} } \n", handler, mask, flags); */
-  /* } */
-  
-  /* PyObject* result = Py_BuildValue("iii", handler,  mask, flags); */
-  /* //free(act); */
-  /* return result; */
-  Py_RETURN_NONE;
-}
-
-
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
   if (DEBUG) printf("C: Entering populate rt_sigaction_struct\n");
@@ -1830,8 +1791,6 @@ static PyMethodDef TraceReplayMethods[]  = {
      METH_VARARGS, "write poll result"},
     {"populate_select_bitmaps", tracereplay_populate_select_bitmaps,
      METH_VARARGS, "populate select bitmaps"},
-    {"build_rt_sigaction_struct", tracereplay_build_rt_sigaction_struct,
-     METH_VARARGS, "build rt_sigaction struct"},
     {"populate_rt_sigaction_struct", tracereplay_populate_rt_sigaction_struct,
      METH_VARARGS, "populate rt_sigaction struct"},
     {"populate_stat64_struct", tracereplay_populate_stat64_struct,
