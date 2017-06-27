@@ -94,6 +94,7 @@ int copy_child_process_memory_into_buffer(pid_t child,
             addr++;
         }
     }
+
     return 0;
 }
 
@@ -1059,76 +1060,97 @@ static PyObject* tracereplay_populate_llseek_result(PyObject* self,
     Py_RETURN_NONE;
 }
 
-
-/* void print_sigset_t(sigset_t *set) */
-/* { */
-/*   int i; */
-
-/*   i = SIGRTMAX; */
-/*   do { */
-/*     int x = 0; */
-/*     i -= 4; */
-/*     if (sigismember(set, i+1)) x |= 1; */
-/*     if (sigismember(set, i+2)) x |= 2; */
-/*     if (sigismember(set, i+3)) x |= 4; */
-/*     if (sigismember(set, i+4)) x |= 8; */
-/*     printf("%x", x); */
-/*   } while (i >= 4); */
-/*   printf("\n"); */
-/* } */
-
+struct kernel_sigaction {
+  __sighandler_t k_sa_handler;
+  unsigned int sa_flags;
+  void* sa_restorer;
+  sigset_t sa_mask;
+};
 
 static PyObject* tracereplay_populate_rt_sigaction_struct(PyObject* self,
 		 					  PyObject* args) {
-
-  printf("C: Entering populate rt_sigaction_struct\n");
+  if (DEBUG) {
+    printf("C: Entering populate rt_sigaction_struct\n");
+  }
 
   self = self;
   pid_t child;
 
-  struct sigaction oldact;
-  void*     oldact_addr; 
-  int       old_sa_handler; // this could also be void * but not yet implemented
-  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
-  sigset_t  old_sa_mask;
-  int       old_sa_flags;
-  void*     old_sa_restorer = NULL;  // no longer used, but in sigaction struct
+  struct kernel_sigaction oldact;
+  void*         oldact_addr; 
+  int           old_sa_handler; // this could also be void * but not yet implemented
+  PyObject*     mask_sig_list;
+  sigset_t      old_sa_mask;
+  unsigned int  old_sa_flags;
+  void*         old_sa_restorer;  // no longer used, but in sigaction struct when VDSO off
+  //  void*     old_sa_sigaction = NULL; // use not implemented yet, see kernelhandlers.py
 
   bool argument_population_failed = !PyArg_ParseTuple(args,
-  						      "iiiki",
+  						      "IIIOII",
   						      &child,
     						      &oldact_addr,
     						      &old_sa_handler,
-  						      &old_sa_mask,
-   						      &old_sa_flags);
-  
-  if (true) {
-    printf("C: populate_sigaction: child %d\n", child);
-    
-    printf("C: populate_sigaction: old action address %p\n", oldact_addr);
-    printf("C: populate_sigaction: old_sa_handler %d\n", old_sa_handler);
-    printf("C: populate_sigaction: old_sa_mask %lu\n", old_sa_mask);
-    printf("C: populate_sigaction: old_sa_flags %d\n", old_sa_flags);
-    fflush(stdout);
-   }
+						      &mask_sig_list,
+   						      &old_sa_flags,
+						      &old_sa_restorer);
 
-  //PyErr_SetString(TraceReplayError, "dont want to scroll up");
-  
   if (argument_population_failed) {
     PyErr_SetString(TraceReplayError, "populate rt_sigaction data failed");
   }
 
+  if (DEBUG) {
+    printf("C: populate_sigaction: read arguments: child %d \n", child);
+    printf("C: populate_sigaction: read arguments: oldact_addr %p \n", oldact_addr);
+    printf("C: populate_sigaction: read arguments: sa_handler %d \n",  old_sa_handler);
+    printf("C: populate_sigaction: read arguments: old_sa_flags %d at %p \n", old_sa_flags, &old_sa_mask);
+    printf("C: populate_sigaction: read arguments: sa_restorer %p \n",  old_sa_restorer);
+   }
   
-  // copy oldact into memory
-  copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
   
-  oldact.sa_handler = (void*) old_sa_handler;
-  oldact.sa_sigaction = old_sa_sigaction;
-  oldact.sa_mask = old_sa_mask;
+  // setup memory for copying oldact in
+    copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
+
+  // Note: cant set handler and sigaction at same time as use same memory
+  oldact.k_sa_handler = (void*) old_sa_handler;
   oldact.sa_flags = old_sa_flags;
   oldact.sa_restorer = old_sa_restorer;
+  
+  // create sa_mask sigset_t from mask_sig_list
+  sigemptyset(&oldact.sa_mask);
 
+  PyObject* iter = PyObject_GetIter(mask_sig_list);
+  PyObject* next = PyIter_Next(iter);
+  while (next) {
+    if (!PyInt_Check(next)) {
+      PyErr_SetString(TraceReplayError, "Encountered non-Int in mask list");
+    }
+    
+    int sig = (int)PyInt_AsLong(next);
+    sigaddset(&oldact.sa_mask, sig);
+   
+    if (DEBUG) {
+      printf("C: populate rt_sigation: signal %d added to mask \n", sig);
+      printf("C: populate rt_sigaction: Mask: %x \n", &oldact.sa_mask);
+    }
+    
+    next = PyIter_Next(iter);
+  }
+
+  // copy oldact into memory
   copy_buffer_into_child_process_memory(child, oldact_addr, (unsigned char*)&oldact, sizeof(oldact));
+
+  // copy back out of memory to read / test values
+  struct kernel_sigaction test;
+  copy_child_process_memory_into_buffer(child, oldact_addr, (unsigned char*)&test, sizeof(test));
+
+
+   if (DEBUG) {
+     printf("C: Read sigaction: sigaction at %p \n", &test);
+     printf("C: Read sigaction: sa_handler %d at %p \n", (int) test.k_sa_handler, &(test.k_sa_handler));
+     printf("C: Read sigaction: sa_flags %d at %p \n", test.sa_flags, &(test.sa_flags));
+     printf("C: Read sigaction: sa_mask 0x%x at %p \n", test.sa_mask, &test.sa_mask);     
+     printf("C: Read sigaction: sa_restorer %p at %p \n", test.sa_restorer, &(test.sa_restorer));    
+   }
 
   Py_RETURN_NONE;
 }
