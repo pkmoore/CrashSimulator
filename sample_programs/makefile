@@ -122,3 +122,12 @@ clean:
 	- rm callmkstemp
 	- rm callsigaction
 	- rm timer_tests
+	- rm callgetaddrinfo
+	- rm callgetdents64
+	- rm callpoll
+	- rm callselect_noaction
+	- rm callsigaction
+	- rm charactertest
+	- rm dropbear_read_calls
+	- rm nonblock
+	- rm read_known_hosts
