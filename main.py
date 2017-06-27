@@ -118,7 +118,6 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         266,  # set_clock_getres
         240,  # sys_futex
         242,  # sys_sched_getaffinity
-        174,  # rt_sigaction
         243,  # sys_set_thread_area
         311,  # sys_set_robust_list
         340,  # sys_prlimit64
@@ -200,6 +199,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (221, True): fcntl64_entry_handler,
         (196, True): lstat64_entry_handler,
         (268, True): statfs64_entry_handler,
+        (265, True): clock_gettime_entry_handler,
         (41, True): dup_entry_handler,
         (41, False): dup_exit_handler,
         (150, True): syscall_return_success_handler,
@@ -365,8 +365,6 @@ if __name__ == '__main__':
             196: lstat64_entry_debug_printer,
             197: fstat64_entry_debug_printer,
             221: fcntl64_entry_debug_printer,
-            259: timer_create_entry_handler,
-            #260: timer_settime_entry_handler
         }
         # Open our trace (specified as either a command line argument with -t
         # or as specified in a replay config file.  Then pass it to the
