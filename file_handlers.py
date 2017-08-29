@@ -30,6 +30,18 @@ from util import (cleanup_quotes,
 
 
 def eventfd2_entry_handler(syscall_id, syscall_object, pid):
+    """Replay Always
+    Checks:
+    0: unsigned int initval: initial kernel counter value
+    Sets:
+    return value: new file descriptor or -1 (error)
+        (added as replay file descriptor)
+    errno
+
+    Not Implemented:
+    * Check int flags value
+    """
+
     logging.debug('Entering eventfd2 entry handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
     add_replay_fd(int(syscall_object.ret[0]))
@@ -38,6 +50,18 @@ def eventfd2_entry_handler(syscall_id, syscall_object, pid):
 
 
 def ftruncate_entry_handler(syscall_id, syscall_object, pid):
+    """Replay Optional - File Descriptor Dependent
+    Checks:
+    0: int fd: file descriptor
+    1: off_t length: length after truncate
+    Sets:
+    if replayed:
+    return value: 0 (success) or -1 (error)
+    errno
+    if not replayed:
+    call exit handler
+    """
+
     logging.debug('Entering ftruncate entry handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
     validate_integer_argument(pid, syscall_object, 1, 1)
@@ -51,6 +75,13 @@ def ftruncate_entry_handler(syscall_id, syscall_object, pid):
 
 
 def ftruncate_exit_handler(syscall_id, syscall_object, pid):
+    """Used only if not replayed
+    Checks:
+    return value: 0 (success) or -1 (error)
+    Sets:
+    None
+    """
+
     logging.debug('Entering ftruncate exit handler')
     ret_val_from_trace = int(syscall_object.ret[0])
     ret_val_from_execution = cint.peek_register(pid, cint.EAX)
@@ -62,6 +93,18 @@ def ftruncate_exit_handler(syscall_id, syscall_object, pid):
 
 
 def ftruncate64_entry_handler(syscall_id, syscall_object, pid):
+    """Replay Optional - File Descriptor Dependent
+    Checks:
+    0: int fd: file descriptor
+    1: off64_t length: length after truncate
+    Sets:
+    if replayed:
+    return value: 0 (success) or -1 (error)
+    errno
+    if not replayed:
+    call exit handler
+    """
+
     logging.debug('Entering ftruncate entry handler')
     validate_integer_argument(pid, syscall_object, 0, 0)
     validate_integer_argument(pid, syscall_object, 1, 1)
@@ -75,6 +118,12 @@ def ftruncate64_entry_handler(syscall_id, syscall_object, pid):
 
 
 def ftruncate64_exit_handler(syscall_id, syscall_object, pid):
+    """Used only if not replayed
+    Checks:
+    return value: 0 (success) or -1 (failure)
+    Sets:
+    None
+    """
     logging.debug('Entering ftruncate exit handler')
     ret_val_from_trace = int(syscall_object.ret[0])
     ret_val_from_execution = cint.peek_register(pid, cint.EAX)
@@ -86,6 +135,21 @@ def ftruncate64_exit_handler(syscall_id, syscall_object, pid):
 
 
 def creat_entry_handler(syscall_id, syscall_object, pid):
+    """ Replay Optional - is new file or device mmapped at any time
+    Checks:
+    0: char* pathname: pathname of file or device being created
+    Sets:
+    if replayed:
+    return value: file descriptor or -1 (error)
+        (added as replay file descriptor)
+    errno
+    if not replayed:
+    None
+
+    Not Implemented:
+    * Check mode_t mode value
+    """
+
     logging.debug('Entering creat entry handler')
     filename_from_trace = cleanup_quotes(syscall_object.args[0].value)
     filename_from_execution = peek_string(pid, cint.peek_register(pid,
