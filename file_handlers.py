@@ -1,3 +1,10 @@
+# pylint: disable=W0613, C0302
+# unused arguments, too many ines
+
+"""File manipulation handlers
+"""
+
+
 from __future__ import print_function
 from time import strptime, mktime
 
