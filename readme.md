@@ -21,3 +21,26 @@
 4. Generate system call definitions pickle file --- inside parse-syscall-definitions folder:
     python ./parse_syscall_definitions.py
 5. Copy syscall_definitions.pickle into CrashSimulator root directory
+7. Install python development materials
+    sudo apt-get install python-dev
+6. Install tracereplay python module in python_modules directory using
+    sudo python setup.py install
+
+
+# Running Tests
+1. Compile programs used in testing by building all targets specified in the make file in sample_programs directory
+2. Execute test scripts in tests directory
+
+
+# Recoding a System Call Trace With Sufficient Detail
+
+    strace -f -s 65535 -vvvvv -o <filename>.strace <command>
+
+
+# Replaying a Recorded System Call Trace
+
+    python main.py -c "['<command>']" -t <system call trace>
+
+Note:  The "command" portion is a Python list of python strings containing the elements of the commands (command, switches, switch parameters, etc.).
+For example:
+    python main.py -c "['wget', '-q0', '-', 'http://www.google.com']" -t wget_google.strace
