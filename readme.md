@@ -1,3 +1,6 @@
+# YOU DON'T WANT THIS REPO/VERSION OF THE TOOL
+# THIS REPO EXISTS ONLY FOR ARCHIVAL PURPOSES
+
 # Requirements
 * Supported OS:
     uname -a
