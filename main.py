@@ -224,6 +224,7 @@ def handle_syscall(syscall_id, syscall_object, entering, pid):
         (258, True): set_tid_address_entry_handler,
         (258, False): set_tid_address_exit_handler,
         (259, True): timer_create_entry_handler,
+        (259, False): timer_create_exit_handler,
         (260, True): timer_settime_entry_handler,
         (261, True): timer_gettime_entry_handler,
         (263, True): timer_delete_entry_handler,
